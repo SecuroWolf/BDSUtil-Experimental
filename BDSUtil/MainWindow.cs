@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
+using System.IO.Ports;
 using System.Windows.Forms;
 
 namespace BDSUtil
@@ -16,6 +17,7 @@ namespace BDSUtil
         private readonly MaterialSkinManager _materialSkinManager;
         private Process _serverProcess;
         private string _currentLogPath;
+        private bool _isServerFullyInitialized = false;
         private int _previousActiveTabIndex = 0;
 
         // State flag to signal if a backup sequence is waiting for the active server exit thread event
@@ -65,8 +67,72 @@ namespace BDSUtil
 
         private void MainWindow_Load(object sender, EventArgs e)
         {
-            //
+            UpdateControlButtonStates();
         }
+
+        /// <summary>
+        /// Centrally evaluates the active server process and configuration paths 
+        /// to dynamically force the correct visibility states onto the Start/Stop buttons.
+        /// </summary>
+        /// <summary>
+        /// Centrally evaluates the active server process and configuration paths 
+        /// to dynamically force the correct visibility states onto the Start/Stop buttons.
+        /// </summary>
+        private void UpdateControlButtonStates()
+        {
+            // Gather initial environment states safely
+            string configuredPath = AppSettings.Instance.ServerExecutablePath;
+            bool isPathConfigured = false;
+
+            if (!string.IsNullOrWhiteSpace(configuredPath))
+            {
+                // Account for variations: check if it's the raw directory or the direct file link itself
+                if (configuredPath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                {
+                    isPathConfigured = File.Exists(configuredPath);
+                }
+                else
+                {
+                    // If it's stored as a base folder directory path, look for the execution executable right inside it
+                    string absoluteBinaryTarget = Path.Combine(configuredPath, "bedrock_server.exe");
+                    isPathConfigured = Directory.Exists(configuredPath) && File.Exists(absoluteBinaryTarget);
+                }
+            }
+
+            // Check if our server execution thread handle is physically running right now
+            bool isProcessRunning = _serverProcess != null && !_serverProcess.HasExited;
+
+            // Scenario 2 Fix: If the path isn't set up yet, completely hide the buttons 
+            // so the user is forced into the setup dialogue loop cleanly.
+            if (!isPathConfigured)
+            {
+                StartServerBTN_New.Visible = false;
+                StopServerBTN_New.Visible = false;
+                return;
+            }
+
+            if (isProcessRunning)
+            {
+                // Scenario 1 Fix: The Start button vanishes the millisecond a process is active.
+                StartServerBTN_New.Visible = false;
+
+                // Scenario 1 Fix (ID-10-T protection): Defer showing the Stop button 
+                // until your background text stream explicitly toggles a flag confirming 
+                // that the process printed the "Server Started." boot sequence.
+                StopServerBTN_New.Visible = _isServerFullyInitialized;
+            }
+            else
+            {
+                // If the server process is entirely dead or hasn't booted yet, 
+                // reset the canvas back to the default safe starting state.
+                StartServerBTN_New.Visible = true;
+                StopServerBTN_New.Visible = false;
+
+                // Clear out our synchronization flag securely for the next launch cycle
+                _isServerFullyInitialized = false;
+            }
+        }
+
 
         private void InitializeBackupEngine()
         {
@@ -183,6 +249,9 @@ namespace BDSUtil
             }
         }
 
+        /// <summary>
+        /// Outputs log text strings to the terminal box while monitoring for explicit server initialization flags.
+        /// </summary>
         private void AppendTerminalLine(string text)
         {
             if (string.IsNullOrEmpty(text)) return;
@@ -197,12 +266,20 @@ namespace BDSUtil
             ConsoleOutputTextBox.SelectionStart = ConsoleOutputTextBox.Text.Length;
             ConsoleOutputTextBox.ScrollToCaret();
 
+            // FIXED: Use IndexOf with OrdinalIgnoreCase to strip out timestamps or color flags wrapping the confirmation text
+            if (text.IndexOf("Server Started.", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                _isServerFullyInitialized = true;
+                UpdateControlButtonStates();
+            }
+
             try
             {
                 File.AppendAllText(_currentLogPath, text + Environment.NewLine);
             }
             catch { }
         }
+
 
         private void ServerProcess_Exited(object sender, EventArgs e)
         {
@@ -212,11 +289,13 @@ namespace BDSUtil
                 return;
             }
 
+            _isServerFullyInitialized = false;
+            UpdateControlButtonStates();
+
             ConsoleOutputTextBox.AppendText(Environment.NewLine + "==================================================" + Environment.NewLine + "Server has shutdown successfully." + Environment.NewLine + "==================================================" + Environment.NewLine);
 
             ConsoleOutputTextBox.SelectionStart = ConsoleOutputTextBox.Text.Length;
             ConsoleOutputTextBox.ScrollToCaret();
-
 
             if (_isBackupPendingAfterStop)
             {
@@ -1042,13 +1121,10 @@ namespace BDSUtil
 
         private void StartServerBTN_New_Click(object sender, EventArgs e)
         {
-            StartServerBTN_New.Hide();
             if (_serverProcess != null && !_serverProcess.HasExited) return;
 
             string serverDirectory = AppSettings.Instance.ServerExecutablePath;
-            string fullBinaryPath = System.IO.Path.Combine(serverDirectory, "bedrock_server.exe");
-
-            if (string.IsNullOrWhiteSpace(serverDirectory) || !System.IO.File.Exists(fullBinaryPath))
+            if (string.IsNullOrWhiteSpace(serverDirectory) || !System.IO.Directory.Exists(serverDirectory))
             {
                 DialogResult promptResult = ReaLTaiizor.Controls.MaterialMessageBox.Show(
                     "The Minecraft Bedrock Server path has not been configured, or 'bedrock_server.exe' could not be found.\n\n" +
@@ -1065,15 +1141,27 @@ namespace BDSUtil
                         if (settings.ShowDialog(this) == DialogResult.OK)
                         {
                             AppendTerminalLine("[MANAGER INFO] Configuration paths updated. Click 'Start Server' again to launch.");
+                            UpdateControlButtonStates();
                         }
                     }
                 }
                 return;
             }
 
+            string fullBinaryPath = System.IO.Path.Combine(serverDirectory, "bedrock_server.exe");
+            if (!System.IO.File.Exists(fullBinaryPath))
+            {
+                ReaLTaiizor.Controls.MaterialMessageBox.Show(
+                    "The binary execution module 'bedrock_server.exe' could not be found in the specified server root path.",
+                    "Target Executable Missing",
+                    MessageBoxButtons.OK,
+                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
+                );
+                return;
+            }
+
             ConsoleOutputTextBox.Clear();
             ConsoleOutputTextBox.AppendText("Initializing Server Boot Pipeline...\r\n");
-
 
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HHmm");
             System.IO.Directory.CreateDirectory("logs");
@@ -1097,19 +1185,21 @@ namespace BDSUtil
             _serverProcess.Start();
             _serverProcess.BeginOutputReadLine();
             _serverProcess.BeginErrorReadLine();
-            StopServerBTN_New.Show();
+
+            UpdateControlButtonStates();
         }
+
 
         private void StopServerBTN_New_Click(object sender, EventArgs e)
         {
-            StopServerBTN_New.Hide();
             if (_serverProcess != null && !_serverProcess.HasExited)
             {
                 AppendTerminalLine("[MANAGER INFO] Injected administrative 'stop' command stream...");
                 _serverProcess.StandardInput.WriteLine("stop");
-                StartServerBTN_New.Show();
+                UpdateControlButtonStates();
             }
         }
+
 
         private void SvConfigButton_Click(object sender, EventArgs e)
         {

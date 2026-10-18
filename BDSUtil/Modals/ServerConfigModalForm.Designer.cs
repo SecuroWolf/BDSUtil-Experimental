@@ -32,16 +32,16 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ServerConfigModalForm));
             this.CfgTabControl = new ReaLTaiizor.Controls.MaterialTabControl();
             this.PropTab = new System.Windows.Forms.TabPage();
-            this.serverPropertiesControl1 = new BDSUtil.Modals.Content_Controls.CfgHelper.ServerPropertiesControl();
             this.WLTab = new System.Windows.Forms.TabPage();
-            this.whitelistControl1 = new BDSUtil.Modals.Content_Controls.CfgHelper.WhitelistControl();
             this.PermTab = new System.Windows.Forms.TabPage();
-            this.permissionsControl1 = new BDSUtil.Modals.Content_Controls.CfgHelper.PermissionsControl();
             this.ChatTab = new System.Windows.Forms.TabPage();
-            this.chatFilterControl1 = new BDSUtil.Modals.Content_Controls.CfgHelper.ChatFilterControl();
             this.SaveDummyTab = new System.Windows.Forms.TabPage();
             this.PHCl = new ReaLTaiizor.Controls.MaterialButton();
             this.IconList_Cfg = new System.Windows.Forms.ImageList(this.components);
+            this.serverPropertiesControl1 = new BDSUtil.Modals.Content_Controls.CfgHelper.ServerPropertiesControl();
+            this.whitelistControl1 = new BDSUtil.Modals.Content_Controls.CfgHelper.WhitelistControl();
+            this.permissionsControl1 = new BDSUtil.Modals.Content_Controls.CfgHelper.PermissionsControl();
+            this.chatFilterControl1 = new BDSUtil.Modals.Content_Controls.CfgHelper.ChatFilterControl();
             this.CfgTabControl.SuspendLayout();
             this.PropTab.SuspendLayout();
             this.WLTab.SuspendLayout();
@@ -84,18 +84,6 @@
             this.PropTab.ToolTipText = "Server.Properties";
             this.PropTab.UseVisualStyleBackColor = true;
             // 
-            // serverPropertiesControl1
-            // 
-            this.serverPropertiesControl1.AutoScroll = true;
-            this.serverPropertiesControl1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.serverPropertiesControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.serverPropertiesControl1.Location = new System.Drawing.Point(0, 0);
-            this.serverPropertiesControl1.Margin = new System.Windows.Forms.Padding(0);
-            this.serverPropertiesControl1.MaximumSize = new System.Drawing.Size(738, 0);
-            this.serverPropertiesControl1.Name = "serverPropertiesControl1";
-            this.serverPropertiesControl1.Size = new System.Drawing.Size(738, 412);
-            this.serverPropertiesControl1.TabIndex = 0;
-            // 
             // WLTab
             // 
             this.WLTab.Controls.Add(this.whitelistControl1);
@@ -108,15 +96,6 @@
             this.WLTab.ToolTipText = "Whitelist";
             this.WLTab.UseVisualStyleBackColor = true;
             // 
-            // whitelistControl1
-            // 
-            this.whitelistControl1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.whitelistControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.whitelistControl1.Location = new System.Drawing.Point(0, 0);
-            this.whitelistControl1.Name = "whitelistControl1";
-            this.whitelistControl1.Size = new System.Drawing.Size(789, 412);
-            this.whitelistControl1.TabIndex = 0;
-            // 
             // PermTab
             // 
             this.PermTab.Controls.Add(this.permissionsControl1);
@@ -127,15 +106,6 @@
             this.PermTab.TabIndex = 2;
             this.PermTab.Text = "Permissions";
             this.PermTab.UseVisualStyleBackColor = true;
-            // 
-            // permissionsControl1
-            // 
-            this.permissionsControl1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.permissionsControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.permissionsControl1.Location = new System.Drawing.Point(0, 0);
-            this.permissionsControl1.Name = "permissionsControl1";
-            this.permissionsControl1.Size = new System.Drawing.Size(789, 412);
-            this.permissionsControl1.TabIndex = 0;
             // 
             // ChatTab
             // 
@@ -149,15 +119,6 @@
             this.ChatTab.Text = "Chat Filter";
             this.ChatTab.ToolTipText = "Chat Filter";
             this.ChatTab.UseVisualStyleBackColor = true;
-            // 
-            // chatFilterControl1
-            // 
-            this.chatFilterControl1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.chatFilterControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chatFilterControl1.Location = new System.Drawing.Point(0, 0);
-            this.chatFilterControl1.Name = "chatFilterControl1";
-            this.chatFilterControl1.Size = new System.Drawing.Size(789, 412);
-            this.chatFilterControl1.TabIndex = 0;
             // 
             // SaveDummyTab
             // 
@@ -205,6 +166,45 @@
             this.IconList_Cfg.Images.SetKeyName(5, "");
             this.IconList_Cfg.Images.SetKeyName(6, "save_24dp.png");
             // 
+            // serverPropertiesControl1
+            // 
+            this.serverPropertiesControl1.AutoScroll = true;
+            this.serverPropertiesControl1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
+            this.serverPropertiesControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.serverPropertiesControl1.Location = new System.Drawing.Point(0, 0);
+            this.serverPropertiesControl1.Margin = new System.Windows.Forms.Padding(0);
+            this.serverPropertiesControl1.MaximumSize = new System.Drawing.Size(738, 0);
+            this.serverPropertiesControl1.Name = "serverPropertiesControl1";
+            this.serverPropertiesControl1.Size = new System.Drawing.Size(738, 0);
+            this.serverPropertiesControl1.TabIndex = 0;
+            // 
+            // whitelistControl1
+            // 
+            this.whitelistControl1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
+            this.whitelistControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.whitelistControl1.Location = new System.Drawing.Point(0, 0);
+            this.whitelistControl1.Name = "whitelistControl1";
+            this.whitelistControl1.Size = new System.Drawing.Size(789, 412);
+            this.whitelistControl1.TabIndex = 0;
+            // 
+            // permissionsControl1
+            // 
+            this.permissionsControl1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
+            this.permissionsControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.permissionsControl1.Location = new System.Drawing.Point(0, 0);
+            this.permissionsControl1.Name = "permissionsControl1";
+            this.permissionsControl1.Size = new System.Drawing.Size(789, 412);
+            this.permissionsControl1.TabIndex = 0;
+            // 
+            // chatFilterControl1
+            // 
+            this.chatFilterControl1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
+            this.chatFilterControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.chatFilterControl1.Location = new System.Drawing.Point(0, 0);
+            this.chatFilterControl1.Name = "chatFilterControl1";
+            this.chatFilterControl1.Size = new System.Drawing.Size(789, 412);
+            this.chatFilterControl1.TabIndex = 0;
+            // 
             // ServerConfigModalForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -219,6 +219,7 @@
             this.Name = "ServerConfigModalForm";
             this.Padding = new System.Windows.Forms.Padding(0, 0, 3, 3);
             this.Text = "ServerConfigModalForm";
+            this.Load += new System.EventHandler(this.ServerConfigModalForm_Load);
             this.CfgTabControl.ResumeLayout(false);
             this.PropTab.ResumeLayout(false);
             this.WLTab.ResumeLayout(false);
