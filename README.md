@@ -49,8 +49,8 @@ TRIGGERS A THERMONUCLEAR WAR. YOU USE THIS SOFTWARE ENTIRELY AT YOUR OWN RISK.
 
 ## Libraries & Credits
 This project leverages the following incredible open-source libraries to power its interface and networking stack:
-* **[ReaLTaiizor]([https://github.com](https://github.com/Taiizor/ReaLTaiizor)):** A comprehensive, feature-rich .NET WinForms component library that powers BDSUtil's modern Material Design layout ecosystem.
-* **[Open.NAT]([https://github.com](https://github.com/lontivero/Open.NAT)):** A lightweight, asynchronous .NET library used to manage port mapping allocations via UPnP and PMP seamlessly.
+* **[ReaLTaiizor](https://github.com/Taiizor/ReaLTaiizor):** A comprehensive, feature-rich .NET WinForms component library that powers BDSUtil's modern Material Design layout ecosystem.
+* **[Open.NAT](https://github.com/lontivero/Open.NAT):** A lightweight, asynchronous .NET library used to manage port mapping allocations via UPnP and PMP seamlessly.
 
 ---
 
