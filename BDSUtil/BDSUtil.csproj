@@ -32,7 +32,13 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>bds-manager.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Open.Nat, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f22a6a4582336c76, processorArchitecture=MSIL">
+      <HintPath>..\packages\Open.NAT.2.1.0.0\lib\net45\Open.Nat.dll</HintPath>
+    </Reference>
     <Reference Include="ReaLTaiizor">
       <HintPath>Resources\Dependencies\ReaLTaiizor.dll</HintPath>
       <Private>True</Private>
@@ -55,6 +61,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AppSettings.cs" />
+    <Compile Include="Helpers\UPnP.cs" />
+    <Compile Include="Modals\AddPortDialogue.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Modals\CloseConfirmForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -67,6 +77,9 @@
     <Compile Include="MainWindow.Designer.cs">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
+    <Compile Include="Modals\Content Controls\AdvancedNetworkingDialogue.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Modals\Content Controls\CfgHelper\CfgEditor.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -78,6 +91,12 @@
     </Compile>
     <Compile Include="Modals\Content Controls\CfgHelper\ChatFilterControl.Designer.cs">
       <DependentUpon>ChatFilterControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Modals\Content Controls\CfgHelper\NetworkingControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Modals\Content Controls\CfgHelper\NetworkingControl.Designer.cs">
+      <DependentUpon>NetworkingControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Modals\Content Controls\CfgHelper\PermissionsControl.cs">
       <SubType>UserControl</SubType>
@@ -97,11 +116,17 @@
     <Compile Include="Modals\Content Controls\CfgHelper\WhitelistControl.Designer.cs">
       <DependentUpon>WhitelistControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Modals\NetworkSecurityDialogue.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Modals\ServerConfigModalForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Modals\ServerConfigModalForm.Designer.cs">
       <DependentUpon>ServerConfigModalForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Modals\UPnPCloseProgressForm.cs">
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -131,6 +156,9 @@
     <EmbeddedResource Include="Modals\Content Controls\CfgHelper\ChatFilterControl.resx">
       <DependentUpon>ChatFilterControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Modals\Content Controls\CfgHelper\NetworkingControl.resx">
+      <DependentUpon>NetworkingControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Modals\Content Controls\CfgHelper\PermissionsControl.resx">
       <DependentUpon>PermissionsControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -154,6 +182,7 @@
     <EmbeddedResource Include="Modals\SettingsForm.resx">
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </EmbeddedResource>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -171,6 +200,7 @@
     <Folder Include="Resources\Dependencies\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="bds-manager.ico" />
     <Content Include="Resources\Icons\baseline_bluetooth_black_24dp.png" />
     <Content Include="Resources\Icons\baseline_build_black_24dp.png" />
     <Content Include="Resources\Icons\baseline_favorite_border_black_24dp.png" />
@@ -195,6 +225,17 @@
     <Content Include="Resources\Icons\round_report_problem_white_24dp.png" />
     <Content Include="Resources\Icons\round_swap_vert_white_24dp.png" />
     <Content Include="Resources\Icons\terminal_24dp.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="UPNPLib">
+      <Guid>{DB3442A7-A2E9-4A59-9CB5-F5C1A5D901E5}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </COMReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

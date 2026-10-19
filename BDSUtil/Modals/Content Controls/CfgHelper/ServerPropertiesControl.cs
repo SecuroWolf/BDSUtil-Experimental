@@ -33,7 +33,6 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
         public void InitializeControl(string serverRoot)
         {
             _configPath = Path.Combine(serverRoot, "server.properties");
-            MessageBox.Show("server config found at : " + _configPath, "Configuration Loaded", MessageBoxButtons.OK, MessageBoxIcon.Information);
             LoadPropertiesConfig();
         }
 

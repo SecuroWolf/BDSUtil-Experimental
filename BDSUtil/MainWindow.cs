@@ -3,11 +3,13 @@ using ReaLTaiizor.Colors; // Core Material Color templates
 using ReaLTaiizor.Forms; // Core ReaLTaiizor MaterialForm base class mapping
 using ReaLTaiizor.Manager; // Unified skin and theme scheme manager hooks
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.IO.Ports;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace BDSUtil
@@ -68,12 +70,210 @@ namespace BDSUtil
         private void MainWindow_Load(object sender, EventArgs e)
         {
             UpdateControlButtonStates();
+
+            //#################################################
+            //##            UPnP NETWORK MAPPING             ##
+            //#################################################
+
+            // AUTOMATED PIPELINE GENERATION ENGINE: Proactively allocates primary and multi-node routing pools on boot
+            if (AppSettings.Instance.EnableUPnP)
+            {
+                AppendTerminalLine("[MANAGER INFO] UPnP is active. Initiating dynamic network requisition pipeline...");
+
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        string serverDirectory = AppSettings.Instance.ServerExecutablePath;
+                        if (string.IsNullOrWhiteSpace(serverDirectory)) return;
+
+                        string propertiesFilePath = System.IO.Path.Combine(serverDirectory, "server.properties");
+                        if (!System.IO.File.Exists(propertiesFilePath)) return;
+
+                        string[] originalLines = System.IO.File.ReadAllLines(propertiesFilePath);
+
+                        // Default Fallback values matching vanilla standards
+                        int primaryPortV4 = 19132;
+                        int primaryPortV6 = 19133;
+                        int maxPlayersCount = 10;
+
+                        // Parse out current runtime variables
+                        foreach (string line in originalLines)
+                        {
+                            string trimmed = line.Trim();
+                            if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith("#")) continue;
+
+                            int equalsIdx = trimmed.IndexOf('=');
+                            if (equalsIdx > 0)
+                            {
+                                string key = trimmed.Substring(0, equalsIdx).Trim();
+                                string val = trimmed.Substring(equalsIdx + 1).Trim();
+
+                                if (key.Equals("server-port", StringComparison.OrdinalIgnoreCase)) int.TryParse(val, out primaryPortV4);
+                                else if (key.Equals("server-portv6", StringComparison.OrdinalIgnoreCase)) int.TryParse(val, out primaryPortV6);
+                                else if (key.Equals("max-players", StringComparison.OrdinalIgnoreCase)) int.TryParse(val, out maxPlayersCount);
+                            }
+                        }
+
+                        string localSubnetIp = BDSUtil.Helpers.UPnPEngine.GetLocalIPAddress();
+                        string externalPublicIp = BDSUtil.Helpers.UPnPEngine.GetExternalIPAddress();
+
+                        // --- PHASE 1: REQUISITION PRIMARY MAIN GAME PORTS (DUAL PROTOCOL) ---
+                        this.Invoke((MethodInvoker)delegate {
+                            AppendTerminalLine($"[UPnP ENGINE] Requisitioning dual-protocol primary endpoints (IPv4: {primaryPortV4}, IPv6: {primaryPortV6})...");
+                        });
+
+                        // Map Primary IPv4 Port across BOTH transport layers cleanly
+                        BDSUtil.Helpers.UPnPEngine.ForwardPort(primaryPortV4, primaryPortV4, localSubnetIp, "UDP");
+                        BDSUtil.Helpers.UPnPEngine.ForwardPort(primaryPortV4, primaryPortV4, localSubnetIp, "TCP");
+
+                        // Map Primary IPv6 Port across BOTH transport layers cleanly
+                        BDSUtil.Helpers.UPnPEngine.ForwardPort(primaryPortV6, primaryPortV6, localSubnetIp, "UDP");
+                        BDSUtil.Helpers.UPnPEngine.ForwardPort(primaryPortV6, primaryPortV6, localSubnetIp, "TCP");
+
+                        // --- PHASE 2: REQUISITION DYNAMIC NETHERNET PORT POOL (UDP ONLY) ---
+                        List<string> successfulUdpTokens = new List<string>();
+                        int targetPortCandidate = 19134;
+
+                        while (successfulUdpTokens.Count < maxPlayersCount)
+                        {
+                            if (targetPortCandidate > 65535) break;
+
+                            // Skip over your primary ports if your candidate loop intersects them
+                            if (targetPortCandidate == primaryPortV4 || targetPortCandidate == primaryPortV6)
+                            {
+                                targetPortCandidate++;
+                                continue;
+                            }
+
+                            bool mapSuccess = BDSUtil.Helpers.UPnPEngine.ForwardPort(targetPortCandidate, targetPortCandidate, localSubnetIp);
+
+                            // RESTORED VISUAL LOGGING HOOKS
+                            if (mapSuccess)
+                            {
+                                string formattedToken = $"{externalPublicIp}:{targetPortCandidate}:{targetPortCandidate}";
+                                successfulUdpTokens.Add(formattedToken);
+
+                                int currentCount = successfulUdpTokens.Count;
+                                int loggedPort = targetPortCandidate;
+                                this.Invoke((MethodInvoker)delegate {
+                                    AppendTerminalLine($"[UPnP SUCCESS] Allocated node {currentCount}/{maxPlayersCount} onto UDP port: {loggedPort}");
+                                });
+                            }
+                            else
+                            {
+                                int failedPort = targetPortCandidate;
+                                this.Invoke((MethodInvoker)delegate {
+                                    AppendTerminalLine($"[UPnP LEASE REFUSED] Port {failedPort} unavailable. Skipping to evaluate candidate replacement...");
+                                });
+                            }
+
+                            targetPortCandidate++;
+                        }
+
+                        // --- PHASE 3: SERIALIZE CLEAN PAYLOAD TO PROPERTIES ---
+                        // Ensure the string is exactly 4 sets of numbers separated by dots (a valid IPv4 format)
+                        bool isValidIpNode = System.Text.RegularExpressions.Regex.IsMatch(externalPublicIp, @"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$");
+
+                        if (successfulUdpTokens.Count > 0 && isValidIpNode)
+                        {
+                            if (successfulUdpTokens.Count > 16) successfulUdpTokens = successfulUdpTokens.GetRange(0, 16);
+
+                            string consolidatedPortsPayloadString = string.Join(",", successfulUdpTokens);
+                            List<string> optimizedOutputBuffer = new List<string>();
+                            bool targetKeyFoundAndUpdated = false;
+                            string strictKeyAssignmentPattern = @"^\s*#?\s*server-udp-ports\s*=";
+
+                            foreach (string currentRawLine in originalLines)
+                            {
+                                if (System.Text.RegularExpressions.Regex.IsMatch(currentRawLine, strictKeyAssignmentPattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                                {
+                                    if (targetKeyFoundAndUpdated) continue;
+                                    optimizedOutputBuffer.Add($"server-udp-ports={consolidatedPortsPayloadString}");
+                                    targetKeyFoundAndUpdated = true;
+                                }
+                                else
+                                {
+                                    optimizedOutputBuffer.Add(currentRawLine);
+                                }
+                            }
+
+                            if (!targetKeyFoundAndUpdated)
+                            {
+                                optimizedOutputBuffer.Add($"server-udp-ports={consolidatedPortsPayloadString}");
+                            }
+
+                            System.IO.File.WriteAllLines(propertiesFilePath, optimizedOutputBuffer, System.Text.Encoding.UTF8);
+
+                            this.Invoke((MethodInvoker)delegate {
+                                AppendTerminalLine("[MANAGER INFO] Network pipeline initialization complete. External connections authorized.");
+                            });
+                        }
+                        else
+                        {
+                            this.Invoke((MethodInvoker)delegate {
+                                AppendTerminalLine("[UPnP ERROR] Public IP format was invalid. Aborting configuration changes to protect file integrity.");
+                            });
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Invoke((MethodInvoker)delegate {
+                            AppendTerminalLine($"[UPnP SYSTEM EXCEPTION] Boot pipeline failure: {ex.Message}");
+                        });
+                    }
+                });
+            }
+
         }
 
         /// <summary>
-        /// Centrally evaluates the active server process and configuration paths 
-        /// to dynamically force the correct visibility states onto the Start/Stop buttons.
+        /// Public interface module to cleanly scrub active UPnP hardware leases 
+        /// and return server properties back to default states during restarts.
         /// </summary>
+        public static void ExecuteUpnpTeardown()
+        {
+            try
+            {
+                string serverDirectory = AppSettings.Instance?.ServerExecutablePath;
+                if (!string.IsNullOrWhiteSpace(serverDirectory))
+                {
+                    string propertiesFilePath = System.IO.Path.Combine(serverDirectory, "server.properties");
+
+                    if (System.IO.File.Exists(propertiesFilePath))
+                    {
+                        string[] currentLines = System.IO.File.ReadAllLines(propertiesFilePath);
+                        List<string> cleanOutputBuffer = new List<string>();
+                        string strictKeyAssignmentPattern = @"^\s*#?\s*server-udp-ports\s*=";
+
+                        foreach (string line in currentLines)
+                        {
+                            if (System.Text.RegularExpressions.Regex.IsMatch(line, strictKeyAssignmentPattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                            {
+                                // RE-COMMENT THE ENTRY: Returns configurations cleanly back to stock condition
+                                cleanOutputBuffer.Add("#server-udp-ports=");
+                            }
+                            else
+                            {
+                                cleanOutputBuffer.Add(line);
+                            }
+                        }
+
+                        System.IO.File.WriteAllLines(propertiesFilePath, cleanOutputBuffer, System.Text.Encoding.UTF8);
+                    }
+                }
+
+                // Force individual lease deletions directly on router gateway circuits
+                BDSUtil.Helpers.UPnPEngine.TearDownPorts();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failover restart network cleanup violation: {ex.Message}");
+            }
+        }
+
+
         /// <summary>
         /// Centrally evaluates the active server process and configuration paths 
         /// to dynamically force the correct visibility states onto the Start/Stop buttons.
@@ -102,7 +302,7 @@ namespace BDSUtil
             // Check if our server execution thread handle is physically running right now
             bool isProcessRunning = _serverProcess != null && !_serverProcess.HasExited;
 
-            // Scenario 2 Fix: If the path isn't set up yet, completely hide the buttons 
+            // Fix: If the path isn't set up yet, completely hide the buttons 
             // so the user is forced into the setup dialogue loop cleanly.
             if (!isPathConfigured)
             {
@@ -113,12 +313,8 @@ namespace BDSUtil
 
             if (isProcessRunning)
             {
-                // Scenario 1 Fix: The Start button vanishes the millisecond a process is active.
+                // Fix: The Start button vanishes the millisecond a process is active.
                 StartServerBTN_New.Visible = false;
-
-                // Scenario 1 Fix (ID-10-T protection): Defer showing the Stop button 
-                // until your background text stream explicitly toggles a flag confirming 
-                // that the process printed the "Server Started." boot sequence.
                 StopServerBTN_New.Visible = _isServerFullyInitialized;
             }
             else
@@ -278,6 +474,33 @@ namespace BDSUtil
                 File.AppendAllText(_currentLogPath, text + Environment.NewLine);
             }
             catch { }
+
+            // --- LIVE PLAYER IDENTITY STREAM CAPTURE ---
+            if (text.IndexOf("Player connected:", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                try
+                {
+                    int labelLen = "Player connected:".Length;
+                    int nameStartIndex = text.IndexOf("Player connected:") + labelLen;
+                    int commaIndex = text.IndexOf(",", nameStartIndex);
+                    int xuidLabelIndex = text.IndexOf("xuid:", commaIndex);
+                    int xuidStartIndex = xuidLabelIndex + "xuid:".Length;
+
+                    if (commaIndex > nameStartIndex && xuidLabelIndex > 0)
+                    {
+                        string gamertag = text.Substring(nameStartIndex, commaIndex - nameStartIndex).Trim();
+                        string xuidValue = text.Substring(xuidStartIndex).Trim();
+
+                        if (!string.IsNullOrEmpty(xuidValue) && !string.IsNullOrEmpty(gamertag))
+                        {
+                            // RE-ROUTED: Commits the player profile live to both memory and your persistent local database file!
+                            BDSUtil.Modals.Content_Controls.CfgHelper.PlayerIdentityStore.SavePlayerNode(xuidValue, gamertag);
+                        }
+                    }
+                }
+                catch { }
+            }
+
         }
 
 
@@ -1040,11 +1263,34 @@ namespace BDSUtil
             }
         }
 
-        // Add a private tracking flag at the top of your class fields block inside MainWindow.cs
-        private bool _forceSystemExit = false;
+        // Add a private tracking flag at the top of class fields block inside MainWindow.cs
+        private bool _forceSystemExit = false; private bool _isUpnpCleanupComplete = false; // Flag to trace network teardown status loops
 
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
+            // --- START OF UPnP NETWORK TEARDOWN INTERCEPT PIPELINE ---
+            if (!_forceSystemExit && AppSettings.Instance.EnableUPnP && !_isUpnpCleanupComplete)
+            {
+                e.Cancel = true;
+                this.Enabled = false;
+
+                Task.Run(() =>
+                {
+                    // Call the universal dynamic teardown engine pass asynchronously
+                    ExecuteUpnpTeardown();
+
+                    this.BeginInvoke((MethodInvoker)delegate
+                    {
+                        _isUpnpCleanupComplete = true;
+                        this.Close();
+                    });
+                });
+
+                return;
+            }
+
+            // --- END OF UPnP VISUAL SHUTDOWN PROGRESS CONTEXT INTERCEPT ---
+
             // If our private force flag is true, bypass all prompts and let the window exit cleanly!
             if (_forceSystemExit)
             {
@@ -1110,11 +1356,13 @@ namespace BDSUtil
                     else // FALLBACK PROTECTION LOOP
                     {
                         e.Cancel = true;
+                        this.Enabled = true; // Restore interface responsiveness if the action drops out
                     }
                 }
                 else // USER CLICKED "NO" OR CLOSED THE MODAL WINDOW
                 {
                     e.Cancel = true; // Discard the closing window frame context and return focus to console
+                    this.Enabled = true; // Restore interface responsiveness
                 }
             }
         }
@@ -1217,11 +1465,19 @@ namespace BDSUtil
                 return;
             }
 
-            // 2. MODAL DISPATCH: Pass 'this' as the parent context handler to force centering over your console canvas
+            // 2. MAIN WINDOW HIDE GATE: Hide our parent canvas panel layout out of sight immediately
+            this.Hide();
+
+            // 3. MODAL DISPATCH: Pass 'this' as the parent context handler to force centering over your console canvas
             using (var configForm = new ServerConfigModalForm(this))
             {
                 configForm.ShowDialog(this);
             }
+
+            // 4. WORKSPACE RESTORATION PILL: Restore and completely refresh your log dashboard on close
+            this.Show();
+            this.Update(); // Forces an immediate, clean graphical hardware redraw pass
         }
+
     }
 }

@@ -18,8 +18,10 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             this.MaterialTabControl1 = new ReaLTaiizor.Controls.MaterialTabControl();
             this.tabLiveMonitor = new System.Windows.Forms.TabPage();
+            this.StartServerBTN_New = new ReaLTaiizor.Controls.MaterialFloatingActionButton();
             this.IconList = new System.Windows.Forms.ImageList(this.components);
             this.SvConfigButton = new ReaLTaiizor.Controls.MaterialFloatingActionButton();
+            this.StopServerBTN_New = new ReaLTaiizor.Controls.MaterialFloatingActionButton();
             this.CommandInputTextBox = new ReaLTaiizor.Controls.MaterialTextBoxEdit();
             this.ConsoleOutputTextBox = new System.Windows.Forms.RichTextBox();
             this.BkRsTab = new System.Windows.Forms.TabPage();
@@ -36,8 +38,6 @@
             this.RestorTitleLBL = new ReaLTaiizor.Controls.MaterialLabel();
             this.SettingsTabPage = new System.Windows.Forms.TabPage();
             this.label1 = new System.Windows.Forms.Label();
-            this.StartServerBTN_New = new ReaLTaiizor.Controls.MaterialFloatingActionButton();
-            this.StopServerBTN_New = new ReaLTaiizor.Controls.MaterialFloatingActionButton();
             this.MaterialTabControl1.SuspendLayout();
             this.tabLiveMonitor.SuspendLayout();
             this.BkRsTab.SuspendLayout();
@@ -79,6 +79,21 @@
             this.tabLiveMonitor.Text = "Server Console";
             this.tabLiveMonitor.UseVisualStyleBackColor = true;
             // 
+            // StartServerBTN_New
+            // 
+            this.StartServerBTN_New.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.StartServerBTN_New.Depth = 0;
+            this.StartServerBTN_New.Icon = global::BDSUtil.Properties.Resources.power_settings_new_24dp_green;
+            this.StartServerBTN_New.ImageList = this.IconList;
+            this.StartServerBTN_New.Location = new System.Drawing.Point(834, 316);
+            this.StartServerBTN_New.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            this.StartServerBTN_New.Name = "StartServerBTN_New";
+            this.StartServerBTN_New.Size = new System.Drawing.Size(56, 56);
+            this.StartServerBTN_New.TabIndex = 23;
+            this.StartServerBTN_New.Text = "materialFloatingActionButton3";
+            this.StartServerBTN_New.UseVisualStyleBackColor = true;
+            this.StartServerBTN_New.Click += new System.EventHandler(this.StartServerBTN_New_Click);
+            // 
             // IconList
             // 
             this.IconList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("IconList.ImageStream")));
@@ -119,6 +134,22 @@
             this.SvConfigButton.Text = "SvConfigButton";
             this.SvConfigButton.UseVisualStyleBackColor = true;
             this.SvConfigButton.Click += new System.EventHandler(this.SvConfigButton_Click);
+            // 
+            // StopServerBTN_New
+            // 
+            this.StopServerBTN_New.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.StopServerBTN_New.Depth = 0;
+            this.StopServerBTN_New.Icon = global::BDSUtil.Properties.Resources.power_settings_new_24dp_red;
+            this.StopServerBTN_New.ImageList = this.IconList;
+            this.StopServerBTN_New.Location = new System.Drawing.Point(834, 316);
+            this.StopServerBTN_New.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            this.StopServerBTN_New.Name = "StopServerBTN_New";
+            this.StopServerBTN_New.Size = new System.Drawing.Size(56, 56);
+            this.StopServerBTN_New.TabIndex = 21;
+            this.StopServerBTN_New.Text = "materialFloatingActionButton1";
+            this.StopServerBTN_New.UseVisualStyleBackColor = true;
+            this.StopServerBTN_New.Visible = false;
+            this.StopServerBTN_New.Click += new System.EventHandler(this.StopServerBTN_New_Click);
             // 
             // CommandInputTextBox
             // 
@@ -421,37 +452,6 @@
             this.label1.Text = "This is a dummy tab.\r\nIn release you should never see this. \r\nIf you see this you" +
     "\'re somewhere you shouldnt be.\r\nMaybe you should come work for me :D";
             // 
-            // StartServerBTN_New
-            // 
-            this.StartServerBTN_New.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.StartServerBTN_New.Depth = 0;
-            this.StartServerBTN_New.Icon = global::BDSUtil.Properties.Resources.power_settings_new_24dp_green;
-            this.StartServerBTN_New.ImageList = this.IconList;
-            this.StartServerBTN_New.Location = new System.Drawing.Point(834, 316);
-            this.StartServerBTN_New.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.StartServerBTN_New.Name = "StartServerBTN_New";
-            this.StartServerBTN_New.Size = new System.Drawing.Size(56, 56);
-            this.StartServerBTN_New.TabIndex = 23;
-            this.StartServerBTN_New.Text = "materialFloatingActionButton3";
-            this.StartServerBTN_New.UseVisualStyleBackColor = true;
-            this.StartServerBTN_New.Click += new System.EventHandler(this.StartServerBTN_New_Click);
-            // 
-            // StopServerBTN_New
-            // 
-            this.StopServerBTN_New.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.StopServerBTN_New.Depth = 0;
-            this.StopServerBTN_New.Icon = global::BDSUtil.Properties.Resources.power_settings_new_24dp_red;
-            this.StopServerBTN_New.ImageList = this.IconList;
-            this.StopServerBTN_New.Location = new System.Drawing.Point(834, 316);
-            this.StopServerBTN_New.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.StopServerBTN_New.Name = "StopServerBTN_New";
-            this.StopServerBTN_New.Size = new System.Drawing.Size(56, 56);
-            this.StopServerBTN_New.TabIndex = 21;
-            this.StopServerBTN_New.Text = "materialFloatingActionButton1";
-            this.StopServerBTN_New.UseVisualStyleBackColor = true;
-            this.StopServerBTN_New.Visible = false;
-            this.StopServerBTN_New.Click += new System.EventHandler(this.StopServerBTN_New_Click);
-            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -460,6 +460,7 @@
             this.Controls.Add(this.MaterialTabControl1);
             this.DrawerShowIconsWhenHidden = true;
             this.DrawerTabControl = this.MaterialTabControl1;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "MainWindow";
             this.Padding = new System.Windows.Forms.Padding(0, 64, 0, 3);

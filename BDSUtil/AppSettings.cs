@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Text;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Win32;
 
@@ -11,9 +13,8 @@ namespace BDSUtil
         private static readonly object _lock = new object();
         private static readonly string ConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
 
-        // --- PERSISTENT DATA FIELDS ---
-        public string ServerExecutablePath { get; set; } = string.Empty;
-        public int CompressionMode { get; set; } = 0; // 0 = WinRAR RAR, 1 = WinRAR ZIP, 2 = Windows Native ZIP
+        // FIXED: Infinite storage backing indexer tracking array handles any settings dynamically
+        private readonly Dictionary<string, string> _settingsRegistry = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         // --- RUNTIME ENVIRONMENT FLAGS ---
         public bool IsWinRarInstalled { get; private set; } = false;
@@ -35,6 +36,93 @@ namespace BDSUtil
                 }
             }
         }
+
+        /// <summary>
+        /// DYNAMIC INDEXER METHOD: Pulls and casts any preference parameter securely on the fly.
+        /// If the item isn't in config.json yet, it caches the default value automatically!
+        /// </summary>
+        public T GetSetting<T>(string settingKey, T defaultFallbackValue = default(T))
+        {
+            lock (_lock)
+            {
+                if (!_settingsRegistry.TryGetValue(settingKey, out string rawValue))
+                {
+                    // Cache the default fallback option on the fly so it saves cleanly later
+                    SetSetting(settingKey, defaultFallbackValue);
+                    return defaultFallbackValue;
+                }
+
+                try
+                {
+                    // Direct string conversion shortcut pass
+                    if (typeof(T) == typeof(string))
+                    {
+                        return (T)(object)rawValue;
+                    }
+
+                    // Native framework type parser conversion matrix
+                    return (T)Convert.ChangeType(rawValue, typeof(T));
+                }
+                catch
+                {
+                    return defaultFallbackValue;
+                }
+            }
+        }
+
+        /// <summary>
+        /// DYNAMIC SETTER METHOD: Modifies or initializes configuration preferences in the memory registry.
+        /// </summary>
+        public void SetSetting<T>(string settingKey, T inputVal)
+        {
+            lock (_lock)
+            {
+                if (inputVal == null)
+                {
+                    _settingsRegistry[settingKey] = string.Empty;
+                    return;
+                }
+
+                if (inputVal is bool boolVal)
+                {
+                    _settingsRegistry[settingKey] = boolVal.ToString().ToLower(); // Keeps standard JSON boolean formats
+                }
+                else
+                {
+                    _settingsRegistry[settingKey] = inputVal.ToString();
+                }
+            }
+        }
+
+        // --- EXPLICIT COMPATIBILITY WRAPPERS FOR YOUR EXISTING FORMS ---
+        // (Keeps your main forms and path buttons compiling without modifying their current code)
+
+        public string ServerExecutablePath
+        {
+            get => GetSetting("ServerExecutablePath", string.Empty);
+            set => SetSetting("ServerExecutablePath", value);
+        }
+
+        public int CompressionMode
+        {
+            get => GetSetting("CompressionMode", 0);
+            set => SetSetting("CompressionMode", value);
+        }
+
+        public bool HasAcceptedNetworkRisks
+        {
+            get => GetSetting("HasAcceptedNetworkRisks", false);
+            set => SetSetting("HasAcceptedNetworkRisks", value);
+        }
+
+        // NEW WORKSPACE PROPERTY: Automatically integrated for your newly updated Networking Control Switch
+        public bool EnableUPnP
+        {
+            get => GetSetting("EnableUPnP", false);
+            set => SetSetting("EnableUPnP", value);
+        }
+
+        // --- END OF COMPATIBILITY LAYER ---
 
         public void RunStartupCheck()
         {
@@ -63,8 +151,8 @@ namespace BDSUtil
         }
 
         /// <summary>
-        /// Reads the local config file using pure native text stream parsing.
-        /// Completely avoids JavaScriptSerializer reflection type collisions!
+        /// MODERNIZED NATIVE PARSER ENGINE: Reads any arbitrary key/value pair 
+        /// completely dependency-free without string index positioning hardcoding.
         /// </summary>
         public static async Task LoadSettingsAsync()
         {
@@ -77,46 +165,26 @@ namespace BDSUtil
                 {
                     using (StreamReader reader = new StreamReader(ConfigPath))
                     {
-                        string rawText = await reader.ReadToEndAsync();
-
-                        if (!string.IsNullOrWhiteSpace(rawText))
+                        string line;
+                        while ((line = await reader.ReadLineAsync()) != null)
                         {
-                            // --- EXPLICIT NATIVE TEXT PARSING ENGINE ---
-                            // Extract ServerExecutablePath parameter cleanly
-                            int pathKeyIndex = rawText.IndexOf("\"ServerExecutablePath\"");
-                            if (pathKeyIndex != -1)
-                            {
-                                int startQuote = rawText.IndexOf("\"", pathKeyIndex + 22);
-                                if (startQuote != -1)
-                                {
-                                    int endQuote = rawText.IndexOf("\"", startQuote + 1);
-                                    if (endQuote != -1)
-                                    {
-                                        string extractedPath = rawText.Substring(startQuote + 1, endQuote - startQuote - 1);
-                                        // Unescape JSON forward slash path characters cleanly
-                                        localSettings.ServerExecutablePath = extractedPath.Replace("\\\\", "\\");
-                                    }
-                                }
-                            }
+                            string trimmed = line.Trim();
+                            if (string.IsNullOrEmpty(trimmed) || trimmed == "{" || trimmed == "}") continue;
 
-                            // Extract CompressionMode parameter cleanly
-                            int modeKeyIndex = rawText.IndexOf("\"CompressionMode\"");
-                            if (modeKeyIndex != -1)
+                            int colonIdx = trimmed.IndexOf(':');
+                            if (colonIdx > 0)
                             {
-                                int colonIndex = rawText.IndexOf(":", modeKeyIndex);
-                                if (colonIndex != -1)
-                                {
-                                    // Parse out numeric text blocks up until the closing brace or comma dividers
-                                    string searchBlock = rawText.Substring(colonIndex + 1).Trim(new char[] { ' ', '}', ',', '\r', '\n' });
-                                    int nextComma = searchBlock.IndexOf(",");
-                                    if (nextComma != -1) searchBlock = searchBlock.Substring(0, nextComma).Trim();
-                                    int nextBrace = searchBlock.IndexOf("}");
-                                    if (nextBrace != -1) searchBlock = searchBlock.Substring(0, nextBrace).Trim();
+                                // Clean up the key string segment bounds
+                                string rawKey = trimmed.Substring(0, colonIdx).Trim(new char[] { ' ', '"', ',' });
 
-                                    if (int.TryParse(searchBlock, out int parsedMode))
-                                    {
-                                        localSettings.CompressionMode = parsedMode;
-                                    }
+                                // Clean up the value string segment bounds
+                                string rawValue = trimmed.Substring(colonIdx + 1).Trim(new char[] { ' ', '"', ',' });
+
+                                if (!string.IsNullOrEmpty(rawKey))
+                                {
+                                    // Unescape string path delimiters back to normal slashes
+                                    string cleanValue = rawValue.Replace("\\\\", "\\");
+                                    localSettings._settingsRegistry[rawKey] = cleanValue;
                                 }
                             }
                         }
@@ -133,13 +201,12 @@ namespace BDSUtil
                 _instance = localSettings;
                 _instance.RunStartupCheck();
 
-                // If config.json already exists and was read successfully, do not overwrite fields
                 if (configFileExists)
                 {
                     return;
                 }
 
-                // --- AUTOFILL DETECTION ENGINE (ONLY FIRES ON FRESH BLANK BOOTS) ---
+                // AUTOFILL DETECTION ENGINE (ONLY FIRES ON FRESH BLANK BOOTS)
                 if (string.IsNullOrWhiteSpace(_instance.ServerExecutablePath))
                 {
                     string localServerCheck = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bedrock_server.exe");
@@ -161,31 +228,51 @@ namespace BDSUtil
         }
 
         /// <summary>
-        /// Emits a flat structural JSON text stream straight to disk byte zero.
+        /// DYNAMIC EMISSION GENERATOR: Loops your internal settings cache list 
+        /// and converts it to a standard, beautifully aligned JSON text profile file.
         /// </summary>
         public async Task SaveSettingsAsync()
         {
             try
             {
-                // Escape backslashes cleanly so standard text editors read the directories perfectly
-                string escapedPath = ServerExecutablePath.Replace("\\", "\\\\");
+                StringBuilder jsonBuilder = new StringBuilder();
+                jsonBuilder.AppendLine("{");
 
-                // Formulate the raw JSON text string format layout bounds explicitly manually
-                string flatJsonText = string.Format(
-                    "{{\r\n  \"ServerExecutablePath\": \"{0}\",\r\n  \"CompressionMode\": {1}\r\n}}",
-                    escapedPath,
-                    CompressionMode
-                );
+                lock (_lock)
+                {
+                    int trackerIdx = 0;
+                    foreach (KeyValuePair<string, string> settingPair in _settingsRegistry)
+                    {
+                        // Escape backslashes inside value parameters securely for standard text formatting
+                        string escapedValue = settingPair.Value.Replace("\\", "\\\\");
+
+                        // Format structural indentation layers matching standard layouts
+                        jsonBuilder.AppendFormat("  \"{0}\": \"{1}\"", settingPair.Key, escapedValue);
+
+                        // Keep standard JSON trailing commas trailing down until the final line element loop
+                        if (trackerIdx < _settingsRegistry.Count - 1)
+                        {
+                            jsonBuilder.AppendLine(",");
+                        }
+                        else
+                        {
+                            jsonBuilder.AppendLine();
+                        }
+                        trackerIdx++;
+                    }
+                }
+
+                jsonBuilder.Append("}");
 
                 using (FileStream fs = new FileStream(ConfigPath, FileMode.Create, FileAccess.Write, FileShare.None))
-                using (StreamWriter writer = new StreamWriter(fs))
+                using (StreamWriter writer = new StreamWriter(fs, Encoding.UTF8))
                 {
-                    await writer.WriteAsync(flatJsonText);
+                    await writer.WriteAsync(jsonBuilder.ToString());
                 }
             }
             catch (Exception ex)
             {
-                throw new IOException("Failed to write manual text configuration changes to storage bounds.", ex);
+                throw new IOException("Failed to write dynamic manual text configuration changes to storage bounds.", ex);
             }
         }
     }
