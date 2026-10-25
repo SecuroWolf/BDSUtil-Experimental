@@ -214,14 +214,14 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Resources\Dependencies\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="bds-manager.ico" />
     <Content Include="Bedrock Server Addon\bds_monitor\pack_icon.png" />
     <Content Include="Bedrock Server Addon\bds_monitor\scripts\main.js" />
     <None Include="Resources\folder_open_24dp.png" />
+    <EmbeddedResource Include="Resources\Dependencies\Open.Nat.dll" />
+    <EmbeddedResource Include="Resources\Dependencies\ReaLTaiizor.dll" />
     <Content Include="Resources\Icons\baseline_bluetooth_black_24dp.png" />
     <Content Include="Resources\Icons\baseline_build_black_24dp.png" />
     <Content Include="Resources\Icons\baseline_favorite_border_black_24dp.png" />

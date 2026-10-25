@@ -1,6 +1,7 @@
 # BDSUtil
 
-This is a work in progress project of mine.
+**Disclaimer:** BDSUtil is a personal project and is not affiliated with, endorsed by, or associated with Mojang Studios or Microsoft Corporation. Minecraft, Bedrock Edition, and BDS (Bedrock Dedicated Server) are trademarks or registered trademarks of their respective owners.
+
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
@@ -11,11 +12,10 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-WITHOUT LIMITING THE FOREGOING, THE AUTHOR ACCEPTS ABSOLUTELY NO LIABILITY 
+WITHOUT LIMITING THE FOREGOING, I ACCEPT ABSOLUTELY NO LIABILITY 
 IF THIS SOFTWARE CORRUPTS YOUR DATA, CAUSES YOUR ALARM NOT TO GO OFF 
 RESULTING IN YOU MISSING WORK, DESTROYS YOUR HARDWARE, OR INADVERTENTLY 
 TRIGGERS A THERMONUCLEAR WAR. YOU USE THIS SOFTWARE ENTIRELY AT YOUR OWN RISK.
-
 
 ## Features
 
@@ -49,8 +49,8 @@ TRIGGERS A THERMONUCLEAR WAR. YOU USE THIS SOFTWARE ENTIRELY AT YOUR OWN RISK.
 
 ## Libraries & Credits
 This project leverages the following incredible open-source libraries to power its interface and networking stack:
-* **[ReaLTaiizor](https://github.com):** A comprehensive, feature-rich .NET WinForms component library that powers BDSUtil's modern Material Design layout ecosystem.
-* **[Open.NAT](https://github.com):** A lightweight, asynchronous .NET library used to manage port mapping allocations via UPnP and PMP seamlessly.
+* **[ReaLTaiizor](https://github.com/Taiizor/ReaLTaiizor):** A comprehensive, feature-rich .NET WinForms component library that powers BDSUtil's modern Material Design layout ecosystem.
+* **[Open.NAT](https://github.com/lontivero/Open.NAT):** A lightweight, asynchronous .NET library used to manage port mapping allocations via UPnP and PMP seamlessly.
 
 ---
 

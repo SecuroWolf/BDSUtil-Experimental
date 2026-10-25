@@ -13,45 +13,50 @@ namespace BDSUtil
         [STAThread]
         static void Main()
         {
-            // STEP 1: Immediately bind the resolver hook at the absolute physical entry boundary
-            AppDomain.CurrentDomain.AssemblyResolve += ResolveEmbeddedMaterialSkin;
-
-            // STEP 2: Pass execution into a completely isolated method frame.
-            // This prevents .NET from checking form dependencies before the hook is registered.
+            AppDomain.CurrentDomain.AssemblyResolve += ResolveEmbeddedDependencies;
             RunApplicationPipeline();
         }
 
-        /// <summary>
-        /// Isolated execution frame to protect dependency loading sequences safely.
-        /// </summary>
         private static void RunApplicationPipeline()
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-
-            // Force local config settings to load into memory synchronously
             AppSettings.LoadSettingsAsync().GetAwaiter().GetResult();
-
-            // Run the main framework loop smoothly from memory
             Application.Run(new MainWindow());
         }
 
-        /// <summary>
-        /// Automatically intercepts the runtime binding routine and feeds it the embedded DLL byte array.
-        /// </summary>
-        private static Assembly ResolveEmbeddedMaterialSkin(object sender, ResolveEventArgs args)
+
+        private static Assembly ResolveEmbeddedDependencies(object sender, ResolveEventArgs args)
         {
-            string requestedAssemblyName = new AssemblyName(args.Name).Name;
+            string assemblyName = new AssemblyName(args.Name).Name;
 
-            if (requestedAssemblyName.Equals("MaterialSkin", StringComparison.OrdinalIgnoreCase))
+            if (assemblyName.Equals("Open.Nat", StringComparison.OrdinalIgnoreCase))
             {
-                // Safely extract the raw embedded binary data out of your resource manager as a true byte array
-                byte[] assemblyRawBytes = (byte[])Properties.Resources.ResourceManager.GetObject("MaterialSkin");
+                // NOTE: Replace "BDSUtil" with your exact root namespace if it differs
+                string resourcePath = "BDSUtil.Resources.Dependencies.Open.Nat.dll";
 
-                if (assemblyRawBytes != null)
+                using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourcePath))
                 {
-                    // Load and pass the binary structure straight into active application execution memory maps
-                    return Assembly.Load(assemblyRawBytes);
+                    if (stream == null) return null;
+
+                    byte[] assemblyData = new byte[stream.Length];
+                    stream.Read(assemblyData, 0, assemblyData.Length);
+                    return Assembly.Load(assemblyData);
+                }
+            }
+
+            if (assemblyName.Equals("ReaLTaiizor", StringComparison.OrdinalIgnoreCase))
+            {
+                // NOTE: Replace "BDSUtil" with your exact root namespace if it differs
+                string resourcePath = "BDSUtil.Resources.Dependencies.ReaLTaiizor.dll";
+
+                using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourcePath))
+                {
+                    if (stream == null) return null;
+
+                    byte[] assemblyData = new byte[stream.Length];
+                    stream.Read(assemblyData, 0, assemblyData.Length);
+                    return Assembly.Load(assemblyData);
                 }
             }
 
