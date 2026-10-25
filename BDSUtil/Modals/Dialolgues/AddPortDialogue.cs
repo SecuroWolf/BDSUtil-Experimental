@@ -104,9 +104,11 @@ namespace BDSUtil.Modals
             this.Controls.Add(intPortBox);
             this.Controls.Add(btnSave);
             this.Controls.Add(btnCancel);
+            this.AcceptButton = btnSave;
 
             UpdateWindowLayoutBounds(false);
         }
+
 
 
         private void OnlyAllowNumericInputs(object sender, KeyPressEventArgs e)

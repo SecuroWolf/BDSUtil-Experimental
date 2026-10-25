@@ -31,6 +31,7 @@
             this.materialCard1 = new ReaLTaiizor.Controls.MaterialCard();
             this.PropLBL = new ReaLTaiizor.Controls.MaterialLabel();
             this.materialCard2 = new ReaLTaiizor.Controls.MaterialCard();
+            this.materialDivider5 = new ReaLTaiizor.Controls.MaterialDivider();
             this.materialCard5 = new ReaLTaiizor.Controls.MaterialCard();
             this.PropAFK = new ReaLTaiizor.Controls.MaterialComboBox();
             this.PropSD = new ReaLTaiizor.Controls.MaterialComboBox();
@@ -115,6 +116,7 @@
             // materialCard2
             // 
             this.materialCard2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.materialCard2.Controls.Add(this.materialDivider5);
             this.materialCard2.Controls.Add(this.materialCard5);
             this.materialCard2.Controls.Add(this.materialDivider4);
             this.materialCard2.Controls.Add(this.materialCard3);
@@ -129,8 +131,22 @@
             this.materialCard2.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
             this.materialCard2.Name = "materialCard2";
             this.materialCard2.Padding = new System.Windows.Forms.Padding(14);
-            this.materialCard2.Size = new System.Drawing.Size(690, 974);
+            this.materialCard2.Size = new System.Drawing.Size(690, 978);
             this.materialCard2.TabIndex = 4;
+            // 
+            // materialDivider5
+            // 
+            this.materialDivider5.BackColor = System.Drawing.Color.Transparent;
+            this.materialDivider5.Depth = 0;
+            this.materialDivider5.Dock = System.Windows.Forms.DockStyle.Top;
+            this.materialDivider5.Enabled = false;
+            this.materialDivider5.Location = new System.Drawing.Point(14, 958);
+            this.materialDivider5.Margin = new System.Windows.Forms.Padding(10);
+            this.materialDivider5.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            this.materialDivider5.Name = "materialDivider5";
+            this.materialDivider5.Size = new System.Drawing.Size(662, 10);
+            this.materialDivider5.TabIndex = 8;
+            this.materialDivider5.Text = "materialDivider5";
             // 
             // materialCard5
             // 
@@ -944,6 +960,7 @@
             this.PropSvName.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.PropSvName.TrailingIcon = null;
             this.PropSvName.UseSystemPasswordChar = false;
+            this.PropSvName.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.PropSvName_KeyPress);
             // 
             // SvNameLBL
             // 
@@ -1030,5 +1047,6 @@
         private ReaLTaiizor.Controls.MaterialComboBox PropSD;
         private ReaLTaiizor.Controls.MaterialComboBox PropVD;
         private ReaLTaiizor.Controls.MaterialSwitch PropCCG;
+        private ReaLTaiizor.Controls.MaterialDivider materialDivider5;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using BDSUtil.Modals;
 using ReaLTaiizor.Colors; // Core Material Color templates
+using ReaLTaiizor.Controls;
 using ReaLTaiizor.Forms; // Core ReaLTaiizor MaterialForm base class mapping
 using ReaLTaiizor.Manager; // Unified skin and theme scheme manager hooks
 using System;
@@ -9,6 +10,8 @@ using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.IO.Ports;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -21,6 +24,7 @@ namespace BDSUtil
         private string _currentLogPath;
         private bool _isServerFullyInitialized = false;
         private int _previousActiveTabIndex = 0;
+        private bool _isRedirecting = false;
 
         // State flag to signal if a backup sequence is waiting for the active server exit thread event
         private bool _isBackupPendingAfterStop = false;
@@ -31,7 +35,7 @@ namespace BDSUtil
         private string _backupDestinationRoot = string.Empty;
         private readonly string _winRarRegistryPath = @"C:\Program Files\WinRAR\WinRAR.exe";
 
-                public MainWindow()
+        public MainWindow()
         {
             InitializeComponent();
 
@@ -69,6 +73,18 @@ namespace BDSUtil
 
         private void MainWindow_Load(object sender, EventArgs e)
         {
+            //#################################################
+            //##        New Feature Template Injection       ##
+            //#################################################
+            // This is a Developer Preview feature that is not yet fully implemented. It is intended to only be used
+            // for testing a new feature modal. It will be commented out on for source commits and removed from production builds entirely.
+
+            //using (var NewFeatureModal = new LevelEditorWrapper(this))
+            //{
+            //    NewFeatureModal.ShowDialog(this);
+            //}
+
+
             UpdateControlButtonStates();
 
             //#################################################
@@ -78,7 +94,13 @@ namespace BDSUtil
             // AUTOMATED PIPELINE GENERATION ENGINE: Proactively allocates primary and multi-node routing pools on boot
             if (AppSettings.Instance.EnableUPnP)
             {
-                AppendTerminalLine("[MANAGER INFO] UPnP is active. Initiating dynamic network requisition pipeline...");
+                AppendTerminalLine("[MANAGER INFO] UPnP is active. Initiating network mapping synchronization...");
+
+                // Proactively hide the deployment button while the hardware synchronization pipeline runs
+                this.Invoke((MethodInvoker)delegate
+                {
+                    StartServerBTN_New.Visible = false;
+                });
 
                 Task.Run(() =>
                 {
@@ -118,18 +140,72 @@ namespace BDSUtil
                         string localSubnetIp = BDSUtil.Helpers.UPnPEngine.GetLocalIPAddress();
                         string externalPublicIp = BDSUtil.Helpers.UPnPEngine.GetExternalIPAddress();
 
+                        // Discover the active device cleanly via Open.NAT discovery handles
+                        var discoverer = new Open.Nat.NatDiscoverer();
+                        var cts = new CancellationTokenSource(2500);
+                        var device = discoverer.DiscoverDeviceAsync(Open.Nat.PortMapper.Upnp, cts).GetAwaiter().GetResult();
+
+                        if (device == null)
+                        {
+                            this.Invoke((MethodInvoker)delegate
+                            {
+                                AppendTerminalLine("[UPnP ERROR] Gateway hardware discovery timed out. Pipeline aborted.");
+                                StartServerBTN_New.Visible = true;
+                            });
+                            return;
+                        }
+
+                        // Scrape every existing active port mapping configuration currently cached in router memory
+                        var hardwareMappings = device.GetAllMappingsAsync().GetAwaiter().GetResult() ?? new List<Open.Nat.Mapping>();
+                        var activeUdpMappings = new Dictionary<int, string>();
+                        var activeTcpMappings = new Dictionary<int, string>();
+
+                        foreach (var mapping in hardwareMappings)
+                        {
+                            if (mapping.Protocol == Open.Nat.Protocol.Udp)
+                                activeUdpMappings[mapping.PublicPort] = mapping.PrivateIP.ToString();
+                            else if (mapping.Protocol == Open.Nat.Protocol.Tcp)
+                                activeTcpMappings[mapping.PublicPort] = mapping.PrivateIP.ToString();
+                        }
+
+                        // Helper function to evaluate and enforce the mapping condition cleanly
+                        bool EnsurePortIsLeased(int port, string protocolType)
+                        {
+                            var activeMap = (protocolType == "TCP") ? activeTcpMappings : activeUdpMappings;
+
+                            // Condition A: If already mapped to our exact local IP address, it's a verified success!
+                            if (activeMap.ContainsKey(port) && activeMap[port] == localSubnetIp) return true;
+
+                            // Condition B: If mapped to a different machine, flag the collision
+                            if (activeMap.ContainsKey(port) && activeMap[port] != localSubnetIp) return false;
+
+                            // Condition C: Unmapped channel. Safely issue a fresh, non-blocking registration request
+                            return BDSUtil.Helpers.UPnPEngine.ForwardPort(port, port, localSubnetIp, protocolType);
+                        }
+
                         // --- PHASE 1: REQUISITION PRIMARY MAIN GAME PORTS (DUAL PROTOCOL) ---
-                        this.Invoke((MethodInvoker)delegate {
-                            AppendTerminalLine($"[UPnP ENGINE] Requisitioning dual-protocol primary endpoints (IPv4: {primaryPortV4}, IPv6: {primaryPortV6})...");
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            AppendTerminalLine($"[UPnP ENGINE] Synchronizing primary game endpoints (IPv4: {primaryPortV4}, IPv6: {primaryPortV6})...");
                         });
 
-                        // Map Primary IPv4 Port across BOTH transport layers cleanly
-                        BDSUtil.Helpers.UPnPEngine.ForwardPort(primaryPortV4, primaryPortV4, localSubnetIp, "UDP");
-                        BDSUtil.Helpers.UPnPEngine.ForwardPort(primaryPortV4, primaryPortV4, localSubnetIp, "TCP");
+                        bool v4UdpOk = EnsurePortIsLeased(primaryPortV4, "UDP");
+                        bool v4TcpOk = EnsurePortIsLeased(primaryPortV4, "TCP");
+                        bool v6UdpOk = EnsurePortIsLeased(primaryPortV6, "UDP");
+                        bool v6TcpOk = EnsurePortIsLeased(primaryPortV6, "TCP");
 
-                        // Map Primary IPv6 Port across BOTH transport layers cleanly
-                        BDSUtil.Helpers.UPnPEngine.ForwardPort(primaryPortV6, primaryPortV6, localSubnetIp, "UDP");
-                        BDSUtil.Helpers.UPnPEngine.ForwardPort(primaryPortV6, primaryPortV6, localSubnetIp, "TCP");
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            if (v4UdpOk && v4TcpOk)
+                                AppendTerminalLine($"[UPnP SUCCESS] Primary IPv4 core confirmed active on port: {primaryPortV4} (TCP/UDP)");
+                            else
+                                AppendTerminalLine($"[UPnP COLLISION] Primary IPv4 port {primaryPortV4} is assigned to an alternate machine.");
+
+                            if (v6UdpOk && v6TcpOk)
+                                AppendTerminalLine($"[UPnP SUCCESS] Primary IPv6 core confirmed active on port: {primaryPortV6} (TCP/UDP)");
+                            else
+                                AppendTerminalLine($"[UPnP COLLISION] Primary IPv6 port {primaryPortV6} is assigned to an alternate machine.");
+                        });
 
                         // --- PHASE 2: REQUISITION DYNAMIC NETHERNET PORT POOL (UDP ONLY) ---
                         List<string> successfulUdpTokens = new List<string>();
@@ -139,32 +215,32 @@ namespace BDSUtil
                         {
                             if (targetPortCandidate > 65535) break;
 
-                            // Skip over your primary ports if your candidate loop intersects them
                             if (targetPortCandidate == primaryPortV4 || targetPortCandidate == primaryPortV6)
                             {
                                 targetPortCandidate++;
                                 continue;
                             }
 
-                            bool mapSuccess = BDSUtil.Helpers.UPnPEngine.ForwardPort(targetPortCandidate, targetPortCandidate, localSubnetIp);
+                            bool nodeLeaseOk = EnsurePortIsLeased(targetPortCandidate, "UDP");
 
-                            // RESTORED VISUAL LOGGING HOOKS
-                            if (mapSuccess)
+                            if (nodeLeaseOk)
                             {
                                 string formattedToken = $"{externalPublicIp}:{targetPortCandidate}:{targetPortCandidate}";
                                 successfulUdpTokens.Add(formattedToken);
 
                                 int currentCount = successfulUdpTokens.Count;
                                 int loggedPort = targetPortCandidate;
-                                this.Invoke((MethodInvoker)delegate {
+                                this.Invoke((MethodInvoker)delegate
+                                {
                                     AppendTerminalLine($"[UPnP SUCCESS] Allocated node {currentCount}/{maxPlayersCount} onto UDP port: {loggedPort}");
                                 });
                             }
                             else
                             {
                                 int failedPort = targetPortCandidate;
-                                this.Invoke((MethodInvoker)delegate {
-                                    AppendTerminalLine($"[UPnP LEASE REFUSED] Port {failedPort} unavailable. Skipping to evaluate candidate replacement...");
+                                this.Invoke((MethodInvoker)delegate
+                                {
+                                    AppendTerminalLine($"[UPnP COLLISION] Port UDP {failedPort} claimed by an alternate device. Skipping node...");
                                 });
                             }
 
@@ -172,7 +248,6 @@ namespace BDSUtil
                         }
 
                         // --- PHASE 3: SERIALIZE CLEAN PAYLOAD TO PROPERTIES ---
-                        // Ensure the string is exactly 4 sets of numbers separated by dots (a valid IPv4 format)
                         bool isValidIpNode = System.Text.RegularExpressions.Regex.IsMatch(externalPublicIp, @"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$");
 
                         if (successfulUdpTokens.Count > 0 && isValidIpNode)
@@ -205,27 +280,32 @@ namespace BDSUtil
 
                             System.IO.File.WriteAllLines(propertiesFilePath, optimizedOutputBuffer, System.Text.Encoding.UTF8);
 
-                            this.Invoke((MethodInvoker)delegate {
+                            this.Invoke((MethodInvoker)delegate
+                            {
                                 AppendTerminalLine("[MANAGER INFO] Network pipeline initialization complete. External connections authorized.");
+                                StartServerBTN_New.Visible = true; // Reveal button only when table validation finishes!
                             });
                         }
                         else
                         {
-                            this.Invoke((MethodInvoker)delegate {
+                            this.Invoke((MethodInvoker)delegate
+                            {
                                 AppendTerminalLine("[UPnP ERROR] Public IP format was invalid. Aborting configuration changes to protect file integrity.");
+                                StartServerBTN_New.Visible = true;
                             });
                         }
 
                     }
                     catch (Exception ex)
                     {
-                        this.Invoke((MethodInvoker)delegate {
+                        this.Invoke((MethodInvoker)delegate
+                        {
                             AppendTerminalLine($"[UPnP SYSTEM EXCEPTION] Boot pipeline failure: {ex.Message}");
+                            StartServerBTN_New.Visible = true;
                         });
                     }
                 });
             }
-
         }
 
         /// <summary>
@@ -252,7 +332,7 @@ namespace BDSUtil
                             if (System.Text.RegularExpressions.Regex.IsMatch(line, strictKeyAssignmentPattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
                             {
                                 // RE-COMMENT THE ENTRY: Returns configurations cleanly back to stock condition
-                                cleanOutputBuffer.Add("#server-udp-ports=");
+                                cleanOutputBuffer.Add("# server-udp-ports=");
                             }
                             else
                             {
@@ -280,51 +360,39 @@ namespace BDSUtil
         /// </summary>
         private void UpdateControlButtonStates()
         {
-            // Gather initial environment states safely
-            string configuredPath = AppSettings.Instance.ServerExecutablePath;
+            string configuredPath = AppSettings.Instance?.ServerExecutablePath;
             bool isPathConfigured = false;
 
             if (!string.IsNullOrWhiteSpace(configuredPath))
             {
-                // Account for variations: check if it's the raw directory or the direct file link itself
-                if (configuredPath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                // Strip trailing executable file bindings if the user linked the direct binary instead of the parent folder
+                if (configuredPath.EndsWith("bedrock_server.exe", StringComparison.OrdinalIgnoreCase))
                 {
-                    isPathConfigured = File.Exists(configuredPath);
+                    configuredPath = Path.GetDirectoryName(configuredPath);
                 }
-                else
+
+                if (!string.IsNullOrEmpty(configuredPath) && Directory.Exists(configuredPath))
                 {
-                    // If it's stored as a base folder directory path, look for the execution executable right inside it
                     string absoluteBinaryTarget = Path.Combine(configuredPath, "bedrock_server.exe");
-                    isPathConfigured = Directory.Exists(configuredPath) && File.Exists(absoluteBinaryTarget);
+                    string absolutePropertiesTarget = Path.Combine(configuredPath, "server.properties");
+
+                    // FIXED (#2): Validates that BOTH critical files are present on disk
+                    isPathConfigured = File.Exists(absoluteBinaryTarget) && File.Exists(absolutePropertiesTarget);
                 }
             }
 
-            // Check if our server execution thread handle is physically running right now
             bool isProcessRunning = _serverProcess != null && !_serverProcess.HasExited;
 
-            // Fix: If the path isn't set up yet, completely hide the buttons 
-            // so the user is forced into the setup dialogue loop cleanly.
-            if (!isPathConfigured)
-            {
-                StartServerBTN_New.Visible = false;
-                StopServerBTN_New.Visible = false;
-                return;
-            }
-
+            // FIXED (#1): Keep buttons VISIBLE even if path configuration fails, allowing the missing path fallback dialogue code path to trigger on click
             if (isProcessRunning)
             {
-                // Fix: The Start button vanishes the millisecond a process is active.
                 StartServerBTN_New.Visible = false;
                 StopServerBTN_New.Visible = _isServerFullyInitialized;
             }
             else
             {
-                // If the server process is entirely dead or hasn't booted yet, 
-                // reset the canvas back to the default safe starting state.
                 StartServerBTN_New.Visible = true;
                 StopServerBTN_New.Visible = false;
-
-                // Clear out our synchronization flag securely for the next launch cycle
                 _isServerFullyInitialized = false;
             }
         }
@@ -347,73 +415,6 @@ namespace BDSUtil
         {
             // Update the UI control bar elements safely straight out of the background worker thread reports
             BackupProgressBar.Value = e.ProgressPercentage;
-        }
-
-
-        private void StartServerBtn_Click(object sender, EventArgs e)
-        {
-            if (_serverProcess != null && !_serverProcess.HasExited) return;
-
-            string serverDirectory = AppSettings.Instance.ServerExecutablePath;
-            string fullBinaryPath = System.IO.Path.Combine(serverDirectory, "bedrock_server.exe");
-
-            if (string.IsNullOrWhiteSpace(serverDirectory) || !System.IO.File.Exists(fullBinaryPath))
-            {
-                DialogResult promptResult = ReaLTaiizor.Controls.MaterialMessageBox.Show(
-                    "The Minecraft Bedrock Server path has not been configured, or 'bedrock_server.exe' could not be found.\n\n" +
-                    "Would you like to open the application Settings panel now to link a valid server directory target path?",
-                    "Server Routing Target Missing",
-                    MessageBoxButtons.YesNo,
-                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
-                );
-
-                if (promptResult == DialogResult.Yes)
-                {
-                    using (var settings = new SettingsForm())
-                    {
-                        if (settings.ShowDialog(this) == DialogResult.OK)
-                        {
-                            AppendTerminalLine("[MANAGER INFO] Configuration paths updated. Click 'Start Server' again to launch.");
-                        }
-                    }
-                }
-                return;
-            }
-
-            ConsoleOutputTextBox.Clear();
-            ConsoleOutputTextBox.AppendText("Initializing Server Boot Pipeline...\r\n");
-
-            string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HHmm");
-            System.IO.Directory.CreateDirectory("logs");
-            _currentLogPath = $@"logs\server_{timestamp}.log";
-
-            _serverProcess = new Process();
-            _serverProcess.StartInfo.FileName = fullBinaryPath;
-            _serverProcess.StartInfo.WorkingDirectory = serverDirectory;
-            _serverProcess.StartInfo.UseShellExecute = false;
-            _serverProcess.StartInfo.CreateNoWindow = true;
-            _serverProcess.StartInfo.RedirectStandardOutput = true;
-            _serverProcess.StartInfo.RedirectStandardError = true;
-            _serverProcess.StartInfo.RedirectStandardInput = true;
-
-            _serverProcess.OutputDataReceived += (s, args) => AppendTerminalLine(args.Data);
-            _serverProcess.ErrorDataReceived += (s, args) => AppendTerminalLine(args.Data);
-
-            _serverProcess.EnableRaisingEvents = true;
-            _serverProcess.Exited += ServerProcess_Exited;
-
-            _serverProcess.Start();
-            _serverProcess.BeginOutputReadLine();
-            _serverProcess.BeginErrorReadLine();
-        }
-
-        private void StopServerBtn_Click(object sender, EventArgs e)
-        {
-            if (_serverProcess != null && !_serverProcess.HasExited)
-            {
-                AppendTerminalLine("[MANAGER INFO] Injected administrative 'stop' command stream...");
-                _serverProcess.StandardInput.WriteLine("stop");
-            }
         }
 
         private void CommandInputTextBox_KeyDown(object sender, KeyEventArgs e)
@@ -446,7 +447,8 @@ namespace BDSUtil
         }
 
         /// <summary>
-        /// Outputs log text strings to the terminal box while monitoring for explicit server initialization flags.
+        /// Outputs log text strings to the terminal box while monitoring for explicit server initialization flags,
+        /// parsing real-time chat updates and critical game event telemetry layers dynamically.
         /// </summary>
         private void AppendTerminalLine(string text)
         {
@@ -462,7 +464,7 @@ namespace BDSUtil
             ConsoleOutputTextBox.SelectionStart = ConsoleOutputTextBox.Text.Length;
             ConsoleOutputTextBox.ScrollToCaret();
 
-            // FIXED: Use IndexOf with OrdinalIgnoreCase to strip out timestamps or color flags wrapping the confirmation text
+            // --- SERVER INITIALIZATION FLAG DETECTION ---
             if (text.IndexOf("Server Started.", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 _isServerFullyInitialized = true;
@@ -493,7 +495,6 @@ namespace BDSUtil
 
                         if (!string.IsNullOrEmpty(xuidValue) && !string.IsNullOrEmpty(gamertag))
                         {
-                            // RE-ROUTED: Commits the player profile live to both memory and your persistent local database file!
                             BDSUtil.Modals.Content_Controls.CfgHelper.PlayerIdentityStore.SavePlayerNode(xuidValue, gamertag);
                         }
                     }
@@ -501,8 +502,94 @@ namespace BDSUtil
                 catch { }
             }
 
+            // =========================================================================
+            // --- BDSUTIL_BRIDGE REAL-TIME PARSING ENGINE ---
+            // =========================================================================
+            if (text.Contains("[BDSUTIL_BRIDGE]"))
+            {
+                try
+                {
+                    // 1. REAL-TIME CHAT INTERCEPTION & MODERATION VECTOR
+                    if (text.Contains("[CHAT]"))
+                    {
+                        int tokenIndex = text.IndexOf("[CHAT] ");
+                        if (tokenIndex != -1)
+                        {
+                            string chatPayload = text.Substring(tokenIndex + 7).Trim(); // Slices to "<PlayerName>: message"
+                            int endBracket = chatPayload.IndexOf('>');
+
+                            if (chatPayload.StartsWith("<") && endBracket > 0)
+                            {
+                                string player = chatPayload.Substring(1, endBracket - 1);
+                                string message = chatPayload.Substring(endBracket + 2).Trim();
+
+                                // Hand over to an autonomous helper module or inline evaluation array
+                                EvaluateAutoModChatRules(player, message);
+                            }
+                        }
+                    }
+                    // 2. REAL-TIME DEATH & PVP GRIEF TELEMETRY CAPTURE
+                    else if (text.Contains("[DEATH][PVP]"))
+                    {
+                        string victim = ExtractBridgeTokenValue(text, "victim=");
+                        string killer = ExtractBridgeTokenValue(text, "killer=");
+                        string cause = ExtractBridgeTokenValue(text, "cause=");
+
+                        if (!string.IsNullOrEmpty(killer) && !string.IsNullOrEmpty(victim))
+                        {
+                            // Output notice to all players using the standard server command pipeline input handles
+                            if (_serverProcess != null && !_serverProcess.HasExited)
+                            {
+                                _serverProcess.StandardInput.WriteLine($"say §c[Security Hub] Player {killer} killed {victim} using {cause}!");
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Bridge Dynamic Parser Exception]: {ex.Message}");
+                }
+            }
         }
 
+                /// <summary>
+        /// Compares real-time chat strings against active filtering cache rules, executing commands instantly on trigger matches.
+        /// </summary>
+        private void EvaluateAutoModChatRules(string player, string message)
+        {
+            // AutoModWrapper updates its list programmatically. Replace this with your global expressions list cache object variable name
+            var bannedExpressions = new List<string> { "badword1", "griefbot" }; 
+
+            foreach (string expression in bannedExpressions)
+            {
+                // FIXED: Using IndexOf to satisfy the old .NET Framework compiler with case-insensitive capability!
+                if (message.IndexOf(expression, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    if (_serverProcess != null && !_serverProcess.HasExited)
+                    {
+                        // Safely inject the kick sequence down the standard process input stream
+                        _serverProcess.StandardInput.WriteLine($"kick \"{player}\" AutoMod Trigger: Chat policy violation.");
+                        _serverProcess.StandardInput.WriteLine($"say §e[AutoMod] Kicked player {player} for using filtered phrases.");
+                    }
+                    break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Surgically extracts value strings bound between structural quotation tokens in bridge lines.
+        /// </summary>
+        private string ExtractBridgeTokenValue(string line, string tokenName)
+        {
+            int start = line.IndexOf(tokenName);
+            if (start == -1) return string.Empty;
+
+            start += tokenName.Length + 1; // Step right past the token header text and the opening double quote character
+            int end = line.IndexOf('"', start);
+            if (end == -1) return string.Empty;
+
+            return line.Substring(start, end - start);
+        }
 
         private void ServerProcess_Exited(object sender, EventArgs e)
         {
@@ -527,31 +614,51 @@ namespace BDSUtil
             }
         }
 
-        private void MaterialTabControl1_SelectedIndexChanged(object sender, EventArgs e)
+        private void LaunchModalAndRestoreTab(Func<Form> formFactory)
         {
-            // Wipe out the visibility states immediately upon tab switching operations
-            BKCompleteLBL.Visible = false;
-            BackupProgressBar.Visible = false;
+            int snapshotIndex = _previousActiveTabIndex;
+            DialogResult outcomeResult;
 
-            int settingsTabIndex = MaterialTabControl1.TabCount - 1;
-
-            if (MaterialTabControl1.SelectedIndex != settingsTabIndex)
+            this.Hide();
+            using (Form modalWindow = formFactory.Invoke())
             {
-                _previousActiveTabIndex = MaterialTabControl1.SelectedIndex;
+                outcomeResult = modalWindow.ShowDialog(this);
+            }
+            this.Show();
+
+            // FIXED: Leverages a 1ms micro-deferment timer loop to ensure the viewport canvas updates natively
+            if (outcomeResult == DialogResult.Retry)
+            {
+                if (MaterialTabControl1 != null)
+                {
+                    int settingsIndex = MaterialTabControl1.TabCount - 1;
+
+                    System.Windows.Forms.Timer redirectTimer = new System.Windows.Forms.Timer { Interval = 1 };
+                    redirectTimer.Tick += (s, args) =>
+                    {
+                        redirectTimer.Stop();
+
+                        _isRedirecting = true; // LOCK: Blocks the selection loop from re-triggering the intercept modal
+                        MaterialTabControl1.SelectedIndex = settingsIndex;
+                        _isRedirecting = false; // UNLOCK: Restores standard baseline navigation rules
+
+                        MaterialTabControl1.Update();
+
+                        if (this.settingsProvider1 != null)
+                        {
+                            this.settingsProvider1.InitializeControl();
+                            this.settingsProvider1.ClearSelectionFocus();
+                        }
+
+                        redirectTimer.Dispose();
+                    };
+                    redirectTimer.Start();
+                }
                 return;
             }
 
-            int snapshotIndex = _previousActiveTabIndex;
-            this.Hide();
-
-            using (var settings = new SettingsForm())
-            {
-                settings.ShowDialog(this);
-            }
-
-            this.Show();
-
-            Timer restorationTimer = new Timer { Interval = 1 };
+            // Standard restoration routine for normal cancel operations
+            System.Windows.Forms.Timer restorationTimer = new System.Windows.Forms.Timer { Interval = 1 };
             restorationTimer.Tick += (s, args) =>
             {
                 restorationTimer.Stop();
@@ -561,6 +668,128 @@ namespace BDSUtil
             };
             restorationTimer.Start();
         }
+
+
+        // Place inside your MainWindow.cs file
+        // This block replaces the current MaterialTabControl1_SelectedIndexChanged structure
+
+        private void MaterialTabControl1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (BKCompleteLBL != null) BKCompleteLBL.Visible = false;
+            if (BackupProgressBar != null) BackupProgressBar.Visible = false;
+
+            // Guard gate: If the application is actively redirecting to settings, skip all structural intercepts completely
+            if (_isRedirecting) return;
+
+            int activeIndex = MaterialTabControl1.SelectedIndex;
+
+            // --- AUTOMOD TAB INTERCEPTOR (INDEX 2) ---
+            if (activeIndex == 2)
+            {
+                LaunchModalAndRestoreTab(() => new AutoModWrapper(this));
+                return;
+            }
+
+            // --- LEVEL EDITOR TAB INTERCEPTOR (INDEX 3) ---
+            // Assumes Index 3 is your target Level Editor tab control index coordinates
+            if (activeIndex == 3)
+            {
+                if (AppSettings.Instance.WorldEditorEnabled)
+                {
+                    // Security rules cleared: Make the underlying operational control components interactive
+                    if (this.editorProvider1 != null)
+                    {
+                        this.editorProvider1.Visible = true;
+                        this.editorProvider1.InitializeControl();
+                        this.editorProvider1.ClearSelectionFocus();
+                    }
+                }
+                else
+                {
+                    // Lock out active manipulation interfaces and spawn the redirection routing prompt
+                    if (this.editorProvider1 != null)
+                    {
+                        this.editorProvider1.Visible = false;
+                    }
+
+                    EvaluateLevelEditorAccessAndRedirect();
+                    return;
+                }
+            }
+
+            // --- INLINE SETTINGS MANAGEMENT (LAST INDEX TARGET) ---
+            int settingsTabIndex = MaterialTabControl1.TabCount - 1;
+            if (activeIndex == settingsTabIndex)
+            {
+                if (this.settingsProvider1 != null)
+                {
+                    this.settingsProvider1.InitializeControl();
+                    this.settingsProvider1.ClearSelectionFocus();
+                }
+            }
+
+            // Cache stable tab navigation transitions cleanly
+            _previousActiveTabIndex = activeIndex;
+        }
+
+        /// <summary>
+        /// Spawns a Material confirmation dialogue warning users that permissions are restricted,
+        /// providing automated routing shortcuts straight to the system configuration panel layout.
+        /// </summary>
+        private void EvaluateLevelEditorAccessAndRedirect()
+        {
+            int snapshotIndex = _previousActiveTabIndex;
+            int settingsIndex = MaterialTabControl1.TabCount - 1;
+
+            DialogResult routingConsentResult = MaterialMessageBox.Show(
+                this,
+                "ACCESS RESTRICTED:\n\n" +
+                "World Editor tools are currently locked down under global safety profile configurations.\n\n" +
+                "Would you like to navigate directly to the Settings panel to authorize file transformations?\n\n",
+                "Permissions Consent Required",
+                MessageBoxButtons.YesNo,
+                false,
+                MaterialFlexibleForm.ButtonsPosition.Center
+            );
+
+            if (routingConsentResult == DialogResult.Yes)
+            {
+                System.Windows.Forms.Timer redirectTimer = new System.Windows.Forms.Timer { Interval = 1 };
+                redirectTimer.Tick += (s, args) =>
+                {
+                    redirectTimer.Stop();
+
+                    _isRedirecting = true; // LOCK: Blocks the selection loop from re-triggering the intercept prompt
+                    MaterialTabControl1.SelectedIndex = settingsIndex;
+                    _isRedirecting = false; // UNLOCK: Restores standard baseline navigation rules
+
+                    MaterialTabControl1.Update();
+
+                    if (this.settingsProvider1 != null)
+                    {
+                        this.settingsProvider1.InitializeControl();
+                        this.settingsProvider1.ClearSelectionFocus();
+                    }
+
+                    redirectTimer.Dispose();
+                };
+                redirectTimer.Start();
+            }
+            else
+            {
+                // User aborted: Fire a micro-deferred timer route back to the last stable viewport state coordinates
+                System.Windows.Forms.Timer restorationTimer = new System.Windows.Forms.Timer { Interval = 1 };
+                restorationTimer.Tick += (s, args) =>
+                {
+                    restorationTimer.Stop();
+                    MaterialTabControl1.SelectedIndex = snapshotIndex;
+                    MaterialTabControl1.Update();
+                    restorationTimer.Dispose();
+                };
+                restorationTimer.Start();
+            }
+        }
+
 
         //#############################################################################
         //############################ MAIN BACKUP PIPELINE ###########################
@@ -1324,7 +1553,8 @@ namespace BDSUtil
 
                             // Wire a specialized event loop to forcefully exit the entire process 
                             // environment the precise millisecond the server drops clear, bypassing recursion!
-                            _serverProcess.Exited += (s, args) => {
+                            _serverProcess.Exited += (s, args) =>
+                            {
                                 _forceSystemExit = true;
                                 Environment.Exit(0);
                             };
@@ -1384,13 +1614,33 @@ namespace BDSUtil
 
                 if (promptResult == DialogResult.Yes)
                 {
-                    using (var settings = new SettingsForm())
+                    if (MaterialTabControl1 != null)
                     {
-                        if (settings.ShowDialog(this) == DialogResult.OK)
+                        int settingsIndex = MaterialTabControl1.TabCount - 1;
+
+                        System.Windows.Forms.Timer redirectTimer = new System.Windows.Forms.Timer { Interval = 1 };
+                        redirectTimer.Tick += (s, args) =>
                         {
-                            AppendTerminalLine("[MANAGER INFO] Configuration paths updated. Click 'Start Server' again to launch.");
+                            redirectTimer.Stop();
+
+                            _isRedirecting = true;
+                            MaterialTabControl1.SelectedIndex = settingsIndex;
+                            _isRedirecting = false;
+
+                            MaterialTabControl1.Update();
+
+                            if (this.settingsProvider1 != null)
+                            {
+                                this.settingsProvider1.InitializeControl();
+                                this.settingsProvider1.ClearSelectionFocus();
+                            }
+
+                            AppendTerminalLine("[MANAGER INFO] Configuration paths updated. Click 'Start Server' again once path is linked.");
                             UpdateControlButtonStates();
-                        }
+
+                            redirectTimer.Dispose();
+                        };
+                        redirectTimer.Start();
                     }
                 }
                 return;
@@ -1465,19 +1715,108 @@ namespace BDSUtil
                 return;
             }
 
-            // 2. MAIN WINDOW HIDE GATE: Hide our parent canvas panel layout out of sight immediately
+            // 2. DEFENSIVE ENVIRONMENT VALIDATION GATE
+            string targetDir = AppSettings.Instance?.ServerExecutablePath;
+            bool isEnvironmentValid = false;
+
+            if (!string.IsNullOrWhiteSpace(targetDir))
+            {
+                if (targetDir.EndsWith("bedrock_server.exe", StringComparison.OrdinalIgnoreCase))
+                {
+                    targetDir = Path.GetDirectoryName(targetDir);
+                }
+
+                if (!string.IsNullOrEmpty(targetDir) && Directory.Exists(targetDir))
+                {
+                    string binaryCheck = Path.Combine(targetDir, "bedrock_server.exe");
+                    string propertiesCheck = Path.Combine(targetDir, "server.properties");
+
+                    // Valid environmental state confirmation
+                    isEnvironmentValid = File.Exists(binaryCheck) && File.Exists(propertiesCheck);
+                }
+            }
+
+            // 3. REUSE SEAMLESS NAVIGATION DIALOGUE IF MISSING OR INVALID
+            if (!isEnvironmentValid)
+            {
+                DialogResult promptResult = ReaLTaiizor.Controls.MaterialMessageBox.Show(
+                    "You cant edit the server configuration since you didnt set its path...\n\n" +
+                    "Would you like to open the application Settings panel now to link a valid server directory target path?",
+                    "Silly Goose :D",
+                    MessageBoxButtons.YesNo,
+                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
+                );
+
+
+                if (promptResult == DialogResult.Yes)
+                {
+                    if (MaterialTabControl1 != null)
+                    {
+                        int settingsIndex = MaterialTabControl1.TabCount - 1;
+
+                        System.Windows.Forms.Timer redirectTimer = new System.Windows.Forms.Timer { Interval = 1 };
+                        redirectTimer.Tick += (s, args) =>
+                        {
+                            redirectTimer.Stop();
+
+                            _isRedirecting = true;
+                            MaterialTabControl1.SelectedIndex = settingsIndex;
+                            _isRedirecting = false;
+
+                            MaterialTabControl1.Update();
+
+                            if (this.settingsProvider1 != null)
+                            {
+                                this.settingsProvider1.InitializeControl();
+                                this.settingsProvider1.ClearSelectionFocus();
+                            }
+
+                            AppendTerminalLine("[MANAGER INFO] Swapped to Settings panel. Please link a valid server directory path.");
+                            UpdateControlButtonStates();
+
+                            redirectTimer.Dispose();
+                        };
+                        redirectTimer.Start();
+                    }
+                }
+
+                return;
+            }
+
+            // Environment is already valid, jump straight into the modal display engine pass
+            ProceedToConfigModal();
+        }
+
+        /// <summary>
+        /// Dedicated isolation helper to handle drawing and restoring the properties modal canvas cleanly.
+        /// </summary>
+        private void ProceedToConfigModal()
+        {
             this.Hide();
 
-            // 3. MODAL DISPATCH: Pass 'this' as the parent context handler to force centering over your console canvas
-            using (var configForm = new ServerConfigModalForm(this))
+            using (var configForm = new ServerConfig(this))
             {
                 configForm.ShowDialog(this);
             }
 
-            // 4. WORKSPACE RESTORATION PILL: Restore and completely refresh your log dashboard on close
             this.Show();
-            this.Update(); // Forces an immediate, clean graphical hardware redraw pass
+            this.Update(); // Redraw parent canvas graphics immediately
+        }
+
+        /// <summary>
+        /// Programmatically switches the active window context to your application settings tab panel view.
+        /// </summary>
+        public void NavigateToSettingsTab()
+        {
+            if (MaterialTabControl1 != null)
+            {
+                // Dynamically switches index to your application's last tab layout where Settings lives
+                int settingsIndex = MaterialTabControl1.TabCount - 1;
+                MaterialTabControl1.SelectedIndex = settingsIndex;
+                MaterialTabControl1.Update();
+            }
         }
 
     }
+
 }

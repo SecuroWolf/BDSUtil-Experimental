@@ -94,8 +94,9 @@ namespace BDSUtil
             }
         }
 
-        // --- EXPLICIT COMPATIBILITY WRAPPERS FOR YOUR EXISTING FORMS ---
-        // (Keeps your main forms and path buttons compiling without modifying their current code)
+        /// <summary>
+        /// CONFIG VARIABLES: These are the actual settings that will be saved to disk and loaded from disk.
+        /// </summary>
 
         public string ServerExecutablePath
         {
@@ -115,14 +116,32 @@ namespace BDSUtil
             set => SetSetting("HasAcceptedNetworkRisks", value);
         }
 
-        // NEW WORKSPACE PROPERTY: Automatically integrated for your newly updated Networking Control Switch
         public bool EnableUPnP
         {
             get => GetSetting("EnableUPnP", false);
             set => SetSetting("EnableUPnP", value);
         }
 
-        // --- END OF COMPATIBILITY LAYER ---
+        public bool AutoModEnabled
+        {
+            get => GetSetting("AutoModEnabled", false);
+            set => SetSetting("AutoModEnabled", value);
+        }
+
+        public bool WorldEditorEnabled
+        {
+            get => GetSetting("WorldEditorEnabled", false);
+            set => SetSetting("WorldEditorEnabled", value);
+        }
+
+        public bool ExperimentsWarned
+        {
+            get => GetSetting("ExperimentsWarned", false);
+            set => SetSetting("ExperimentsWarned", value);
+        }
+
+        // --- END OF CONFIG VARIABLES ---
+
 
         public void RunStartupCheck()
         {
@@ -228,8 +247,23 @@ namespace BDSUtil
         }
 
         /// <summary>
-        /// DYNAMIC EMISSION GENERATOR: Loops your internal settings cache list 
-        /// and converts it to a standard, beautifully aligned JSON text profile file.
+        /// NEW Settings Saving Method: Forces the thread pool to execute the serialization routine synchronously to keep writes isolated.
+        /// </summary>
+        public void SaveSettings()
+        {
+            try
+            {
+                // Forces the thread pool to execute the serialization routine synchronously to keep writes isolated
+                Task.Run(async () => await SaveSettingsAsync()).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[AppSettings Sync Save Violation]: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// OLD Settings Saving Method: Asynchronously writes the current configuration registry to disk in a structured JSON format.
         /// </summary>
         public async Task SaveSettingsAsync()
         {

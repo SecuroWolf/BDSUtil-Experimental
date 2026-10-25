@@ -36,13 +36,20 @@
             this.BackupPointsListBox = new ReaLTaiizor.Controls.MaterialListBox();
             this.RestoreTypeComboBox = new ReaLTaiizor.Controls.MaterialComboBox();
             this.RestorTitleLBL = new ReaLTaiizor.Controls.MaterialLabel();
+            this.AutoModTab = new System.Windows.Forms.TabPage();
+            this.label2 = new System.Windows.Forms.Label();
+            this.LETab = new System.Windows.Forms.TabPage();
+            this.editorProvider1 = new BDSUtil.Modals.Content_Controls.Level_Editor.EditorProvider();
             this.SettingsTabPage = new System.Windows.Forms.TabPage();
-            this.label1 = new System.Windows.Forms.Label();
+            this.settingsProvider1 = new BDSUtil.Modals.Content_Controls.Settings.SettingsProvider();
+            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105 = new ReaLTaiizor.Controls.MaterialTabControl();
             this.MaterialTabControl1.SuspendLayout();
             this.tabLiveMonitor.SuspendLayout();
             this.BkRsTab.SuspendLayout();
             this.BackupWrapper.SuspendLayout();
             this.RestoreWrapper.SuspendLayout();
+            this.AutoModTab.SuspendLayout();
+            this.LETab.SuspendLayout();
             this.SettingsTabPage.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -50,6 +57,8 @@
             // 
             this.MaterialTabControl1.Controls.Add(this.tabLiveMonitor);
             this.MaterialTabControl1.Controls.Add(this.BkRsTab);
+            this.MaterialTabControl1.Controls.Add(this.AutoModTab);
+            this.MaterialTabControl1.Controls.Add(this.LETab);
             this.MaterialTabControl1.Controls.Add(this.SettingsTabPage);
             this.MaterialTabControl1.Depth = 0;
             this.MaterialTabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -119,6 +128,8 @@
             this.IconList.Images.SetKeyName(18, "round_report_problem_white_24dp.png");
             this.IconList.Images.SetKeyName(19, "round_swap_vert_white_24dp.png");
             this.IconList.Images.SetKeyName(20, "terminal_24dp.png");
+            this.IconList.Images.SetKeyName(21, "chat_info_24dp.png");
+            this.IconList.Images.SetKeyName(22, "globe_24dp.png");
             // 
             // SvConfigButton
             // 
@@ -430,27 +441,84 @@
             this.RestorTitleLBL.TabIndex = 0;
             this.RestorTitleLBL.Text = "Server Snapshot Recovery";
             // 
+            // AutoModTab
+            // 
+            this.AutoModTab.Controls.Add(this.label2);
+            this.AutoModTab.ImageKey = "chat_info_24dp.png";
+            this.AutoModTab.Location = new System.Drawing.Point(4, 31);
+            this.AutoModTab.Name = "AutoModTab";
+            this.AutoModTab.Padding = new System.Windows.Forms.Padding(3);
+            this.AutoModTab.Size = new System.Drawing.Size(942, 448);
+            this.AutoModTab.TabIndex = 2;
+            this.AutoModTab.Text = "Chat AutoMod";
+            this.AutoModTab.UseVisualStyleBackColor = true;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("Consolas", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.Location = new System.Drawing.Point(172, 176);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(598, 96);
+            this.label2.TabIndex = 2;
+            this.label2.Text = "This is a dummy tab(AutoMod).\r\nIn release you should never see this. \r\nIf you see" +
+    " this you\'re somewhere you shouldnt be.\r\nMaybe you should come work for me :D";
+            // 
+            // LETab
+            // 
+            this.LETab.Controls.Add(this.editorProvider1);
+            this.LETab.ImageKey = "globe_24dp.png";
+            this.LETab.Location = new System.Drawing.Point(4, 31);
+            this.LETab.Name = "LETab";
+            this.LETab.Padding = new System.Windows.Forms.Padding(3);
+            this.LETab.Size = new System.Drawing.Size(942, 448);
+            this.LETab.TabIndex = 4;
+            this.LETab.Text = "Level Editor";
+            this.LETab.UseVisualStyleBackColor = true;
+            // 
+            // editorProvider1
+            // 
+            this.editorProvider1.AutoScroll = true;
+            this.editorProvider1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
+            this.editorProvider1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.editorProvider1.Location = new System.Drawing.Point(3, 3);
+            this.editorProvider1.Name = "editorProvider1";
+            this.editorProvider1.Size = new System.Drawing.Size(936, 442);
+            this.editorProvider1.TabIndex = 0;
+            // 
             // SettingsTabPage
             // 
-            this.SettingsTabPage.Controls.Add(this.label1);
+            this.SettingsTabPage.Controls.Add(this.settingsProvider1);
             this.SettingsTabPage.ImageKey = "ic_settings_white_24dp_1x.png";
             this.SettingsTabPage.Location = new System.Drawing.Point(4, 31);
             this.SettingsTabPage.Name = "SettingsTabPage";
             this.SettingsTabPage.Size = new System.Drawing.Size(942, 448);
-            this.SettingsTabPage.TabIndex = 2;
+            this.SettingsTabPage.TabIndex = 3;
             this.SettingsTabPage.Text = "Settings";
             this.SettingsTabPage.UseVisualStyleBackColor = true;
             // 
-            // label1
+            // settingsProvider1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Consolas", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(176, 137);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(598, 96);
-            this.label1.TabIndex = 1;
-            this.label1.Text = "This is a dummy tab.\r\nIn release you should never see this. \r\nIf you see this you" +
-    "\'re somewhere you shouldnt be.\r\nMaybe you should come work for me :D";
+            this.settingsProvider1.AutoScroll = true;
+            this.settingsProvider1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
+            this.settingsProvider1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.settingsProvider1.Location = new System.Drawing.Point(0, 0);
+            this.settingsProvider1.Name = "settingsProvider1";
+            this.settingsProvider1.Size = new System.Drawing.Size(942, 448);
+            this.settingsProvider1.TabIndex = 0;
+            // 
+            // object_7f028359_dd1b_422d_83c9_6faf6dccb105
+            // 
+            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105.Depth = 0;
+            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105.Location = new System.Drawing.Point(0, 64);
+            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105.Multiline = true;
+            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105.Name = "object_7f028359_dd1b_422d_83c9_6faf6dccb105";
+            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105.SelectedIndex = 0;
+            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105.Size = new System.Drawing.Size(950, 483);
+            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105.TabIndex = 0;
+            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105.Visible = false;
             // 
             // MainWindow
             // 
@@ -476,8 +544,10 @@
             this.BackupWrapper.PerformLayout();
             this.RestoreWrapper.ResumeLayout(false);
             this.RestoreWrapper.PerformLayout();
+            this.AutoModTab.ResumeLayout(false);
+            this.AutoModTab.PerformLayout();
+            this.LETab.ResumeLayout(false);
             this.SettingsTabPage.ResumeLayout(false);
-            this.SettingsTabPage.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -490,7 +560,6 @@
         private System.Windows.Forms.RichTextBox ConsoleOutputTextBox;
         private ReaLTaiizor.Controls.MaterialTextBoxEdit CommandInputTextBox;
         private System.Windows.Forms.TabPage SettingsTabPage;
-        private System.Windows.Forms.Label label1;
         private ReaLTaiizor.Controls.MaterialCard RestoreWrapper;
         private ReaLTaiizor.Controls.MaterialCard BackupWrapper;
         private ReaLTaiizor.Controls.MaterialButton BackupServerBTN;
@@ -506,5 +575,11 @@
         private ReaLTaiizor.Controls.MaterialFloatingActionButton StartServerBTN_New;
         private ReaLTaiizor.Controls.MaterialFloatingActionButton SvConfigButton;
         private System.Windows.Forms.ImageList IconList;
+        private System.Windows.Forms.TabPage AutoModTab;
+        private System.Windows.Forms.Label label2;
+        private Modals.Content_Controls.Settings.SettingsProvider settingsProvider1;
+        private System.Windows.Forms.TabPage LETab;
+        private ReaLTaiizor.Controls.MaterialTabControl object_7f028359_dd1b_422d_83c9_6faf6dccb105;
+        private Modals.Content_Controls.Level_Editor.EditorProvider editorProvider1;
     }
 }

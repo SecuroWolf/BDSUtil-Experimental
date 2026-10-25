@@ -1,0 +1,26 @@
+{
+  "format_version": 2,
+  "header": {
+    "description": "System stream bridge for BDSUtil logging pipelines.",
+    "name": "BDSUtil Server Monitor Addon",
+    "uuid": "4f9d2a6b-c7e1-432a-9e12-b5c6d7e8f9a0",
+    "version": [ 0, 1, 1 ],
+    "min_engine_version": [ 1, 26, 50 ]
+  },
+  "modules": [
+    {
+      "description": "Main monitoring engine script file",
+      "type": "script",
+      "language": "javascript",
+      "uuid": "7a8b9c0d-1e2f-4a3b-bcd1-2e3f4a5b6c7d",
+      "version": [ 0, 1, 1 ],
+      "entry": "scripts/main.js"
+    }
+  ],
+  "dependencies": [
+    {
+      "module_name": "@minecraft/server",
+      "version": "2.11.0-beta"
+    }
+  ]
+}

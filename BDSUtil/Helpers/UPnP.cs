@@ -35,18 +35,22 @@ namespace BDSUtil.Helpers
                 using (System.Net.Http.HttpClient client = new System.Net.Http.HttpClient())
                 {
                     client.Timeout = TimeSpan.FromSeconds(3);
-                    // REAL FIX: Changed 'ipify.org' to 'api.ipify.org' to get raw text instead of HTML
-                    string ip = client.GetStringAsync("https://api.ipify.org").GetAwaiter().GetResult();
-                    return ip.Trim();
+
+                    string traceDump = client.GetStringAsync("https://cloudflare.com/cdn-cgi/trace").GetAwaiter().GetResult();
+
+                    foreach (string line in traceDump.Split('\n'))
+                    {
+                        if (line.StartsWith("ip=", StringComparison.OrdinalIgnoreCase))
+                        {
+                            return line.Substring(3).Trim();
+                        }
+                    }
                 }
             }
-            catch
-            {
-                return "127.0.0.1";
-            }
+            catch { }
+
+            return "127.0.0.1"; // Fallback safety placeholder if connection completely drops out
         }
-
-
 
         /// <summary>
         /// Standard 3-parameter variant (Defaults to UDP for dynamic multi-node tracking pools)
@@ -149,20 +153,20 @@ namespace BDSUtil.Helpers
 
                 if (device != null)
                 {
-                    foreach (var lease in leasesToPurge)
+                    foreach (var (port, protocol) in leasesToPurge)
                     {
                         try
                         {
-                            Open.Nat.Protocol targetProtocol = lease.Protocol == "TCP"
+                            Open.Nat.Protocol targetProtocol = protocol == "TCP"
                                 ? Open.Nat.Protocol.Tcp
                                 : Open.Nat.Protocol.Udp;
 
-                            var oldMapping = new Open.Nat.Mapping(targetProtocol, lease.Port, lease.Port);
+                            var oldMapping = new Open.Nat.Mapping(targetProtocol, port, port);
                             device.DeletePortMapAsync(oldMapping).GetAwaiter().GetResult();
                         }
                         catch (Exception ex)
                         {
-                            System.Diagnostics.Debug.WriteLine($"[UPnP Individual Purge Failure]: Port {lease.Port} ({lease.Protocol}) - {ex.Message}");
+                            System.Diagnostics.Debug.WriteLine($"[UPnP Individual Purge Failure]: Port {port} ({protocol}) - {ex.Message}");
                         }
                     }
 

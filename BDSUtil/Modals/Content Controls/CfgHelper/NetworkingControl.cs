@@ -12,43 +12,67 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
     {
         private string _propertiesPath;
         private readonly Dictionary<string, string> _serverPropertiesMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private readonly List<string> _activeUdpNodesCache = new List<string>();
+        private readonly Label _focusTrapLabel;
+        private bool _isManualChange = true;
 
         public NetworkingControl()
         {
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             InitializeComponent();
+            this.AutoSize = false;
 
-            // Wire the layout container disabling trigger hook right to your dynamic theme switch
-            if (CfgUPnP != null)
-            {
-                CfgUPnP.CheckedChanged += CfgUPnP_CheckedChanged;
-            }
+            _focusTrapLabel = new Label { Size = new System.Drawing.Size(0, 0), Location = new System.Drawing.Point(0, 0), TabStop = true };
+            this.Controls.Add(_focusTrapLabel);
 
-            // Explicitly link your button clicks to their event handlers
+            if (CfgUPnP != null) CfgUPnP.CheckedChanged += CfgUPnP_CheckedChanged;
             if (APBTN != null) APBTN.Click += APBTN_Click;
             if (RPBTN != null) RPBTN.Click += RPBTN_Click;
         }
 
-        /// <summary>
-        /// Captures the server root execution path and kicks off the initial property file loading.
-        /// </summary>
         public void InitializeControl(string serverRoot)
         {
             _propertiesPath = Path.Combine(serverRoot, "server.properties");
             LoadConfig();
         }
 
-        /// <summary>
-        /// Reads network configuration strings from disk and binds values directly into visual canvas elements.
-        /// </summary>
+        public void ClearSelectionFocus()
+        {
+            if (_focusTrapLabel != null && _focusTrapLabel.CanFocus) _focusTrapLabel.Focus();
+        }
+
+        private void NetworkingControl_Load(object sender, EventArgs e)
+        {
+            ClearSelectionFocus();
+        }
+
+        private void CfgUPnP_CheckedChanged(object sender, EventArgs e)
+        {
+            ToggleManualInputContainers(!CfgUPnP.Checked);
+            if (_isManualChange) SaveConfig();
+            ClearSelectionFocus();
+        }
+
+        private void ToggleManualInputContainers(bool enableManual)
+        {
+            if (ManPMCtrls != null) ManPMCtrls.Enabled = enableManual;
+            if (PortBTNCard != null) PortBTNCard.Enabled = enableManual;
+        }
         private void LoadConfig()
         {
             _serverPropertiesMap.Clear();
-            PMList.Items.Clear();
+            _activeUdpNodesCache.Clear();
 
-            if (!File.Exists(_propertiesPath)) return;
+            // ✅ FIX: Purge the tracking data AND physically vaporize old UI checkbox handles
+            PMList.Items.Clear();
+            PMList.Controls.Clear();
+
+            if (!File.Exists(_propertiesPath)) { ClearSelectionFocus(); return; }
 
             try
             {
+                _isManualChange = false;
+
                 string[] lines = File.ReadAllLines(_propertiesPath);
                 foreach (string line in lines)
                 {
@@ -60,29 +84,16 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
                         string key = line.Substring(0, equalsIdx).Trim();
                         string val = line.Substring(equalsIdx + 1).Trim();
 
-                        // CRITICAL FIX: Skip and ignore the legacy key completely so it never enters the memory cache
                         if (key.Equals("bdsutil-enable-upnp", StringComparison.OrdinalIgnoreCase)) continue;
-
                         _serverPropertiesMap[key] = val;
                     }
                 }
 
+                if (AppSettings.Instance != null) CfgUPnP.Checked = AppSettings.Instance.EnableUPnP;
+                else CfgUPnP.Checked = false;
 
-                // 1. Process UPnP Configuration State directly from our own configuration variables
-                // FIXED: Reading from AppSettings.Instance instead of parsing server.properties
-                if (AppSettings.Instance != null)
-                {
-                    CfgUPnP.Checked = AppSettings.Instance.EnableUPnP;
-                }
-                else
-                {
-                    CfgUPnP.Checked = false; // Safety fallback default setting
-                }
-
-                // Force initial visual card state evaluation right away on file load
                 ToggleManualInputContainers(!CfgUPnP.Checked);
 
-                // 2. Parse out the complex server-udp-ports map lines array
                 if (_serverPropertiesMap.TryGetValue("server-udp-ports", out string rawPorts) && !string.IsNullOrWhiteSpace(rawPorts))
                 {
                     string[] nodes = rawPorts.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
@@ -91,8 +102,9 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
                         string cleanNode = node.Trim();
                         if (string.IsNullOrEmpty(cleanNode)) continue;
 
-                        // Check for fully articulated map configurations ([IP]:Ext:Int)
+                        _activeUdpNodesCache.Add(cleanNode);
                         string[] segments = cleanNode.Split(':');
+
                         if (segments.Length >= 2)
                         {
                             string internalPort = segments[segments.Length - 1];
@@ -102,13 +114,11 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
                                 ? $"UDP Forward Node: {externalPort}"
                                 : $"UDP Port Map: {externalPort} mapped to internal port {internalPort}";
 
-                            // FIXED: PMList.Items.Add returns void in ReaLTaiizor. Append it, then apply your tag to the final index tracking slot.
                             PMList.Items.Add(listDisplayLabel, false);
-                            int addedIndex = PMList.Items.Count - 1;
-                            if (addedIndex >= 0)
-                            {
-                                PMList.Items[addedIndex].Tag = cleanNode;
-                            }
+                        }
+                        else
+                        {
+                            PMList.Items.Add($"UDP Port Node: {cleanNode}", false);
                         }
                     }
                 }
@@ -117,48 +127,133 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             {
                 System.Diagnostics.Debug.WriteLine($"Network load file violation error: {ex.Message}");
             }
+            finally
+            {
+                _isManualChange = true;
+            }
+
+            ClearSelectionFocus();
         }
 
-        /// <summary>
-        /// Assembles internal lists and flushes clean string nodes back down into server.properties file bytes.
-        /// </summary>
+        private void APBTN_Click(object sender, EventArgs e)
+        {
+            using (var addDialog = new BDSUtil.Modals.AddPortDialogue())
+            {
+                if (addDialog.ShowDialog(this) == DialogResult.OK && addDialog.IsConfirmed)
+                {
+                    string wanIpAddress = UPnPEngine.GetExternalIPAddress();
+                    string formattedPropertyToken = $"{wanIpAddress}:{addDialog.ExternalPort}:{addDialog.InternalPort}";
+
+                    string cleanDisplayLabel = (addDialog.ExternalPort == addDialog.InternalPort)
+                        ? $"UDP Forward Node: {addDialog.ExternalPort}"
+                        : $"UDP Port Map: {addDialog.ExternalPort} mapped to internal port {addDialog.InternalPort}";
+
+                    if (_activeUdpNodesCache.Contains(formattedPropertyToken, StringComparer.OrdinalIgnoreCase))
+                    {
+                        ReaLTaiizor.Controls.MaterialMessageBox.Show(this, "That specific port translation map rule node already exists inside your active grid.", "Duplicate Conflict");
+                        ClearSelectionFocus();
+                        return;
+                    }
+
+                    _activeUdpNodesCache.Add(formattedPropertyToken);
+                    PMList.Items.Add(cleanDisplayLabel, false);
+
+                    SaveConfig();
+                }
+            }
+            ClearSelectionFocus();
+        }
+
+        private void RPBTN_Click(object sender, EventArgs e)
+        {
+            var indicesToRemove = new List<int>();
+
+            for (int i = 0; i < PMList.Items.Count; i++)
+            {
+                if (PMList.Items[i].Checked)
+                {
+                    indicesToRemove.Add(i);
+
+                    if (i < _activeUdpNodesCache.Count)
+                    {
+                        string tokenString = _activeUdpNodesCache[i];
+                        string[] parts = tokenString.Split(':');
+                        if (parts.Length >= 2 && int.TryParse(parts[parts.Length - 2], out int extPortToPurge))
+                        {
+                            int portTarget = extPortToPurge;
+                            System.Threading.Tasks.Task.Run(() => {
+                                try { UPnPEngine.ClosePort(portTarget); } catch { }
+                            });
+                        }
+                    }
+                }
+            }
+
+            if (indicesToRemove.Count == 0)
+            {
+                ReaLTaiizor.Controls.MaterialMessageBox.Show(this, "No specific routing configuration rows are checked for deletion tracking.", "Selection Track Empty");
+                ClearSelectionFocus();
+                return;
+            }
+
+            // Remove sequentially from backend memory track array
+            foreach (int index in indicesToRemove.OrderByDescending(v => v))
+            {
+                if (index < _activeUdpNodesCache.Count) _activeUdpNodesCache.RemoveAt(index);
+            }
+
+            try
+            {
+                _isManualChange = false;
+
+                // Commit the target parameters clean state down to disk
+                SaveConfig();
+
+                // Re-verify and rebuild list layout items from disk explicitly 
+                LoadConfig();
+            }
+            finally
+            {
+                _isManualChange = true;
+            }
+
+            ClearSelectionFocus();
+        }
+
         public void SaveConfig()
         {
             if (string.IsNullOrEmpty(_propertiesPath) || !File.Exists(_propertiesPath)) return;
 
             try
             {
-                // Capture the initial saved database configuration state right before evaluating live UI toggles
                 bool historicalUpnpState = AppSettings.Instance?.GetSetting("EnableUPnP", false) ?? false;
                 bool activeUiUpnpState = CfgUPnP.Checked;
 
-                // Commit the toggle selection back to our own internal configuration state variables
                 if (AppSettings.Instance != null)
                 {
                     AppSettings.Instance.EnableUPnP = activeUiUpnpState;
                     AppSettings.Instance.SaveSettingsAsync().GetAwaiter().GetResult();
                 }
 
-                // Formulate the multi-node comma-separated string sequence directly from live list views
-                List<string> activeUdpStrings = new List<string>();
-                for (int i = 0; i < PMList.Items.Count; i++)
-                {
-                    var item = PMList.Items[i];
-                    if (item != null && item.Tag is string savedStringNode)
-                    {
-                        activeUdpStrings.Add(savedStringNode);
-                    }
-                }
+                _serverPropertiesMap["server-udp-ports"] = string.Join(",", _activeUdpNodesCache);
 
-                _serverPropertiesMap["server-udp-ports"] = string.Join(",", activeUdpStrings);
-
-                // Read structural layout commentary lines and cleanly append modified values matching explicit keys
                 string[] lines = File.ReadAllLines(_propertiesPath);
                 List<string> outputBufferLines = new List<string>();
+                bool portsFieldHandled = false;
 
                 foreach (string line in lines)
                 {
-                    if (string.IsNullOrWhiteSpace(line) || line.Trim().StartsWith("#"))
+                    string trimmedLine = line.Trim();
+
+                    // ✅ FIX: Only transform the VERY FIRST instance found. Pass all subsequent examples through cleanly.
+                    if (!portsFieldHandled && trimmedLine.IndexOf("server-udp-ports", StringComparison.OrdinalIgnoreCase) != -1)
+                    {
+                        outputBufferLines.Add($"server-udp-ports={_serverPropertiesMap["server-udp-ports"]}");
+                        portsFieldHandled = true;
+                        continue;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(line) || trimmedLine.StartsWith("#"))
                     {
                         outputBufferLines.Add(line);
                         continue;
@@ -171,6 +266,22 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
 
                         if (key.Equals("bdsutil-enable-upnp", StringComparison.OrdinalIgnoreCase)) continue;
 
+                        if (key.Equals("server-udp-ports", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Safety backup in case an uncommented line slipped past the indexer check above
+                            if (!portsFieldHandled)
+                            {
+                                outputBufferLines.Add($"{key}={_serverPropertiesMap["server-udp-ports"]}");
+                                portsFieldHandled = true;
+                            }
+                            else
+                            {
+                                // If already handled up top, strip out extra active lines so bedrock_server doesn't crash
+                                continue;
+                            }
+                            continue;
+                        }
+
                         if (_serverPropertiesMap.ContainsKey(key))
                         {
                             outputBufferLines.Add($"{key}={_serverPropertiesMap[key]}");
@@ -180,12 +291,16 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
                     outputBufferLines.Add(line);
                 }
 
+                // FALLBACK: If no line containing 'server-udp-ports' was found anywhere, append it safely to the bottom
+                if (!portsFieldHandled)
+                {
+                    outputBufferLines.Add($"server-udp-ports={_serverPropertiesMap["server-udp-ports"]}");
+                }
+
                 File.WriteAllLines(_propertiesPath, outputBufferLines, Encoding.UTF8);
 
-                // --- DETECT INFRASTRUCTURE ADJUSTMENTS & FORCE RESTART INTERCEPT ---
                 if (historicalUpnpState != activeUiUpnpState)
                 {
-                    // Frame out the configuration alignment check prompt
                     if (ReaLTaiizor.Controls.MaterialMessageBox.Show(
                         this,
                         "[UPnP CAPABILITY INVERSION DETECTED]\n\n" +
@@ -196,135 +311,24 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
                         "Infrastructure Realignment Required",
                         true) == DialogResult.OK)
                     {
-                        // FIXED: Open our lightweight cleanup modal to offload network operations safely off the UI thread!
                         string serverDirectory = AppSettings.Instance?.ServerExecutablePath;
 
                         using (UPnPCloseProgressForm progressModal = new UPnPCloseProgressForm(serverDirectory))
                         {
-                            // ShowDialog runs the network drops safely while maintaining full visual feedback updates
                             progressModal.ShowDialog(this);
                         }
 
-                        // The exact millisecond the router confirms cleanup is done, the modal drops and we bounce the app instantly!
                         Application.Restart();
                         Environment.Exit(0);
                     }
                 }
             }
-
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Network save file violation error: {ex.Message}");
             }
-        }
 
-        private void CfgUPnP_CheckedChanged(object sender, EventArgs e)
-        {
-            ToggleManualInputContainers(!CfgUPnP.Checked);
-        }
-
-        /// <summary>
-        /// Toggles target layout visibility panels instantly based on UPnP validation selections.
-        /// </summary>
-        private void ToggleManualInputContainers(bool enableManual)
-        {
-            if (ManPMCtrls != null) ManPMCtrls.Enabled = enableManual;
-            if (PortBTNCard != null) PortBTNCard.Enabled = enableManual;
-        }
-
-        /// <summary>
-        /// Event hook linked straight to your APBTN (Add Port Button) trigger loop channel.
-        /// </summary>
-        /// <summary>
-        /// Event hook linked straight to your APBTN (Add Port Button) trigger loop channel.
-        /// </summary>
-        /// <summary>
-        /// Event hook linked straight to your APBTN (Add Port Button) trigger loop channel.
-        /// </summary>
-        private void APBTN_Click(object sender, EventArgs e)
-        {
-            // FIXED: Explicitly targeting the dialogue utilizing its absolute modal namespace path
-            using (var addDialog = new BDSUtil.Modals.AddPortDialogue())
-            {
-                if (addDialog.ShowDialog(this) == DialogResult.OK && addDialog.IsConfirmed)
-                {
-                    // Dynamic public lookup handles Nethernet mappings perfectly for external users!
-                    string wanIpAddress = UPnPEngine.GetExternalIPAddress();
-
-                    // Re-formulate raw property token block formatting matching Mojang parameters ([IP]:Ext:Int)
-                    string formattedPropertyToken = $"{wanIpAddress}:{addDialog.ExternalPort}:{addDialog.InternalPort}";
-
-                    // Build user descriptive dashboard visualization item text string rows
-                    string cleanDisplayLabel = (addDialog.ExternalPort == addDialog.InternalPort)
-                        ? $"UDP Forward Node: {addDialog.ExternalPort}"
-                        : $"UDP Port Map: {addDialog.ExternalPort} mapped to internal port {addDialog.InternalPort}";
-
-                    // Check for duplications inside our current canvas checklist tracks
-                    for (int i = 0; i < PMList.Items.Count; i++)
-                    {
-                        if (PMList.Items[i].Tag is string existingToken)
-                        {
-                            if (existingToken.Equals(formattedPropertyToken, StringComparison.OrdinalIgnoreCase))
-                            {
-                                ReaLTaiizor.Controls.MaterialMessageBox.Show(this, "That specific port translation map rule node already exists inside your active grid.", "Duplicate Conflict");
-                                return;
-                            }
-                        }
-                    }
-
-                    // FIXED: PMList.Items.Add returns void in ReaLTaiizor. We append it, then fetch the index by count.
-                    PMList.Items.Add(cleanDisplayLabel, false);
-                    int newIndex = PMList.Items.Count - 1;
-                    if (newIndex >= 0)
-                    {
-                        PMList.Items[newIndex].Tag = formattedPropertyToken;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Event hook linked straight to your RPBTN (Remove Selected Port Button) trigger loop channel.
-        /// </summary>
-        private void RPBTN_Click(object sender, EventArgs e)
-        {
-            // Gather all checked items for removal
-            var indicesToRemove = new List<int>();
-
-            for (int i = 0; i < PMList.Items.Count; i++)
-            {
-                if (PMList.Items[i].Checked)
-                {
-                    indicesToRemove.Add(i);
-
-                    // Cleanly tear port forward maps down from your physical hardware router live if UPnP handles it
-                    if (PMList.Items[i].Tag is string tokenString)
-                    {
-                        string[] parts = tokenString.Split(':');
-                        if (parts.Length >= 2 && int.TryParse(parts[parts.Length - 2], out int extPortToPurge))
-                        {
-                            UPnPEngine.ClosePort(extPortToPurge);
-                        }
-                    }
-                }
-            }
-
-            if (indicesToRemove.Count == 0)
-            {
-                ReaLTaiizor.Controls.MaterialMessageBox.Show(this, "No specific routing configuration rows are checked for deletion tracking.", "Selection Track Empty");
-                return;
-            }
-
-            // Remove items in reverse order to preserve indexing constraints during the loop pass
-            foreach (int index in indicesToRemove.OrderByDescending(v => v))
-            {
-                PMList.Items.RemoveAt(index);
-            }
-        }
-
-        private void NetworkingControl_Load(object sender, EventArgs e)
-        {
-
+            ClearSelectionFocus();
         }
     }
 }

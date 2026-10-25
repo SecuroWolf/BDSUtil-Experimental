@@ -117,15 +117,4 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="materialLabel1.Text" xml:space="preserve">
-    <value>Select your server directory here:
-This allows this program to function outside of the server directory if this is desirable.
-Furthermore, the program logic should handle populating this field automatically if a file titled bedrock_server.exe is located in the app directory.</value>
-  </data>
-  <data name="materialLabel2.Text" xml:space="preserve">
-    <value>Select your desired compression method here:
-Note: WinRAR options will be disabled unless WinRAR is installed in its default directory
-(C:/Program Files/WinRAR)
-Using custom WinRAR installation directories will be possible in a later release.</value>
-  </data>
 </root>
