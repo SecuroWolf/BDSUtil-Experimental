@@ -1,8 +1,8 @@
 ﻿using BDSUtil.Modals;
-using ReaLTaiizor.Colors; // Core Material Color templates
+using ReaLTaiizor.Colors;
 using ReaLTaiizor.Controls;
-using ReaLTaiizor.Forms; // Core ReaLTaiizor MaterialForm base class mapping
-using ReaLTaiizor.Manager; // Unified skin and theme scheme manager hooks
+using ReaLTaiizor.Forms;
+using ReaLTaiizor.Manager;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -26,28 +26,24 @@ namespace BDSUtil
         private int _previousActiveTabIndex = 0;
         private bool _isRedirecting = false;
 
-        // State flag to signal if a backup sequence is waiting for the active server exit thread event
         private bool _isBackupPendingAfterStop = false;
-
-        // --- BACKGROUND WORKER PIPELINE FIELDS ---
         private System.ComponentModel.BackgroundWorker _backupWorker;
-        private int _activeBackupType = 0; // 1 = Worlds, 2 = Packs, 3 = Full Server
+        private int _activeBackupType = 0;
         private string _backupDestinationRoot = string.Empty;
         private readonly string _winRarRegistryPath = @"C:\Program Files\WinRAR\WinRAR.exe";
+
+        private bool _forceSystemExit = false;
+        private bool _isUpnpCleanupComplete = false;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            // Set up your universal ReaLTaiizor theme configuration layers cleanly
             _materialSkinManager = ReaLTaiizor.Manager.MaterialSkinManager.Instance;
             _materialSkinManager.EnforceBackcolorOnAllComponents = true;
             _materialSkinManager.AddFormToManage(this);
             _materialSkinManager.Theme = ReaLTaiizor.Manager.MaterialSkinManager.Themes.DARK;
 
-            // THE DIRECT CORE ASSIGNMENT:
-            // Uses the true, verified class names under the ReaLTaiizor.Colors folder hierarchy,
-            // immediately satisfying the compiler with zero namespace errors!
             _materialSkinManager.ColorScheme = new ReaLTaiizor.Colors.MaterialColorScheme(
                 ReaLTaiizor.Colors.MaterialPrimary.BlueGrey800,
                 ReaLTaiizor.Colors.MaterialPrimary.BlueGrey900,
@@ -56,47 +52,26 @@ namespace BDSUtil
                 ReaLTaiizor.Util.MaterialTextShade.WHITE
             );
 
-            // Bind your main window frame to track navigation natively matching the demo
             this.DrawerTabControl = MaterialTabControl1;
             this.DrawerShowIconsWhenHidden = true;
 
-            // Force our tracking cache variable to lock onto the console tab (Index 0) instantly on boot
             _previousActiveTabIndex = 0;
             MaterialTabControl1.SelectedIndex = 0;
 
-            // Initialize background compilation tasks
             InitializeBackupEngine();
         }
 
-
-
-
         private void MainWindow_Load(object sender, EventArgs e)
         {
-            //#################################################
-            //##        New Feature Template Injection       ##
-            //#################################################
-            // This is a Developer Preview feature that is not yet fully implemented. It is intended to only be used
-            // for testing a new feature modal. It will be commented out on for source commits and removed from production builds entirely.
-
-            //using (var NewFeatureModal = new LevelEditorWrapper(this))
-            //{
-            //    NewFeatureModal.ShowDialog(this);
-            //}
-
-
             UpdateControlButtonStates();
 
             //#################################################
             //##            UPnP NETWORK MAPPING             ##
             //#################################################
-
-            // AUTOMATED PIPELINE GENERATION ENGINE: Proactively allocates primary and multi-node routing pools on boot
             if (AppSettings.Instance.EnableUPnP)
             {
                 AppendTerminalLine("[MANAGER INFO] UPnP is active. Initiating network mapping synchronization...");
 
-                // Proactively hide the deployment button while the hardware synchronization pipeline runs
                 this.Invoke((MethodInvoker)delegate
                 {
                     StartServerBTN_New.Visible = false;
@@ -114,12 +89,10 @@ namespace BDSUtil
 
                         string[] originalLines = System.IO.File.ReadAllLines(propertiesFilePath);
 
-                        // Default Fallback values matching vanilla standards
                         int primaryPortV4 = 19132;
                         int primaryPortV6 = 19133;
                         int maxPlayersCount = 10;
 
-                        // Parse out current runtime variables
                         foreach (string line in originalLines)
                         {
                             string trimmed = line.Trim();
@@ -140,7 +113,6 @@ namespace BDSUtil
                         string localSubnetIp = BDSUtil.Helpers.UPnPEngine.GetLocalIPAddress();
                         string externalPublicIp = BDSUtil.Helpers.UPnPEngine.GetExternalIPAddress();
 
-                        // Discover the active device cleanly via Open.NAT discovery handles
                         var discoverer = new Open.Nat.NatDiscoverer();
                         var cts = new CancellationTokenSource(2500);
                         var device = discoverer.DiscoverDeviceAsync(Open.Nat.PortMapper.Upnp, cts).GetAwaiter().GetResult();
@@ -155,7 +127,6 @@ namespace BDSUtil
                             return;
                         }
 
-                        // Scrape every existing active port mapping configuration currently cached in router memory
                         var hardwareMappings = device.GetAllMappingsAsync().GetAwaiter().GetResult() ?? new List<Open.Nat.Mapping>();
                         var activeUdpMappings = new Dictionary<int, string>();
                         var activeTcpMappings = new Dictionary<int, string>();
@@ -168,22 +139,16 @@ namespace BDSUtil
                                 activeTcpMappings[mapping.PublicPort] = mapping.PrivateIP.ToString();
                         }
 
-                        // Helper function to evaluate and enforce the mapping condition cleanly
                         bool EnsurePortIsLeased(int port, string protocolType)
                         {
                             var activeMap = (protocolType == "TCP") ? activeTcpMappings : activeUdpMappings;
 
-                            // Condition A: If already mapped to our exact local IP address, it's a verified success!
                             if (activeMap.ContainsKey(port) && activeMap[port] == localSubnetIp) return true;
-
-                            // Condition B: If mapped to a different machine, flag the collision
                             if (activeMap.ContainsKey(port) && activeMap[port] != localSubnetIp) return false;
 
-                            // Condition C: Unmapped channel. Safely issue a fresh, non-blocking registration request
                             return BDSUtil.Helpers.UPnPEngine.ForwardPort(port, port, localSubnetIp, protocolType);
                         }
 
-                        // --- PHASE 1: REQUISITION PRIMARY MAIN GAME PORTS (DUAL PROTOCOL) ---
                         this.Invoke((MethodInvoker)delegate
                         {
                             AppendTerminalLine($"[UPnP ENGINE] Synchronizing primary game endpoints (IPv4: {primaryPortV4}, IPv6: {primaryPortV6})...");
@@ -207,7 +172,6 @@ namespace BDSUtil
                                 AppendTerminalLine($"[UPnP COLLISION] Primary IPv6 port {primaryPortV6} is assigned to an alternate machine.");
                         });
 
-                        // --- PHASE 2: REQUISITION DYNAMIC NETHERNET PORT POOL (UDP ONLY) ---
                         List<string> successfulUdpTokens = new List<string>();
                         int targetPortCandidate = 19134;
 
@@ -247,7 +211,6 @@ namespace BDSUtil
                             targetPortCandidate++;
                         }
 
-                        // --- PHASE 3: SERIALIZE CLEAN PAYLOAD TO PROPERTIES ---
                         bool isValidIpNode = System.Text.RegularExpressions.Regex.IsMatch(externalPublicIp, @"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$");
 
                         if (successfulUdpTokens.Count > 0 && isValidIpNode)
@@ -283,7 +246,7 @@ namespace BDSUtil
                             this.Invoke((MethodInvoker)delegate
                             {
                                 AppendTerminalLine("[MANAGER INFO] Network pipeline initialization complete. External connections authorized.");
-                                StartServerBTN_New.Visible = true; // Reveal button only when table validation finishes!
+                                StartServerBTN_New.Visible = true;
                             });
                         }
                         else
@@ -308,10 +271,6 @@ namespace BDSUtil
             }
         }
 
-        /// <summary>
-        /// Public interface module to cleanly scrub active UPnP hardware leases 
-        /// and return server properties back to default states during restarts.
-        /// </summary>
         public static void ExecuteUpnpTeardown()
         {
             try
@@ -331,7 +290,6 @@ namespace BDSUtil
                         {
                             if (System.Text.RegularExpressions.Regex.IsMatch(line, strictKeyAssignmentPattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
                             {
-                                // RE-COMMENT THE ENTRY: Returns configurations cleanly back to stock condition
                                 cleanOutputBuffer.Add("# server-udp-ports=");
                             }
                             else
@@ -344,7 +302,6 @@ namespace BDSUtil
                     }
                 }
 
-                // Force individual lease deletions directly on router gateway circuits
                 BDSUtil.Helpers.UPnPEngine.TearDownPorts();
             }
             catch (Exception ex)
@@ -353,11 +310,6 @@ namespace BDSUtil
             }
         }
 
-
-        /// <summary>
-        /// Centrally evaluates the active server process and configuration paths 
-        /// to dynamically force the correct visibility states onto the Start/Stop buttons.
-        /// </summary>
         private void UpdateControlButtonStates()
         {
             string configuredPath = AppSettings.Instance?.ServerExecutablePath;
@@ -365,7 +317,6 @@ namespace BDSUtil
 
             if (!string.IsNullOrWhiteSpace(configuredPath))
             {
-                // Strip trailing executable file bindings if the user linked the direct binary instead of the parent folder
                 if (configuredPath.EndsWith("bedrock_server.exe", StringComparison.OrdinalIgnoreCase))
                 {
                     configuredPath = Path.GetDirectoryName(configuredPath);
@@ -376,14 +327,12 @@ namespace BDSUtil
                     string absoluteBinaryTarget = Path.Combine(configuredPath, "bedrock_server.exe");
                     string absolutePropertiesTarget = Path.Combine(configuredPath, "server.properties");
 
-                    // FIXED (#2): Validates that BOTH critical files are present on disk
                     isPathConfigured = File.Exists(absoluteBinaryTarget) && File.Exists(absolutePropertiesTarget);
                 }
             }
 
             bool isProcessRunning = _serverProcess != null && !_serverProcess.HasExited;
 
-            // FIXED (#1): Keep buttons VISIBLE even if path configuration fails, allowing the missing path fallback dialogue code path to trigger on click
             if (isProcessRunning)
             {
                 StartServerBTN_New.Visible = false;
@@ -397,23 +346,21 @@ namespace BDSUtil
             }
         }
 
-
         private void InitializeBackupEngine()
         {
             _backupWorker = new System.ComponentModel.BackgroundWorker
             {
-                WorkerReportsProgress = true, // MUST BE TRUE TO TRANSMIT PROGRESS VALUES
+                WorkerReportsProgress = true,
                 WorkerSupportsCancellation = false
             };
 
             _backupWorker.DoWork += BackupWorker_DoWork;
-            _backupWorker.ProgressChanged += BackupWorker_ProgressChanged; // NEW SELECTION
+            _backupWorker.ProgressChanged += BackupWorker_ProgressChanged;
             _backupWorker.RunWorkerCompleted += BackupWorker_RunWorkerCompleted;
         }
 
         private void BackupWorker_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
         {
-            // Update the UI control bar elements safely straight out of the background worker thread reports
             BackupProgressBar.Value = e.ProgressPercentage;
         }
 
@@ -447,8 +394,8 @@ namespace BDSUtil
         }
 
         /// <summary>
-        /// Outputs log text strings to the terminal box while monitoring for explicit server initialization flags,
-        /// parsing real-time chat updates and critical game event telemetry layers dynamically.
+        /// Outputs log text strings to the terminal box while monitoring for explicit server initialization flags.
+        /// Catches and translates raw noisy Bedrock telemetry into clean UI displays dynamically.
         /// </summary>
         private void AppendTerminalLine(string text)
         {
@@ -460,6 +407,27 @@ namespace BDSUtil
                 return;
             }
 
+            // =========================================================================
+            // --- BDSUTIL_BRIDGE REAL-TIME PARSING & INTERCEPTION ENGINE ---
+            // =========================================================================
+            if (text.Contains("[BDSUTIL_BRIDGE]"))
+            {
+                ProcessTelemetryLine(text);
+
+                // Write the raw payload to the internal .log file for diagnostic history, 
+                // but SKIP pushing the raw noisy string to the UI console
+                try { File.AppendAllText(_currentLogPath, text + Environment.NewLine); } catch { }
+                return;
+            }
+
+            // Suppress the initial noisy pack discovery broadcast from the Bedrock engine
+            if (text.Contains("[Scripting][verbose]-Plugin Discovered [bdsutil_monitor]"))
+            {
+                try { File.AppendAllText(_currentLogPath, text + Environment.NewLine); } catch { }
+                return;
+            }
+
+            // Standard console append routine for normal server output
             ConsoleOutputTextBox.AppendText(text + Environment.NewLine);
             ConsoleOutputTextBox.SelectionStart = ConsoleOutputTextBox.Text.Length;
             ConsoleOutputTextBox.ScrollToCaret();
@@ -501,73 +469,96 @@ namespace BDSUtil
                 }
                 catch { }
             }
+        }
 
-            // =========================================================================
-            // --- BDSUTIL_BRIDGE REAL-TIME PARSING ENGINE ---
-            // =========================================================================
-            if (text.Contains("[BDSUTIL_BRIDGE]"))
+        /// <summary>
+        /// Extracts and cleans raw JSON telemetry strings coming from the console output interceptor, 
+        /// pushing beautifully formatted strings into the main UI terminal.
+        /// </summary>
+        private void ProcessTelemetryLine(string text)
+        {
+            try
             {
-                try
+                // 1. REAL-TIME CHAT INTERCEPTION & MODERATION VECTOR
+                if (text.Contains("[CHAT]"))
                 {
-                    // 1. REAL-TIME CHAT INTERCEPTION & MODERATION VECTOR
-                    if (text.Contains("[CHAT]"))
+                    string player = ExtractBridgeTokenValue(text, "player=");
+                    string message = ExtractBridgeTokenValue(text, "message=");
+
+                    if (!string.IsNullOrEmpty(player) && !string.IsNullOrEmpty(message))
                     {
-                        int tokenIndex = text.IndexOf("[CHAT] ");
-                        if (tokenIndex != -1)
-                        {
-                            string chatPayload = text.Substring(tokenIndex + 7).Trim(); // Slices to "<PlayerName>: message"
-                            int endBracket = chatPayload.IndexOf('>');
+                        // Clean, readable translation pushed to UI directly
+                        ConsoleOutputTextBox.AppendText($"[AutoMod] 💬 {player}: {message}\r\n");
+                        ConsoleOutputTextBox.SelectionStart = ConsoleOutputTextBox.Text.Length;
+                        ConsoleOutputTextBox.ScrollToCaret();
 
-                            if (chatPayload.StartsWith("<") && endBracket > 0)
-                            {
-                                string player = chatPayload.Substring(1, endBracket - 1);
-                                string message = chatPayload.Substring(endBracket + 2).Trim();
-
-                                // Hand over to an autonomous helper module or inline evaluation array
-                                EvaluateAutoModChatRules(player, message);
-                            }
-                        }
+                        // Hand over to the autonomous evaluation array
+                        EvaluateAutoModChatRules(player, message);
                     }
-                    // 2. REAL-TIME DEATH & PVP GRIEF TELEMETRY CAPTURE
-                    else if (text.Contains("[DEATH][PVP]"))
-                    {
-                        string victim = ExtractBridgeTokenValue(text, "victim=");
-                        string killer = ExtractBridgeTokenValue(text, "killer=");
-                        string cause = ExtractBridgeTokenValue(text, "cause=");
+                }
+                // 2. REAL-TIME DEATH & PVP GRIEF TELEMETRY CAPTURE
+                else if (text.Contains("[DEATH][PVP]"))
+                {
+                    string victim = ExtractBridgeTokenValue(text, "victim=");
+                    string killer = ExtractBridgeTokenValue(text, "killer=");
+                    string cause = ExtractBridgeTokenValue(text, "cause=");
 
-                        if (!string.IsNullOrEmpty(killer) && !string.IsNullOrEmpty(victim))
+                    if (!string.IsNullOrEmpty(killer) && !string.IsNullOrEmpty(victim))
+                    {
+                        ConsoleOutputTextBox.AppendText($"[AutoMod] ⚔️ PVP: {killer} killed {victim} ({cause})\r\n");
+                        ConsoleOutputTextBox.SelectionStart = ConsoleOutputTextBox.Text.Length;
+                        ConsoleOutputTextBox.ScrollToCaret();
+
+                        if (_serverProcess != null && !_serverProcess.HasExited)
                         {
-                            // Output notice to all players using the standard server command pipeline input handles
-                            if (_serverProcess != null && !_serverProcess.HasExited)
-                            {
-                                _serverProcess.StandardInput.WriteLine($"say §c[Security Hub] Player {killer} killed {victim} using {cause}!");
-                            }
+                            _serverProcess.StandardInput.WriteLine($"say §c[Security Hub] Player {killer} killed {victim} using {cause}!");
                         }
                     }
                 }
-                catch (Exception ex)
+                // 3. ENVIRONMENT DEATH CAPTURE
+                else if (text.Contains("[DEATH][ENV]"))
                 {
-                    System.Diagnostics.Debug.WriteLine($"[Bridge Dynamic Parser Exception]: {ex.Message}");
+                    string victim = ExtractBridgeTokenValue(text, "victim=");
+                    string source = ExtractBridgeTokenValue(text, "source=");
+                    string cause = ExtractBridgeTokenValue(text, "cause=");
+
+                    if (!string.IsNullOrEmpty(victim))
+                    {
+                        ConsoleOutputTextBox.AppendText($"[AutoMod] 💀 ENV: {victim} died to {source} ({cause})\r\n");
+                        ConsoleOutputTextBox.SelectionStart = ConsoleOutputTextBox.Text.Length;
+                        ConsoleOutputTextBox.ScrollToCaret();
+                    }
                 }
+                // 4. CLEAN INITIALIZATION FEEDBACK
+                else if (text.Contains("[INIT]"))
+                {
+                    int initIndex = text.IndexOf("[INIT]");
+                    string cleanInit = text.Substring(initIndex).Replace("[INIT]", "").Trim();
+
+                    ConsoleOutputTextBox.AppendText($"[AutoMod] ⚙️ {cleanInit}\r\n");
+                    ConsoleOutputTextBox.SelectionStart = ConsoleOutputTextBox.Text.Length;
+                    ConsoleOutputTextBox.ScrollToCaret();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Bridge Dynamic Parser Exception]: {ex.Message}");
             }
         }
 
-                /// <summary>
+        /// <summary>
         /// Compares real-time chat strings against active filtering cache rules, executing commands instantly on trigger matches.
         /// </summary>
         private void EvaluateAutoModChatRules(string player, string message)
         {
-            // AutoModWrapper updates its list programmatically. Replace this with your global expressions list cache object variable name
-            var bannedExpressions = new List<string> { "badword1", "griefbot" }; 
+            var bannedExpressions = new List<string> { "badword1", "griefbot", "fudge" };
 
             foreach (string expression in bannedExpressions)
             {
-                // FIXED: Using IndexOf to satisfy the old .NET Framework compiler with case-insensitive capability!
                 if (message.IndexOf(expression, StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     if (_serverProcess != null && !_serverProcess.HasExited)
                     {
-                        // Safely inject the kick sequence down the standard process input stream
                         _serverProcess.StandardInput.WriteLine($"kick \"{player}\" AutoMod Trigger: Chat policy violation.");
                         _serverProcess.StandardInput.WriteLine($"say §e[AutoMod] Kicked player {player} for using filtered phrases.");
                     }
@@ -584,7 +575,7 @@ namespace BDSUtil
             int start = line.IndexOf(tokenName);
             if (start == -1) return string.Empty;
 
-            start += tokenName.Length + 1; // Step right past the token header text and the opening double quote character
+            start += tokenName.Length + 1;
             int end = line.IndexOf('"', start);
             if (end == -1) return string.Empty;
 
@@ -626,7 +617,6 @@ namespace BDSUtil
             }
             this.Show();
 
-            // FIXED: Leverages a 1ms micro-deferment timer loop to ensure the viewport canvas updates natively
             if (outcomeResult == DialogResult.Retry)
             {
                 if (MaterialTabControl1 != null)
@@ -638,9 +628,9 @@ namespace BDSUtil
                     {
                         redirectTimer.Stop();
 
-                        _isRedirecting = true; // LOCK: Blocks the selection loop from re-triggering the intercept modal
+                        _isRedirecting = true;
                         MaterialTabControl1.SelectedIndex = settingsIndex;
-                        _isRedirecting = false; // UNLOCK: Restores standard baseline navigation rules
+                        _isRedirecting = false;
 
                         MaterialTabControl1.Update();
 
@@ -657,7 +647,6 @@ namespace BDSUtil
                 return;
             }
 
-            // Standard restoration routine for normal cancel operations
             System.Windows.Forms.Timer restorationTimer = new System.Windows.Forms.Timer { Interval = 1 };
             restorationTimer.Tick += (s, args) =>
             {
@@ -669,34 +658,25 @@ namespace BDSUtil
             restorationTimer.Start();
         }
 
-
-        // Place inside your MainWindow.cs file
-        // This block replaces the current MaterialTabControl1_SelectedIndexChanged structure
-
         private void MaterialTabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (BKCompleteLBL != null) BKCompleteLBL.Visible = false;
             if (BackupProgressBar != null) BackupProgressBar.Visible = false;
 
-            // Guard gate: If the application is actively redirecting to settings, skip all structural intercepts completely
             if (_isRedirecting) return;
 
             int activeIndex = MaterialTabControl1.SelectedIndex;
 
-            // --- AUTOMOD TAB INTERCEPTOR (INDEX 2) ---
             if (activeIndex == 2)
             {
                 LaunchModalAndRestoreTab(() => new AutoModWrapper(this));
                 return;
             }
 
-            // --- LEVEL EDITOR TAB INTERCEPTOR (INDEX 3) ---
-            // Assumes Index 3 is your target Level Editor tab control index coordinates
             if (activeIndex == 3)
             {
                 if (AppSettings.Instance.WorldEditorEnabled)
                 {
-                    // Security rules cleared: Make the underlying operational control components interactive
                     if (this.editorProvider1 != null)
                     {
                         this.editorProvider1.Visible = true;
@@ -706,7 +686,6 @@ namespace BDSUtil
                 }
                 else
                 {
-                    // Lock out active manipulation interfaces and spawn the redirection routing prompt
                     if (this.editorProvider1 != null)
                     {
                         this.editorProvider1.Visible = false;
@@ -717,7 +696,6 @@ namespace BDSUtil
                 }
             }
 
-            // --- INLINE SETTINGS MANAGEMENT (LAST INDEX TARGET) ---
             int settingsTabIndex = MaterialTabControl1.TabCount - 1;
             if (activeIndex == settingsTabIndex)
             {
@@ -728,14 +706,9 @@ namespace BDSUtil
                 }
             }
 
-            // Cache stable tab navigation transitions cleanly
             _previousActiveTabIndex = activeIndex;
         }
 
-        /// <summary>
-        /// Spawns a Material confirmation dialogue warning users that permissions are restricted,
-        /// providing automated routing shortcuts straight to the system configuration panel layout.
-        /// </summary>
         private void EvaluateLevelEditorAccessAndRedirect()
         {
             int snapshotIndex = _previousActiveTabIndex;
@@ -759,9 +732,9 @@ namespace BDSUtil
                 {
                     redirectTimer.Stop();
 
-                    _isRedirecting = true; // LOCK: Blocks the selection loop from re-triggering the intercept prompt
+                    _isRedirecting = true;
                     MaterialTabControl1.SelectedIndex = settingsIndex;
-                    _isRedirecting = false; // UNLOCK: Restores standard baseline navigation rules
+                    _isRedirecting = false;
 
                     MaterialTabControl1.Update();
 
@@ -777,7 +750,6 @@ namespace BDSUtil
             }
             else
             {
-                // User aborted: Fire a micro-deferred timer route back to the last stable viewport state coordinates
                 System.Windows.Forms.Timer restorationTimer = new System.Windows.Forms.Timer { Interval = 1 };
                 restorationTimer.Tick += (s, args) =>
                 {
@@ -810,7 +782,6 @@ namespace BDSUtil
 
             string fileExtension = (compressionType == 0) ? ".rar" : ".zip";
 
-            // Set naming prefix based on operation type
             string stagingFolderName = "Worlds_Backup_";
             if (_activeBackupType == 2) stagingFolderName = "Packs_Backup_";
             else if (_activeBackupType == 3) stagingFolderName = "Server_Backup_";
@@ -821,14 +792,10 @@ namespace BDSUtil
             worker?.ReportProgress(5);
             System.Threading.Thread.Sleep(1500);
 
-            // Create a dedicated local staging path for temporary assembly
             string tempBackupPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "temp_bk_" + timestamp);
 
             try
             {
-                // =========================================================================
-                // BRANCH A: ADDON/PACKS EXTRACTION (TYPE 2)
-                // =========================================================================
                 if (_activeBackupType == 2)
                 {
                     string[] targetPackFolders = new string[] { "behavior_packs", "resource_packs" };
@@ -869,30 +836,21 @@ namespace BDSUtil
                         throw new DirectoryNotFoundException("No active directory nodes starting with your prefix naming scheme 'custom_' were detected inside behavior or resource containers.");
                     }
                 }
-                // =========================================================================
-                // BRANCH B: EXPLICIT FULL SERVER ARCHITECTURE SWEEP (TYPE 3)
-                // =========================================================================
                 else if (_activeBackupType == 3)
                 {
-                    // Explicit whitelist map extracted from server layout assets and requirements
                     string[] whitelistedItems = new string[]
                     {
-                        // Standard base files from your archive capture
                         "allowlist.json",
                         "bedrock_server.exe",
                         "packetlimitconfig.json",
                         "permissions.json",
                         "profanity_filter.wlist",
                         "server.properties",
-                        
-                        // Core configuration and data folder blocks
                         "behavior_packs",
                         "config",
                         "data",
                         "definitions",
                         "resource_packs",
-                        
-                        // Requested development and template directory targets
                         "development_behavior_packs",
                         "development_resource_packs",
                         "development_skin_packs",
@@ -907,7 +865,6 @@ namespace BDSUtil
 
                         if (File.Exists(sourceFullPath))
                         {
-                            // Handle root configuration files cleanly
                             string destFileDir = Path.GetDirectoryName(targetStagingRoot);
                             if (!string.IsNullOrEmpty(destFileDir)) Directory.CreateDirectory(destFileDir);
 
@@ -921,7 +878,6 @@ namespace BDSUtil
                         }
                         else if (Directory.Exists(sourceFullPath))
                         {
-                            // Sweep entire directory trees recursively using shared non-exclusive flags
                             foreach (string filePath in Directory.GetFiles(sourceFullPath, "*.*", SearchOption.AllDirectories))
                             {
                                 string destFilePath = filePath.Replace(sourceFullPath, targetStagingRoot);
@@ -939,9 +895,6 @@ namespace BDSUtil
                         }
                     }
                 }
-                // =========================================================================
-                // BRANCH C: STANDARD TOTAL WORLDS EXTRACTION (TYPE 1)
-                // =========================================================================
                 else
                 {
                     string worldsSourceFolder = Path.Combine(serverDir, "worlds");
@@ -968,9 +921,6 @@ namespace BDSUtil
 
                 worker?.ReportProgress(50);
 
-                // =========================================================================
-                // ARCHIVE COMPILATION PIPELINE CORES
-                // =========================================================================
                 if (compressionType == 0 || compressionType == 1)
                 {
                     string archiveFlag = (compressionType == 1) ? " -afzip" : "";
@@ -1017,10 +967,6 @@ namespace BDSUtil
             e.Result = archiveName;
         }
 
-
-
-
-
         private void BackupWorker_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
         {
             BackupWorldBTN.Enabled = true;
@@ -1040,16 +986,12 @@ namespace BDSUtil
 
                 BKCompleteLBL.Visible = true;
 
-                // --- PROMPT MODAL: CENTER LOCK TO PARENT CANVAS ---
-                // By passing 'this' as the first parameter hook argument signature,
-                // ReaLTaiizor anchors the dialog box bounding coordinates directly to the center 
-                // of your main user window layout, preventing it from straying onto random monitor screens!
                 DialogResult promptResult = ReaLTaiizor.Controls.MaterialMessageBox.Show(
                     this,
                     $"Backup package successfully created:\n'{savedName}'\n\nWould you like to open the local Backups archive directory in File Explorer now?",
                     "Backup Operations Successful",
                     MessageBoxButtons.YesNo,
-                    false, // Critical positioning flag to satisfy the method signature
+                    false,
                     ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
                 );
 
@@ -1073,7 +1015,7 @@ namespace BDSUtil
         private void ExecuteBackgroundBackupPipeline()
         {
             BackupWorldBTN.Enabled = false;
-            BackupPacksBTN.Enabled = false; // NEW BLOCK LOCK
+            BackupPacksBTN.Enabled = false;
             BackupServerBTN.Enabled = false;
 
             BKCompleteLBL.Visible = false;
@@ -1090,19 +1032,15 @@ namespace BDSUtil
             _backupWorker.RunWorkerAsync();
         }
 
-
-
         //#############################################################################
         //############################## Restore Pipeline #############################
         //#############################################################################
 
-        // A specialized data-holding structure to link clear visual tokens to raw files
         private class BackupRestoreItem
         {
             public string FileFullPath { get; set; }
             public string VisualTextString { get; set; }
 
-            // Standard WinForms ListBox reads ToString() to paint the text lines flawlessly on screen
             public override string ToString()
             {
                 return VisualTextString;
@@ -1111,14 +1049,12 @@ namespace BDSUtil
 
         public void PopulateRestoreSnapshotsList()
         {
-            // 1. Reset state controls safely before sweeping disk directories
             BackupPointsListBox.Items.Clear();
             RunRestoreBTN.Visible = false;
 
             string backupRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Backups");
             if (!Directory.Exists(backupRoot)) return;
 
-            // Target mapping evaluation: 0 = Worlds, 1 = Packs, 2 = Server
             int targetType = RestoreTypeComboBox.SelectedIndex;
             string matchPrefix = "Worlds_Backup_";
             if (targetType == 1) matchPrefix = "Packs_Backup_";
@@ -1148,12 +1084,10 @@ namespace BDSUtil
                         string readableDate = month + "/" + day + "/" + year + " @ " + hourStr + ":" + minStr + ":" + secStr;
                         string extension = Path.GetExtension(filePath).ToUpper().Replace(".", "");
 
-                        // Instantiate ReaLTaiizor's native list container item cleanly.
-                        // We store the vital disk path securely right inside the SecondaryText property block!
                         var item = new ReaLTaiizor.Child.Material.MaterialListBoxItem
                         {
                             Text = "📅  " + readableDate,
-                            SecondaryText = filePath // This acts as our hidden tag parameter container
+                            SecondaryText = filePath
                         };
 
                         BackupPointsListBox.Items.Add(item);
@@ -1166,27 +1100,21 @@ namespace BDSUtil
             }
         }
 
-
         private void RestoreTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             PopulateRestoreSnapshotsList();
         }
 
-        // --- NEW SELECTION CHECK HOOK ---
-        // Click event/SelectedIndexChanged wire-up for your MaterialListBox container canvas
         private void BackupPointsListBox_SelectedIndexChanged(object sender, ReaLTaiizor.Child.Material.MaterialListBoxItem selectedItem)
         {
-            // If nothing is selected or the item is empty, ensure the button stays hidden
             if (selectedItem == null || string.IsNullOrEmpty(selectedItem.SecondaryText))
             {
                 RunRestoreBTN.Visible = false;
                 return;
             }
 
-            // Reveal the button immediately when a valid snapshot row is highlighted!
             RunRestoreBTN.Visible = true;
         }
-
 
         //#############################################################################
         //########################### Snapshot Page BTNs ##############################
@@ -1251,7 +1179,6 @@ namespace BDSUtil
                 return;
             }
 
-            // TYPE 2 signals a specialized Packs backup sequence to the background worker thread
             _activeBackupType = 2;
 
             if (_serverProcess != null && !_serverProcess.HasExited)
@@ -1296,7 +1223,6 @@ namespace BDSUtil
                 return;
             }
 
-            // TYPE 3 signals a Full Server backup sequence to the background worker thread
             _activeBackupType = 3;
 
             if (_serverProcess != null && !_serverProcess.HasExited)
@@ -1327,14 +1253,12 @@ namespace BDSUtil
 
         private void RunRestoreBTN_Click(object sender, EventArgs e)
         {
-            // Extract the hidden configuration path string directly out of the secondary metadata tracker property
             if (!(BackupPointsListBox.SelectedItem is ReaLTaiizor.Child.Material.MaterialListBoxItem selectedItem) || string.IsNullOrEmpty(selectedItem.SecondaryText))
             {
                 RunRestoreBTN.Visible = false;
                 return;
             }
 
-            // 1. OPERATION STATE CEILING: Block execution passes if the server binary loop is active
             if (_serverProcess != null && !_serverProcess.HasExited)
             {
                 ReaLTaiizor.Controls.MaterialMessageBox.Show(
@@ -1348,7 +1272,6 @@ namespace BDSUtil
                 return;
             }
 
-            // 2. DEFENSIVE CONFIRMATION DIALOG MODAL PROMPT
             DialogResult confirmResult = ReaLTaiizor.Controls.MaterialMessageBox.Show(
                 this,
                 "WARNING: Proceeding will completely OVERWRITE your existing data matching the snapshot type chosen.\n\nAre you absolutely sure you want to execute recovery?",
@@ -1361,7 +1284,7 @@ namespace BDSUtil
             if (confirmResult != DialogResult.Yes) return;
 
             string serverDir = AppSettings.Instance.ServerExecutablePath;
-            int targetType = RestoreTypeComboBox.SelectedIndex; // 0 = Worlds, 1 = Packs, 2 = Server
+            int targetType = RestoreTypeComboBox.SelectedIndex;
             string archivePath = selectedItem.SecondaryText;
             string extension = Path.GetExtension(archivePath).ToLower();
 
@@ -1369,13 +1292,12 @@ namespace BDSUtil
             {
                 AppendTerminalLine("[RESTORE INITIALIZED] Preparing target environment directories...");
 
-                // 3. DEFENSIVE DESTINATION TARGET CONTAINER SCRUBBING
-                if (targetType == 0) // Worlds Only
+                if (targetType == 0)
                 {
                     string targetFolder = Path.Combine(serverDir, "worlds");
                     if (Directory.Exists(targetFolder)) Directory.Delete(targetFolder, true);
                 }
-                else if (targetType == 1) // Custom Packs Only
+                else if (targetType == 1)
                 {
                     string[] parentContainers = new string[] { "behavior_packs", "resource_packs" };
                     foreach (string container in parentContainers)
@@ -1387,7 +1309,7 @@ namespace BDSUtil
                         foreach (string dir in customDirs) Directory.Delete(dir, true);
                     }
                 }
-                else if (targetType == 2) // Full Server Override - Scrub directories AND loose files
+                else if (targetType == 2)
                 {
                     string[] serverFolders = new string[] {
                         "behavior_packs", "config", "data", "definitions", "resource_packs",
@@ -1400,7 +1322,6 @@ namespace BDSUtil
                         if (Directory.Exists(targetFolder)) Directory.Delete(targetFolder, true);
                     }
 
-                    // Explicitly scrub loose root json/configuration files so extraction never conflicts
                     string[] rootConfigFileNames = new string[] {
                         "allowlist.json", "packetlimitconfig.json", "permissions.json",
                         "profanity_filter.wlist", "server.properties"
@@ -1414,10 +1335,8 @@ namespace BDSUtil
 
                 AppendTerminalLine("[RESTORE EXTRACTION] Extracting archive file bytes down to disk blocks...");
 
-                // 4. EXTRACTION PIPELINE DISPATCH
                 if (extension == ".rar" || (extension == ".zip" && File.Exists(_winRarRegistryPath) && AppSettings.Instance.CompressionMode != 2))
                 {
-                    // WinRAR Extraction: "x" extracts with full paths, "-o+" forces overwrite confirmation bypasses
                     string winRarArgs = "x -o+ \"" + archivePath + "\" \"" + serverDir + "\\\"";
 
                     var rarInfo = new System.Diagnostics.ProcessStartInfo
@@ -1435,7 +1354,6 @@ namespace BDSUtil
                 }
                 else
                 {
-                    // Full .NET Framework compatible file streaming iteration loop
                     using (System.IO.Compression.ZipArchive archive = System.IO.Compression.ZipFile.OpenRead(archivePath))
                     {
                         foreach (System.IO.Compression.ZipArchiveEntry entry in archive.Entries)
@@ -1457,7 +1375,6 @@ namespace BDSUtil
                                     Directory.CreateDirectory(directoryPath);
                                 }
 
-                                // Overwrite existing loose files cleanly by passing true
                                 entry.ExtractToFile(destinationPath, true);
                             }
                         }
@@ -1467,7 +1384,7 @@ namespace BDSUtil
                 AppendTerminalLine("[CONSOLE] [SUCCESS] Snapshot recovery operation successfully committed.");
 
                 RunRestoreBTN.Visible = false;
-                PopulateRestoreSnapshotsList(); // Refresh list layout natively
+                PopulateRestoreSnapshotsList();
 
                 ReaLTaiizor.Controls.MaterialMessageBox.Show(
                     this,
@@ -1492,12 +1409,8 @@ namespace BDSUtil
             }
         }
 
-        // Add a private tracking flag at the top of class fields block inside MainWindow.cs
-        private bool _forceSystemExit = false; private bool _isUpnpCleanupComplete = false; // Flag to trace network teardown status loops
-
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
-            // --- START OF UPnP NETWORK TEARDOWN INTERCEPT PIPELINE ---
             if (!_forceSystemExit && AppSettings.Instance.EnableUPnP && !_isUpnpCleanupComplete)
             {
                 e.Cancel = true;
@@ -1505,7 +1418,6 @@ namespace BDSUtil
 
                 Task.Run(() =>
                 {
-                    // Call the universal dynamic teardown engine pass asynchronously
                     ExecuteUpnpTeardown();
 
                     this.BeginInvoke((MethodInvoker)delegate
@@ -1518,59 +1430,49 @@ namespace BDSUtil
                 return;
             }
 
-            // --- END OF UPnP VISUAL SHUTDOWN PROGRESS CONTEXT INTERCEPT ---
-
-            // If our private force flag is true, bypass all prompts and let the window exit cleanly!
             if (_forceSystemExit)
             {
                 return;
             }
 
-            // If the server process tracking variable is empty or already dead, exit normally
             if (_serverProcess == null || _serverProcess.HasExited)
             {
                 return;
             }
 
-            // INTERCEPT EXIT ATTEMPT: Launch your custom modal button form layout panel
             using (CloseConfirmForm confirmDialog = new CloseConfirmForm())
             {
                 if (confirmDialog.ShowDialog(this) == DialogResult.OK)
                 {
                     string action = confirmDialog.SelectedExitAction;
 
-                    if (action == "CLEAN_STOP") // USER CLICKED "YES (CLEAN STOP)"
+                    if (action == "CLEAN_STOP")
                     {
-                        e.Cancel = true; // Suspend application termination pass frames temporarily
-                        this.Enabled = false; // Block parent window input to prevent double clicks
+                        e.Cancel = true;
+                        this.Enabled = false;
 
                         try
                         {
                             AppendTerminalLine("[EXIT CONSOLE INTERCEPT] Processing clean administrative shutdown sequence...");
 
-                            // Unsubscribe from standard runtime exit event to stop a thread race collision
                             _serverProcess.Exited -= ServerProcess_Exited;
 
-                            // Wire a specialized event loop to forcefully exit the entire process 
-                            // environment the precise millisecond the server drops clear, bypassing recursion!
                             _serverProcess.Exited += (s, args) =>
                             {
                                 _forceSystemExit = true;
                                 Environment.Exit(0);
                             };
 
-                            // Pipe the clean close stream command straight down the input register
                             _serverProcess.StandardInput.WriteLine("stop");
                         }
                         catch
                         {
-                            // Hard safety fallback ceiling if input piping handles throw an exception
                             try { _serverProcess.Kill(); } catch { }
                             _forceSystemExit = true;
                             Environment.Exit(0);
                         }
                     }
-                    else if (action == "FORCE_KILL") // USER CLICKED "FORCE STOP"
+                    else if (action == "FORCE_KILL")
                     {
                         try
                         {
@@ -1579,20 +1481,19 @@ namespace BDSUtil
                         }
                         catch { }
 
-                        // Trip the force flag true to allow the window exit pass to drop without re-triggering the prompt modal
                         _forceSystemExit = true;
                         Application.Exit();
                     }
-                    else // FALLBACK PROTECTION LOOP
+                    else
                     {
                         e.Cancel = true;
-                        this.Enabled = true; // Restore interface responsiveness if the action drops out
+                        this.Enabled = true;
                     }
                 }
-                else // USER CLICKED "NO" OR CLOSED THE MODAL WINDOW
+                else
                 {
-                    e.Cancel = true; // Discard the closing window frame context and return focus to console
-                    this.Enabled = true; // Restore interface responsiveness
+                    e.Cancel = true;
+                    this.Enabled = true;
                 }
             }
         }
@@ -1687,7 +1588,6 @@ namespace BDSUtil
             UpdateControlButtonStates();
         }
 
-
         private void StopServerBTN_New_Click(object sender, EventArgs e)
         {
             if (_serverProcess != null && !_serverProcess.HasExited)
@@ -1698,10 +1598,8 @@ namespace BDSUtil
             }
         }
 
-
         private void SvConfigButton_Click(object sender, EventArgs e)
         {
-            // 1. OPERATION STATE CEILING: Block input changes if the server binary loop is actively active
             if (_serverProcess != null && !_serverProcess.HasExited)
             {
                 ReaLTaiizor.Controls.MaterialMessageBox.Show(
@@ -1715,7 +1613,6 @@ namespace BDSUtil
                 return;
             }
 
-            // 2. DEFENSIVE ENVIRONMENT VALIDATION GATE
             string targetDir = AppSettings.Instance?.ServerExecutablePath;
             bool isEnvironmentValid = false;
 
@@ -1731,12 +1628,10 @@ namespace BDSUtil
                     string binaryCheck = Path.Combine(targetDir, "bedrock_server.exe");
                     string propertiesCheck = Path.Combine(targetDir, "server.properties");
 
-                    // Valid environmental state confirmation
                     isEnvironmentValid = File.Exists(binaryCheck) && File.Exists(propertiesCheck);
                 }
             }
 
-            // 3. REUSE SEAMLESS NAVIGATION DIALOGUE IF MISSING OR INVALID
             if (!isEnvironmentValid)
             {
                 DialogResult promptResult = ReaLTaiizor.Controls.MaterialMessageBox.Show(
@@ -1746,7 +1641,6 @@ namespace BDSUtil
                     MessageBoxButtons.YesNo,
                     ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
                 );
-
 
                 if (promptResult == DialogResult.Yes)
                 {
@@ -1783,13 +1677,9 @@ namespace BDSUtil
                 return;
             }
 
-            // Environment is already valid, jump straight into the modal display engine pass
             ProceedToConfigModal();
         }
 
-        /// <summary>
-        /// Dedicated isolation helper to handle drawing and restoring the properties modal canvas cleanly.
-        /// </summary>
         private void ProceedToConfigModal()
         {
             this.Hide();
@@ -1800,23 +1690,17 @@ namespace BDSUtil
             }
 
             this.Show();
-            this.Update(); // Redraw parent canvas graphics immediately
+            this.Update();
         }
 
-        /// <summary>
-        /// Programmatically switches the active window context to your application settings tab panel view.
-        /// </summary>
         public void NavigateToSettingsTab()
         {
             if (MaterialTabControl1 != null)
             {
-                // Dynamically switches index to your application's last tab layout where Settings lives
                 int settingsIndex = MaterialTabControl1.TabCount - 1;
                 MaterialTabControl1.SelectedIndex = settingsIndex;
                 MaterialTabControl1.Update();
             }
         }
-
     }
-
 }

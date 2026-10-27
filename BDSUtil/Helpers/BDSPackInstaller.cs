@@ -6,6 +6,14 @@ namespace BDSUtil.Helpers
 {
     public static class BDSPackInstaller
     {
+        // Migrated from PackManager
+        public const string MONITOR_PACK_UUID = "4f9d2a6b-c7e1-432a-9e12-b5c6d7e8f9a0";
+        public const string MONITOR_PACK_VERSION = "0, 1, 1";
+        public const string MONITOR_MAIN_SCRIPT_VERSION = "0, 1, 1";
+
+        // Using the required bdsutil_ prefix
+        public const string MONITOR_PACK_FOLDER = "bdsutil_monitor";
+
         /// <summary>
         /// Natively builds and writes the production bds_monitor Bedrock Script API behavior pack files.
         /// </summary>
@@ -15,7 +23,7 @@ namespace BDSUtil.Helpers
 
             try
             {
-                string packRoot = Path.Combine(serverRoot, "behavior_packs", "bds_monitor");
+                string packRoot = Path.Combine(serverRoot, "behavior_packs", MONITOR_PACK_FOLDER);
                 string scriptsFolder = Path.Combine(packRoot, "scripts");
 
                 // Establish clean file system structural coordinates
@@ -38,6 +46,15 @@ namespace BDSUtil.Helpers
                 return false;
             }
         }
+
+        /// <summary>
+        /// Delegates to PackManager to register the BDSUtil Monitor pack into the target world.
+        /// </summary>
+        public static bool EnableMonitorPack(string serverRoot, string worldName)
+        {
+            return PackManager.EnablePackInWorld(serverRoot, worldName, MONITOR_PACK_UUID, MONITOR_PACK_VERSION, isBehaviorPack: true);
+        }
+
         private static string GetManifestJsonContent()
         {
             StringBuilder sb = new StringBuilder();
@@ -45,10 +62,10 @@ namespace BDSUtil.Helpers
             sb.AppendLine("  \"format_version\": 2,");
             sb.AppendLine("  \"header\": {");
             sb.AppendLine("    \"description\": \"BDSUtil Live Chat Bridge Log Monitor Middleware Pipeline\",");
-            sb.AppendLine("    \"name\": \"bds_monitor\",");
-            sb.AppendLine("    \"uuid\": \"4f9d2a6b-c7e1-432a-9e12-b5c6d7e8f9a0\",");
-            sb.AppendLine("    \"version\": [0, 1, 1],");
-            sb.AppendLine("    \"min_engine_version\": \"[1, 26, 50]\"");
+            sb.AppendLine($"    \"name\": \"{MONITOR_PACK_FOLDER}\","); // Updated to match prefix
+            sb.AppendLine($"    \"uuid\": \"{MONITOR_PACK_UUID}\",");
+            sb.AppendLine($"    \"version\": [{MONITOR_PACK_VERSION}],");
+            sb.AppendLine("    \"min_engine_version\": [1, 26, 50]");
             sb.AppendLine("  },");
             sb.AppendLine("  \"modules\": [");
             sb.AppendLine("    {");
@@ -56,7 +73,7 @@ namespace BDSUtil.Helpers
             sb.AppendLine("      \"type\": \"script\",");
             sb.AppendLine("      \"language\": \"javascript\",");
             sb.AppendLine("      \"uuid\": \"1b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e\",");
-            sb.AppendLine("      \"version\": [0, 1, 1],");
+            sb.AppendLine($"      \"version\": [{MONITOR_MAIN_SCRIPT_VERSION}],");
             sb.AppendLine("      \"entry\": \"scripts/main.js\"");
             sb.AppendLine("    }");
             sb.AppendLine("  ],");
@@ -78,7 +95,7 @@ namespace BDSUtil.Helpers
             sb.AppendLine("console.warn(\"[BDSUTIL_BRIDGE] Telemetry engine initializing...\");");
             sb.AppendLine();
             sb.AppendLine("// ==========================================");
-            sb.AppendLine("// 💬 CHAT LOGGING ENGINE");
+            sb.AppendLine("// CHAT LOGGING ENGINE");
             sb.AppendLine("// ==========================================");
             sb.AppendLine("try {");
             sb.AppendLine("    if (world.afterEvents.chatSend) {");
@@ -100,7 +117,7 @@ namespace BDSUtil.Helpers
             sb.AppendLine("}");
             sb.AppendLine();
             sb.AppendLine("// ==========================================");
-            sb.AppendLine("// 💀 DEATH MONITORING ENGINE");
+            sb.AppendLine("// DEATH MONITORING ENGINE");
             sb.AppendLine("// ==========================================");
             sb.AppendLine("try {");
             sb.AppendLine("    world.afterEvents.entityDie.subscribe((event) => {");

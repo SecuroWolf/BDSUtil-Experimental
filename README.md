@@ -1,60 +1,68 @@
 # BDSUtil
 
-**Disclaimer:** BDSUtil is a personal project and is not affiliated with, endorsed by, or associated with Mojang Studios or Microsoft Corporation. Minecraft, Bedrock Edition, and BDS (Bedrock Dedicated Server) are trademarks or registered trademarks of their respective owners.
+![BDSUtil Main Dashboard](docs/home_screenshot.png)
 
+BDSUtil is a C# desktop wrapper I'm putting together to make managing Minecraft Bedrock Dedicated Servers (BDS) a lot less of a headache. It wraps the server console in a clean UI, handles backups, automatically forwards ports via UPnP, and I'm currently experimenting with a native AutoMod bridge.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+**Disclaimer:** BDSUtil is a personal project and is not affiliated with, endorsed by, or associated with Mojang Studios or Microsoft Corporation. Minecraft, Bedrock Edition, and BDS are trademarks or registered trademarks of their respective owners.
 
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
-DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
-OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
-USE OR OTHER DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. 
 
-WITHOUT LIMITING THE FOREGOING, I ACCEPT ABSOLUTELY NO LIABILITY 
-IF THIS SOFTWARE CORRUPTS YOUR DATA, CAUSES YOUR ALARM NOT TO GO OFF 
-RESULTING IN YOU MISSING WORK, DESTROYS YOUR HARDWARE, OR INADVERTENTLY 
-TRIGGERS A THERMONUCLEAR WAR. YOU USE THIS SOFTWARE ENTIRELY AT YOUR OWN RISK.
+WITHOUT LIMITING THE FOREGOING, I ACCEPT ABSOLUTELY NO LIABILITY IF THIS SOFTWARE CORRUPTS YOUR DATA, CAUSES YOUR ALARM NOT TO GO OFF RESULTING IN YOU MISSING WORK, DESTROYS YOUR HARDWARE, OR INADVERTENTLY TRIGGERS A THERMONUCLEAR WAR. YOU USE THIS SOFTWARE ENTIRELY AT YOUR OWN RISK.
 
-## Features
+---
 
-### 🖥️ Interactive Console & GUI Wrapper
-* **Full Console Stream:** Displays real-time `bedrock_server.exe` logs directly inside the app wrapper.
-* **Command Interactivity:** Dedicated input terminal allows you to execute standard console commands on the fly.
-* **One-Click Power Controls:** Instant start and stop macros via floating dashboard action buttons.
+## 🚀 Getting Started
+
+1. **Link Your Server:** Just launch BDSUtil. If you drop it in the same folder as your server, it will automatically find `bedrock_server.exe`. Otherwise, pop into the Settings tab and point it to your server's root folder.
+2. **Fire it Up:** Head to the Server Console tab and hit the green power button. You'll get a clean terminal feed without the usual Bedrock telemetry spam.
+3. **UPnP (Optional):** Tired of manual port forwarding? Turn on UPnP in the settings. On the next server boot, it will automatically lease the required TCP/UDP routes for you and your players.
+4. **AutoMod (WIP):** Head to the Chat AutoMod tab to enable the custom `bdsutil_monitor` behavior pack. *Note: Enabling this automatically patches your world's level.dat for Beta APIs, which permanently turns off Xbox achievements for that specific world.*
+
+---
+
+## ✨ Features
+
+### 🖥️ Interactive Console
+![Console Wrapper](docs/console_screenshot.png)
+- **Clean Feed:** Streams the server log directly into the app, actively filtering out the noisy engine telemetry spam.
+- **Live Commands:** Send commands straight to the server via the built-in terminal.
+- **Quick Toggles:** Start and stop the server instantly with floating action buttons.
+
+### 🛡️ AutoMod & Telemetry Bridge (⚠️ Partially Implemented / WIP)
+*Note: This feature is currently in active development. The backend telemetry intercepts are working, but the rule configuration UI is still being built.*
+- **Behavior Pack Injection:** Automatically installs a custom `bdsutil_monitor` Script API behavior pack into your world to extract live game events.
+- **Live Parsing:** Translates raw JSON telemetry into clean, emoji-tagged terminal alerts for Chat, PVP Kills, and Environmental Deaths.
+- **Automated Enforcement (Coming Soon):** Will soon evaluate live chat against configurable filters to instantly auto-kick or mute griefers.
+
+### 🌐 UPnP & Network Management
+![UPnP Startup](docs/upnp1_screenshot.png)
+![UPnP Settings](docs/upnp2_screenshot.png)
+- **Secure by Default:** UPnP is strictly disabled out of the box. You have to explicitly turn it on.
+- **Auto-Routing:** Negotiates router firewall tables on app launch so you don't have to manually port-forward.
+- **Dynamic Pools:** Proactively leases sequential UDP ports (starting at `19134`) to smoothly balance multiple player connections up to your max-players limit.
+- **Self-Cleaning:** Cleans up after itself by scrubbing the temporary hardware rules from your router when the app closes, returning `server.properties` to a pristine state.
+- **Known Limitation:** The UPnP implementation cannot verify if a requested port is already manually forwarded. Due to a common router limitation, UPnP may report a successful lease even if a manual forward already exists (the manual forward will take priority). Using a third-party port checking API could resolve this, but was explicitly ruled out to maintain strict security and privacy standards.
+
+### 💾 Backups & Recovery
+![Backup Engine](docs/backup_screenshot.png)
+- **Granular Backups:** Back up your whole server, or just isolate specific Worlds and Packs.
+- **Compression:** Uses standard Windows `.zip` compression, or automatically hooks into WinRAR if you have it installed.
+- **One-Click Restore:** A dedicated restoration hub to quickly wipe and roll back worlds to older archive states when things go wrong.
 
 ### 📝 Configuration Editor
-* **GUI-Based Property Management:** Easily view, toggle, and update your baseline `server.properties` and whitelist profiles straight from a clean control dashboard panel without ever needing to navigate configuration text sheets directly.
-
-### 🌐 Dynamic UPnP Port Provisioning & Network Management
-* **Network-Security-First Default:** Consistent with a secure-by-default footprint, all automated network mapping subsystems are strictly disabled out of the box. Users must explicitly toggle UPnP on within their configuration sub-panels.
-* **Automated Gateway Mapping:** Once enabled, the integrated UPnP engine negotiates router firewall tables on app launch, entirely bypassing manual port forwarding requirements.
-* **Dual-Protocol Base Forwarding:** Automatically detects active `server-port` and `server-portv6` assignments on boot, creating simultaneous high-performance TCP and UDP routes for primary traffic.
-* **Dynamic Multi-Node Pools:** Proactively leases sequential UDP transport ports starting at `19134` to balance multiple player connections smoothly, scaling with the configured player slot constraints (up to Mojang's hard 16-port threshold).
-* **Fault-Tolerant Allocation:** Automatically detects local network mapping collisions or router lease rejections, skipping blocked ports instantly to lease alternative slots until the required number is reached.
-* **Manual Mapping Wizard:** For configurations where UPnP is unavailable or disabled, a simplified, streamlined Manual Port Mapping panel is built-in to allow easy tracking and administration of static forwarding nodes.
-* **Self-Cleaning Lifecycle:** Intercepts application restarts and system closures with an asynchronous visual progress modal, cleanly scrubbing temporary active hardware rules from your router while returning `server.properties` to a pristine commented state.
-
-### 💾 Snapshot, Backup & Recovery Engine
-* **Granular Backups:** Target specific backups for your individual Worlds, Resource/Behavior Packs, or execute a Full Server Archive.
-* **Flexible Compression:** Automatically defaults to native Windows Compression (`.zip`), with seamless support for WinRAR integration if detected in its default installation directory.
-* **Snapshot Recovery:** Dedicated restoration hub to roll back worlds and files to older states easily.
-
-### ⚙️ Portable Environment Management
-* **Decoupled Server Directory:** Can function completely outside of the server folder via a manual path picker.
-* **Zero-Config Detection:** Automatically populates the target directory at launch if the app file detects a local `bedrock_server.exe`.
+- **GUI Management:** View, toggle, and update your `server.properties` and whitelist profiles right from a clean UI dashboard—no more digging through text files.
 
 ---
 
-## Libraries & Credits
-This project leverages the following incredible open-source libraries to power its interface and networking stack:
-* **[ReaLTaiizor](https://github.com/Taiizor/ReaLTaiizor):** A comprehensive, feature-rich .NET WinForms component library that powers BDSUtil's modern Material Design layout ecosystem.
-* **[Open.NAT](https://github.com/lontivero/Open.NAT):** A lightweight, asynchronous .NET library used to manage port mapping allocations via UPnP and PMP seamlessly.
+## 📚 Libraries & Credits
+This project leverages a couple of incredible open-source libraries:
+- **[ReaLTaiizor](https://github.com/Taiizor/ReaLTaiizor):** A massive .NET WinForms component library that powers BDSUtil's modern Material Design layout.
+- **[Open.NAT](https://github.com/lontivero/Open.NAT):** A lightweight library used to seamlessly manage the UPnP port mapping allocations.
 
 ---
 
-## Roadmap / Planned Features
-* 💬 **Chat Filter Management:** Real-time log monitoring tab featuring configurable violation enforcements (redaction, mute, kick, warning strikes) alongside precise wildcard evaluations.
-* 📦 **Addon & Pack Management:** In-app installer and manager for server additions.
-* 🔄 **BDS Core Updates:** Automated and manual updating pipeline for the main server binary.
+## 🗺️ Roadmap
+- 📦 **Addon & Pack Management:** A dedicated in-app installer and manager for external custom server additions.
+- 🔄 **BDS Core Updates:** An automated updating pipeline to fetch and install the latest Bedrock Dedicated Server binaries.
+- 📱 **Remote Management API & Companion Apps:** An optional, lightweight remote management API allowing you to monitor and control your server on the go via upcoming Android and Web companion apps.
