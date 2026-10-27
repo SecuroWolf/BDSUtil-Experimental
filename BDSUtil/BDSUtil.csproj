@@ -38,10 +38,11 @@
   <ItemGroup>
     <Reference Include="Open.Nat, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f22a6a4582336c76, processorArchitecture=MSIL">
       <HintPath>..\packages\Open.NAT.2.1.0.0\lib\net45\Open.Nat.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="ReaLTaiizor">
       <HintPath>Resources\Dependencies\ReaLTaiizor.dll</HintPath>
-      <Private>True</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -214,7 +215,9 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Helpers\AutoMod\" />
+  </ItemGroup>
   <ItemGroup>
     <Content Include="bds-manager.ico" />
     <Content Include="Bedrock Server Addon\bds_monitor\pack_icon.png" />
@@ -246,17 +249,6 @@
     <Content Include="Resources\Icons\round_report_problem_white_24dp.png" />
     <Content Include="Resources\Icons\round_swap_vert_white_24dp.png" />
     <Content Include="Resources\Icons\terminal_24dp.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <COMReference Include="UPNPLib">
-      <Guid>{DB3442A7-A2E9-4A59-9CB5-F5C1A5D901E5}</Guid>
-      <VersionMajor>1</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </COMReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

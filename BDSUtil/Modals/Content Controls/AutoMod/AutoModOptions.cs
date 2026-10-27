@@ -76,9 +76,10 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
                 }
                 return;
             }
+
             // Resolve active server execution environment path configurations
             string serverRoot = AppSettings.Instance.ServerExecutablePath;
-            string targetWorldName = "Dedicated Server"; // Default vanilla matching token
+            string targetWorldName = "Dedicated Server";
             string serverPropsPath = Path.Combine(serverRoot, "server.properties");
 
             if (File.Exists(serverPropsPath))
@@ -128,7 +129,6 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
                             return;
                         }
 
-                        // Sync safety preferences globally so Level Editor panel skips redundant prompts
                         AppSettings.Instance.ExperimentsWarned = true;
                         AppSettings.Instance.SaveSettings();
                     }
@@ -139,13 +139,14 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
                     }
                 }
             }
+
             // --- STEP 3: Decoupled Folder Presence and World Manifest Verifications ---
-            string globalPackPath = Path.Combine(serverRoot, "behavior_packs", "bds_monitor");
-            bool isFolderInstalled = Directory.Exists(globalPackPath);
-            bool isPackEnabled = PackManager.IsPackEnabledInWorld(serverRoot, targetWorldName);
+            bool isFolderInstalled = PackManager.IsPackInstalled(serverRoot, BDSPackInstaller.MONITOR_PACK_FOLDER, isBehaviorPack: true);
+            bool isPackEnabled = PackManager.IsPackEnabledInWorld(serverRoot, targetWorldName, BDSPackInstaller.MONITOR_PACK_UUID, isBehaviorPack: true);
 
             if (isFolderInstalled && isPackEnabled)
             {
+                ConfigureServerPropertiesForAutoMod(serverRoot);
                 AMCCard.Visible = true;
                 AppSettings.Instance.AutoModEnabled = true;
                 AppSettings.Instance.SaveSettings();
@@ -154,10 +155,9 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
             {
                 if (this.FindForm() is MaterialForm parentForm)
                 {
-                    // ✅ FIXED: String optimized and newline appended to guarantee no layout canvas clipping
                     DialogResult packDialog = MaterialMessageBox.Show(
                         parentForm,
-                        "The 'bds_monitor' backend script addon folder is missing or disabled for the currently selected server world save.\n\n" +
+                        $"The '{BDSPackInstaller.MONITOR_PACK_FOLDER}' backend script addon folder is missing or disabled for the currently selected server world save.\n\n" +
                         "Would you like BDSUtil to automatically install the required plugin directories and register the pack entries now?\n",
                         "Addon Configuration Required",
                         MessageBoxButtons.YesNo,
@@ -179,7 +179,7 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
 
                         if (!isPackEnabled)
                         {
-                            if (!PackManager.EnablePackInWorld(serverRoot, targetWorldName))
+                            if (!BDSPackInstaller.EnableMonitorPack(serverRoot, targetWorldName))
                             {
                                 ResetToggleToOff();
                                 MaterialMessageBox.Show(parentForm, "Failed to update world_behavior_packs.json array configuration mappings safely.", "Activation Failed", MessageBoxButtons.OK, false, MaterialFlexibleForm.ButtonsPosition.Center);
@@ -187,6 +187,7 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
                             }
                         }
 
+                        ConfigureServerPropertiesForAutoMod(serverRoot);
                         AMCCard.Visible = true;
                         AppSettings.Instance.AutoModEnabled = true;
                         AppSettings.Instance.SaveSettings();
@@ -201,6 +202,33 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
             }
         }
 
+        private void ConfigureServerPropertiesForAutoMod(string serverRoot)
+        {
+            string propsPath = Path.Combine(serverRoot, "server.properties");
+            if (!File.Exists(propsPath)) return;
+
+            string content = File.ReadAllText(propsPath);
+            bool modified = false;
+
+            // Enforce console output routing so our standard output stream intercepts the telemetry
+            if (content.Contains("content-log-console-output-enabled=false"))
+            {
+                content = content.Replace("content-log-console-output-enabled=false", "content-log-console-output-enabled=true");
+                modified = true;
+            }
+
+            // Disable file writing to save disk I/O cycles since the Bedrock engine buffers it incorrectly anyway
+            if (content.Contains("content-log-file-enabled=true"))
+            {
+                content = content.Replace("content-log-file-enabled=true", "content-log-file-enabled=false");
+                modified = true;
+            }
+
+            if (modified)
+            {
+                File.WriteAllText(propsPath, content);
+            }
+        }
 
         private void ResetToggleToOff()
         {

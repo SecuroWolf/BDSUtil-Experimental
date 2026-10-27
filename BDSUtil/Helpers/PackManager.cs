@@ -7,41 +7,42 @@ namespace BDSUtil.Helpers
 {
     public static class PackManager
     {
-        public const string MONITOR_PACK_UUID = "4f9d2a6b-c7e1-432a-9e12-b5c6d7e8f9a0";
-        public const string MONITOR_PACK_VERSION = "0, 1, 1";
-
         /// <summary>
-        /// Checks if the custom bds_monitor behavior pack directory and its manifest are present on disk.
+        /// Checks if a specified pack directory and its manifest are present on disk in either the standard or development folders.
         /// </summary>
-        public static bool IsPackInstalled(string serverRootPath)
+        public static bool IsPackInstalled(string serverRootPath, string packFolderName, bool isBehaviorPack)
         {
             if (string.IsNullOrWhiteSpace(serverRootPath) || !Directory.Exists(serverRootPath))
                 return false;
 
-            string devPackPath = Path.Combine(serverRootPath, "development_behavior_packs", "bds_monitor");
-            string prodPackPath = Path.Combine(serverRootPath, "behavior_packs", "bds_monitor");
+            string packCategory = isBehaviorPack ? "behavior_packs" : "resource_packs";
+            string devPackCategory = isBehaviorPack ? "development_behavior_packs" : "development_resource_packs";
+
+            string devPackPath = Path.Combine(serverRootPath, devPackCategory, packFolderName);
+            string prodPackPath = Path.Combine(serverRootPath, packCategory, packFolderName);
 
             return File.Exists(Path.Combine(devPackPath, "manifest.json")) ||
                    File.Exists(Path.Combine(prodPackPath, "manifest.json"));
         }
 
         /// <summary>
-        /// Scans the world's behavior array file to see if the pack UUID is registered.
+        /// Scans the world's behavior or resource array file to see if the pack UUID is registered.
         /// </summary>
-        public static bool IsPackEnabledInWorld(string serverRootPath, string activeWorldName)
+        public static bool IsPackEnabledInWorld(string serverRootPath, string activeWorldName, string uuid, bool isBehaviorPack)
         {
             if (string.IsNullOrWhiteSpace(serverRootPath) || string.IsNullOrWhiteSpace(activeWorldName))
                 return false;
 
-            string worldBehaviorPackJsonPath = Path.Combine(serverRootPath, "worlds", activeWorldName, "world_behavior_packs.json");
+            string fileName = isBehaviorPack ? "world_behavior_packs.json" : "world_resource_packs.json";
+            string worldPackJsonPath = Path.Combine(serverRootPath, "worlds", activeWorldName, fileName);
 
-            if (!File.Exists(worldBehaviorPackJsonPath))
+            if (!File.Exists(worldPackJsonPath))
                 return false;
 
             try
             {
-                string rawJsonContent = File.ReadAllText(worldBehaviorPackJsonPath);
-                return rawJsonContent.Contains(MONITOR_PACK_UUID);
+                string rawJsonContent = File.ReadAllText(worldPackJsonPath);
+                return rawJsonContent.Contains(uuid);
             }
             catch (Exception ex)
             {
@@ -51,9 +52,9 @@ namespace BDSUtil.Helpers
         }
 
         /// <summary>
-        /// Handles the client-aligned JSON array entry injection into world_behavior_packs.json.
+        /// Handles the client-aligned JSON array entry injection into the specified world pack JSON file.
         /// </summary>
-        public static bool EnablePackInWorld(string serverRootPath, string activeWorldName)
+        public static bool EnablePackInWorld(string serverRootPath, string activeWorldName, string uuid, string versionString, bool isBehaviorPack)
         {
             if (string.IsNullOrWhiteSpace(serverRootPath) || string.IsNullOrWhiteSpace(activeWorldName))
                 return false;
@@ -66,15 +67,16 @@ namespace BDSUtil.Helpers
                     Directory.CreateDirectory(worldFolder);
                 }
 
-                string worldBehaviorPacksFile = Path.Combine(worldFolder, "world_behavior_packs.json");
+                string fileName = isBehaviorPack ? "world_behavior_packs.json" : "world_resource_packs.json";
+                string worldPacksFile = Path.Combine(worldFolder, fileName);
                 List<string> processedLines = new List<string>();
 
-                if (File.Exists(worldBehaviorPacksFile))
+                if (File.Exists(worldPacksFile))
                 {
-                    string[] lines = File.ReadAllLines(worldBehaviorPacksFile, Encoding.UTF8);
+                    string[] lines = File.ReadAllLines(worldPacksFile, Encoding.UTF8);
                     string entireFileText = string.Join("\n", lines);
 
-                    if (entireFileText.Contains(MONITOR_PACK_UUID))
+                    if (entireFileText.Contains(uuid))
                     {
                         return true;
                     }
@@ -115,12 +117,12 @@ namespace BDSUtil.Helpers
                 // Inject the entry matching the exact spacing structure generated by the Minecraft client
                 processedLines.Add("\t");
                 processedLines.Add("\t{");
-                processedLines.Add($"\t\t\"pack_id\" : \"{MONITOR_PACK_UUID}\",");
-                processedLines.Add($"\t\t\"version\": [{MONITOR_PACK_VERSION}],");
+                processedLines.Add($"\t\t\"pack_id\" : \"{uuid}\",");
+                processedLines.Add($"\t\t\"version\": [{versionString}]");
                 processedLines.Add("\t}");
                 processedLines.Add("]");
 
-                File.WriteAllLines(worldBehaviorPacksFile, processedLines, Encoding.UTF8);
+                File.WriteAllLines(worldPacksFile, processedLines, Encoding.UTF8);
                 return true;
             }
             catch (Exception ex)
