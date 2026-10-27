@@ -82,10 +82,23 @@ namespace BDSUtil.Modals.Content_Controls.Settings
                 CfgWorldMod.Checked = AppSettings.Instance.WorldEditorEnabled;
             }
 
+            if (CfgHTel != null) CfgHTel.Checked = AppSettings.Instance.HideTelemetryWarnings;
+
             _isInitializing = false;
 
             // ✅ START WITH NOTHING SELECTED
             ClearSelectionFocus();
+        }
+
+        /// <summary>
+        /// Telemetry Hider toggle
+        /// </summary>
+        private void CfgHTel_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_isInitializing || CfgHTel == null) return;
+
+            AppSettings.Instance.HideTelemetryWarnings = CfgHTel.Checked;
+            AppSettings.Instance.SaveSettings();
         }
 
         /// <summary>

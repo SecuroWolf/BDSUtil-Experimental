@@ -140,6 +140,12 @@ namespace BDSUtil
             set => SetSetting("ExperimentsWarned", value);
         }
 
+        public bool HideTelemetryWarnings
+        {
+            get => GetSetting("HideTelemetryWarnings", false);
+            set => SetSetting("HideTelemetryWarnings", value);
+        }
+
         // --- END OF CONFIG VARIABLES ---
 
 

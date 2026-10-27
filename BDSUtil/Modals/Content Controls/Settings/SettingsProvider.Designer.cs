@@ -45,8 +45,8 @@
             this.ServerPathTextBox = new ReaLTaiizor.Controls.MaterialTextBoxEdit();
             this.EAMLBL = new ReaLTaiizor.Controls.MaterialLabel();
             this.materialCard2 = new ReaLTaiizor.Controls.MaterialCard();
-            this.TestSw = new ReaLTaiizor.Controls.MaterialSwitch();
-            this.TestLBL = new ReaLTaiizor.Controls.MaterialLabel();
+            this.CfgHTel = new ReaLTaiizor.Controls.MaterialSwitch();
+            this.TelHideLBL = new ReaLTaiizor.Controls.MaterialLabel();
             this.materialCard1.SuspendLayout();
             this.materialCard4.SuspendLayout();
             this.materialCard3.SuspendLayout();
@@ -316,8 +316,8 @@
             // materialCard2
             // 
             this.materialCard2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.materialCard2.Controls.Add(this.TestSw);
-            this.materialCard2.Controls.Add(this.TestLBL);
+            this.materialCard2.Controls.Add(this.CfgHTel);
+            this.materialCard2.Controls.Add(this.TelHideLBL);
             this.materialCard2.Depth = 0;
             this.materialCard2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(222)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
             this.materialCard2.Location = new System.Drawing.Point(14, 305);
@@ -328,34 +328,36 @@
             this.materialCard2.Size = new System.Drawing.Size(859, 75);
             this.materialCard2.TabIndex = 14;
             // 
-            // TestSw
+            // CfgHTel
             // 
-            this.TestSw.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.TestSw.AutoSize = true;
-            this.TestSw.Depth = 0;
-            this.TestSw.Location = new System.Drawing.Point(782, 21);
-            this.TestSw.Margin = new System.Windows.Forms.Padding(0);
-            this.TestSw.MouseLocation = new System.Drawing.Point(-1, -1);
-            this.TestSw.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.TestSw.Name = "TestSw";
-            this.TestSw.Ripple = true;
-            this.TestSw.Size = new System.Drawing.Size(58, 37);
-            this.TestSw.TabIndex = 14;
-            this.TestSw.UseAccentColor = false;
-            this.TestSw.UseVisualStyleBackColor = true;
+            this.CfgHTel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.CfgHTel.AutoSize = true;
+            this.CfgHTel.Depth = 0;
+            this.CfgHTel.Location = new System.Drawing.Point(782, 21);
+            this.CfgHTel.Margin = new System.Windows.Forms.Padding(0);
+            this.CfgHTel.MouseLocation = new System.Drawing.Point(-1, -1);
+            this.CfgHTel.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            this.CfgHTel.Name = "CfgHTel";
+            this.CfgHTel.Ripple = true;
+            this.CfgHTel.Size = new System.Drawing.Size(58, 37);
+            this.CfgHTel.TabIndex = 14;
+            this.CfgHTel.UseAccentColor = false;
+            this.CfgHTel.UseVisualStyleBackColor = true;
+            this.CfgHTel.CheckedChanged += new System.EventHandler(this.CfgHTel_CheckedChanged);
             // 
-            // TestLBL
+            // TelHideLBL
             // 
-            this.TestLBL.Depth = 0;
-            this.TestLBL.Dock = System.Windows.Forms.DockStyle.Top;
-            this.TestLBL.Font = new System.Drawing.Font("Roboto", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
-            this.TestLBL.Location = new System.Drawing.Point(14, 14);
-            this.TestLBL.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.TestLBL.Name = "TestLBL";
-            this.TestLBL.Size = new System.Drawing.Size(831, 48);
-            this.TestLBL.TabIndex = 13;
-            this.TestLBL.Text = "Test Setting";
-            this.TestLBL.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.TelHideLBL.Depth = 0;
+            this.TelHideLBL.Dock = System.Windows.Forms.DockStyle.Top;
+            this.TelHideLBL.Font = new System.Drawing.Font("Roboto", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
+            this.TelHideLBL.Location = new System.Drawing.Point(14, 14);
+            this.TelHideLBL.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            this.TelHideLBL.Name = "TelHideLBL";
+            this.TelHideLBL.Size = new System.Drawing.Size(831, 48);
+            this.TelHideLBL.TabIndex = 13;
+            this.TelHideLBL.Text = "Hide \"Telemetry not enabled\" messages in the console\r\n(Privacy: Hides the message" +
+    "/warning without enabling Telemetry)";
+            this.TelHideLBL.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // SettingsProvider
             // 
@@ -395,7 +397,7 @@
         private ReaLTaiizor.Controls.MaterialTextBoxEdit ServerPathTextBox;
         private ReaLTaiizor.Controls.MaterialLabel EAMLBL;
         private ReaLTaiizor.Controls.MaterialCard materialCard2;
-        private ReaLTaiizor.Controls.MaterialSwitch TestSw;
-        private ReaLTaiizor.Controls.MaterialLabel TestLBL;
+        private ReaLTaiizor.Controls.MaterialSwitch CfgHTel;
+        private ReaLTaiizor.Controls.MaterialLabel TelHideLBL;
     }
 }

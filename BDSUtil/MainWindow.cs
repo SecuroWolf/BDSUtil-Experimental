@@ -25,6 +25,7 @@ namespace BDSUtil
         private bool _isServerFullyInitialized = false;
         private int _previousActiveTabIndex = 0;
         private bool _isRedirecting = false;
+        private bool _isSkippingTelemetryBlock = false;
 
         private bool _isBackupPendingAfterStop = false;
         private System.ComponentModel.BackgroundWorker _backupWorker;
@@ -427,7 +428,39 @@ namespace BDSUtil
                 return;
             }
 
-            // Standard console append routine for normal server output
+            // 1. Outright drop the LevelDB AutoCompaction spam
+            if (text.Contains("Running AutoCompaction..."))
+            {
+                try { File.AppendAllText(_currentLogPath, text + Environment.NewLine); } catch { }
+                return;
+            }
+
+            // 2. Stateful block interceptor for the multi-line Telemetry warning
+            if (AppSettings.Instance.HideTelemetryWarnings)
+            {
+                // Detect the start of the block
+                if (text.Contains("======== TELEMETRY MESSAGE ========"))
+                {
+                    _isSkippingTelemetryBlock = true;
+                    try { File.AppendAllText(_currentLogPath, text + Environment.NewLine); } catch { }
+                    return;
+                }
+
+                // If we are currently inside the block, swallow the line
+                if (_isSkippingTelemetryBlock)
+                {
+                    try { File.AppendAllText(_currentLogPath, text + Environment.NewLine); } catch { }
+
+                    // Detect the end of the block (a line of just equals signs with no words)
+                    if (text.Contains("=============================") && !text.Contains("TELEMETRY"))
+                    {
+                        _isSkippingTelemetryBlock = false; // Turn the filter back off for normal logs
+                    }
+                    return;
+                }
+            }
+
+            // Write to UI
             ConsoleOutputTextBox.AppendText(text + Environment.NewLine);
             ConsoleOutputTextBox.SelectionStart = ConsoleOutputTextBox.Text.Length;
             ConsoleOutputTextBox.ScrollToCaret();
