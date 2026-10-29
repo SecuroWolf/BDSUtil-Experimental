@@ -1,4 +1,8 @@
-# BDSUtil
+# BDSUtil ⚠️ NOTE: Nethernet seems to have been further broken as of 26.60(10/27/2026)
+
+⚠️ NOTE: Nethernet seems to have been further broken as of 26.60(10/27/2026)
+I will continue development and look out for community fixes along the way.
+Unfortunately, I may be forced to implement a 3rd party proxy that, unlike <redacted>, has a working NetherNet Implementation.
 
 ![BDSUtil Main Dashboard](docs/home_screenshot.png)
 

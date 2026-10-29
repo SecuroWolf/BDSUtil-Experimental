@@ -1,4 +1,5 @@
 ﻿using BDSUtil.Helpers;
+using BDSUtil.Helpers.AutoMod;
 using ReaLTaiizor.Controls;
 using ReaLTaiizor.Forms;
 using System;
@@ -34,7 +35,65 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
             if (AMCCard != null)
                 AMCCard.Visible = AppSettings.Instance.AutoModEnabled;
 
+            // --- Load AutoMod Configurations ---
+            if (AM_Enforce != null) AM_Enforce.Checked = AMConfHelper.Instance.EnableChatEnforcement;
+            if (AM_PEnType != null) AM_PEnType.Text = AMConfHelper.Instance.PrimaryEnforcementType;
+            if (AM_PEnThresh != null) AM_PEnThresh.Text = AMConfHelper.Instance.PrimaryEnforcementThreshold;
+
+            if (AM_SEnType != null) AM_SEnType.Text = AMConfHelper.Instance.SecondaryEnforcementType;
+            if (AM_SEnThresh != null) AM_SEnThresh.Text = AMConfHelper.Instance.SecondaryEnforcementThreshold;
+
+            if (AM_AntiSpam != null) AM_AntiSpam.Checked = AMConfHelper.Instance.AntiSpamEnabled;
+            if (AM_ASThreshMessages != null) AM_ASThreshMessages.Text = AMConfHelper.Instance.AntiSpamMessages;
+            if (AM_ASThreshTime != null) AM_ASThreshTime.Text = AMConfHelper.Instance.AntiSpamTime;
+            if (AM_ASEnType != null) AM_ASEnType.Text = AMConfHelper.Instance.AntiSpamEnforcementType;
+
+            if (AM_CESR != null) AM_CESR.Text = AMConfHelper.Instance.ChatStrikeReset;
+            if (AM_ASSR != null) AM_ASSR.Text = AMConfHelper.Instance.AntiSpamStrikeReset;
+
+            // Hook up the save events dynamically
+            WireUpSaveEvents();
+
             _isInitializing = false;
+        }
+
+        private void WireUpSaveEvents()
+        {
+            if (AM_Enforce != null) AM_Enforce.CheckedChanged += SaveAutoModSettings;
+            if (AM_AntiSpam != null) AM_AntiSpam.CheckedChanged += SaveAutoModSettings;
+
+            if (AM_PEnType != null) AM_PEnType.SelectedIndexChanged += SaveAutoModSettings;
+            if (AM_SEnType != null) AM_SEnType.SelectedIndexChanged += SaveAutoModSettings;
+            if (AM_ASThreshTime != null) AM_ASThreshTime.SelectedIndexChanged += SaveAutoModSettings;
+            if (AM_ASEnType != null) AM_ASEnType.SelectedIndexChanged += SaveAutoModSettings;
+            if (AM_CESR != null) AM_CESR.SelectedIndexChanged += SaveAutoModSettings;
+            if (AM_ASSR != null) AM_ASSR.SelectedIndexChanged += SaveAutoModSettings;
+
+            if (AM_PEnThresh != null) AM_PEnThresh.Leave += SaveAutoModSettings;
+            if (AM_SEnThresh != null) AM_SEnThresh.Leave += SaveAutoModSettings;
+            if (AM_ASThreshMessages != null) AM_ASThreshMessages.Leave += SaveAutoModSettings;
+        }
+
+        private void SaveAutoModSettings(object sender, EventArgs e)
+        {
+            if (_isInitializing) return;
+
+            if (AM_Enforce != null) AMConfHelper.Instance.EnableChatEnforcement = AM_Enforce.Checked;
+            if (AM_PEnType != null) AMConfHelper.Instance.PrimaryEnforcementType = AM_PEnType.Text;
+            if (AM_PEnThresh != null) AMConfHelper.Instance.PrimaryEnforcementThreshold = AM_PEnThresh.Text;
+
+            if (AM_SEnType != null) AMConfHelper.Instance.SecondaryEnforcementType = AM_SEnType.Text;
+            if (AM_SEnThresh != null) AMConfHelper.Instance.SecondaryEnforcementThreshold = AM_SEnThresh.Text;
+
+            if (AM_AntiSpam != null) AMConfHelper.Instance.AntiSpamEnabled = AM_AntiSpam.Checked;
+            if (AM_ASThreshMessages != null) AMConfHelper.Instance.AntiSpamMessages = AM_ASThreshMessages.Text;
+            if (AM_ASThreshTime != null) AMConfHelper.Instance.AntiSpamTime = AM_ASThreshTime.Text;
+            if (AM_ASEnType != null) AMConfHelper.Instance.AntiSpamEnforcementType = AM_ASEnType.Text;
+
+            if (AM_CESR != null) AMConfHelper.Instance.ChatStrikeReset = AM_CESR.Text;
+            if (AM_ASSR != null) AMConfHelper.Instance.AntiSpamStrikeReset = AM_ASSR.Text;
+
+            AMConfHelper.Instance.SaveSettings();
         }
 
         private void CfgEAM_CheckedChanged(object sender, EventArgs e)

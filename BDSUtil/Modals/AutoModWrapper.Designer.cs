@@ -38,9 +38,11 @@
             this.AMATab = new System.Windows.Forms.TabPage();
             this.SaveTab = new System.Windows.Forms.TabPage();
             this.IconList_Cfg = new System.Windows.Forms.ImageList(this.components);
+            this.activeEnforcement1 = new BDSUtil.Modals.Content_Controls.AutoMod.ActiveEnforcement();
             this.AMTabControl.SuspendLayout();
             this.CFTab.SuspendLayout();
             this.AMTab.SuspendLayout();
+            this.AMATab.SuspendLayout();
             this.SuspendLayout();
             // 
             // AMTabControl
@@ -110,6 +112,7 @@
             // 
             // AMATab
             // 
+            this.AMATab.Controls.Add(this.activeEnforcement1);
             this.AMATab.ImageKey = "admin_panel_settings_24dp.png";
             this.AMATab.Location = new System.Drawing.Point(4, 31);
             this.AMATab.Name = "AMATab";
@@ -142,6 +145,15 @@
             this.IconList_Cfg.Images.SetKeyName(6, "save_24dp.png");
             this.IconList_Cfg.Images.SetKeyName(7, "network_node_24dp.png");
             // 
+            // activeEnforcement1
+            // 
+            this.activeEnforcement1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
+            this.activeEnforcement1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.activeEnforcement1.Location = new System.Drawing.Point(0, 0);
+            this.activeEnforcement1.Name = "activeEnforcement1";
+            this.activeEnforcement1.Size = new System.Drawing.Size(789, 562);
+            this.activeEnforcement1.TabIndex = 0;
+            // 
             // AutoModWrapper
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -161,6 +173,7 @@
             this.AMTabControl.ResumeLayout(false);
             this.CFTab.ResumeLayout(false);
             this.AMTab.ResumeLayout(false);
+            this.AMATab.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -173,5 +186,6 @@
         private System.Windows.Forms.TabPage SaveTab;
         private Content_Controls.AutoMod.FilterTab filterTab1;
         private Content_Controls.AutoMod.AutoModOptions autoModOptions1;
+        private Content_Controls.AutoMod.ActiveEnforcement activeEnforcement1;
     }
 }

@@ -63,6 +63,16 @@ namespace BDSUtil.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap extension_24dp {
+            get {
+                object obj = ResourceManager.GetObject("extension_24dp", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap folder_open_24dp {
             get {
                 object obj = ResourceManager.GetObject("folder_open_24dp", resourceCulture);

@@ -63,16 +63,38 @@
   <ItemGroup>
     <Compile Include="AppSettings.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="Helpers\AutoMod\AMConfHelper.cs" />
+    <Compile Include="Helpers\AutoMod\MessageProvider.cs" />
+    <Compile Include="Helpers\AutoMod\TelemetryInterceptor.cs" />
     <Compile Include="Helpers\BDSConsoleManager.cs" />
     <Compile Include="Helpers\LevelDatPatcher.cs" />
     <Compile Include="Helpers\BDSPackInstaller.cs" />
     <Compile Include="Helpers\PackManager.cs" />
     <Compile Include="Helpers\UPnP.cs" />
+    <Compile Include="Modals\Content Controls\AutoMod\ActiveEnforcement.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Modals\Content Controls\AutoMod\ActiveEnforcement.Designer.cs">
+      <DependentUpon>ActiveEnforcement.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Modals\Content Controls\AutoMod\EnforcementModels.cs" />
+    <Compile Include="Modals\Content Controls\AutoMod\EnforcementProfile.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Modals\Content Controls\AutoMod\EnforcementProfile.Designer.cs">
+      <DependentUpon>EnforcementProfile.cs</DependentUpon>
+    </Compile>
     <Compile Include="Modals\Content Controls\LevelEditor\EditorProvider.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Modals\Content Controls\LevelEditor\EditorProvider.Designer.cs">
       <DependentUpon>EditorProvider.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Modals\Content Controls\Packs\AddonManager.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Modals\Content Controls\Packs\AddonManager.Designer.cs">
+      <DependentUpon>AddonManager.cs</DependentUpon>
     </Compile>
     <Compile Include="Modals\Content Controls\Settings\SettingsProvider.cs">
       <SubType>UserControl</SubType>
@@ -162,8 +184,17 @@
     <EmbeddedResource Include="MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Modals\Content Controls\AutoMod\ActiveEnforcement.resx">
+      <DependentUpon>ActiveEnforcement.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Modals\Content Controls\AutoMod\EnforcementProfile.resx">
+      <DependentUpon>EnforcementProfile.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Modals\Content Controls\LevelEditor\EditorProvider.resx">
       <DependentUpon>EditorProvider.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Modals\Content Controls\Packs\AddonManager.resx">
+      <DependentUpon>AddonManager.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Modals\Content Controls\Settings\SettingsProvider.resx">
       <DependentUpon>SettingsProvider.cs</DependentUpon>
@@ -215,9 +246,7 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Helpers\AutoMod\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="bds-manager.ico" />
     <Content Include="Bedrock Server Addon\bds_monitor\pack_icon.png" />
@@ -230,6 +259,7 @@
     <Content Include="Resources\Icons\baseline_favorite_border_black_24dp.png" />
     <Content Include="Resources\Icons\baseline_fingerprint_black_24dp.png" />
     <Content Include="Resources\Icons\baseline_thumb_up_black_24dp.png" />
+    <None Include="Resources\Icons\extension_24dp.png" />
     <Content Include="Resources\Icons\ic_settings_black_24dp_1x.png" />
     <Content Include="Resources\Icons\ic_settings_white_24dp_1x.png" />
     <Content Include="Resources\Icons\minus.png" />

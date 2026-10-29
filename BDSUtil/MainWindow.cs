@@ -402,6 +402,27 @@ namespace BDSUtil
         {
             if (string.IsNullOrEmpty(text)) return;
 
+            // Intercept player connection to enforce bans instantly on join
+            if (text.Contains("Player connected:"))
+            {
+                try
+                {
+                    // Format: "Player connected: Wolfe4322, xuid: 2535467664359860"
+                    string payload = text.Substring(text.IndexOf("Player connected:") + 17).Trim();
+                    string[] parts = payload.Split(new[] { ", xuid:" }, StringSplitOptions.RemoveEmptyEntries);
+
+                    if (parts.Length >= 2)
+                    {
+                        string gamertag = parts[0].Trim();
+                        string xuid = parts[1].Trim();
+
+                        // Fire the authoritative C# ban enforcer
+                        BDSUtil.Helpers.AutoMod.TelemetryInterceptor.EnforceProfileOnJoin(gamertag, xuid, _serverProcess);
+                    }
+                }
+                catch { }
+            }
+
             if (this.InvokeRequired)
             {
                 this.BeginInvoke(new Action<string>(AppendTerminalLine), text);
@@ -580,24 +601,37 @@ namespace BDSUtil
         }
 
         /// <summary>
-        /// Compares real-time chat strings against active filtering cache rules, executing commands instantly on trigger matches.
+        /// Forwards real-time chat strings to the background AutoMod Telemetry Interceptor engine.
         /// </summary>
         private void EvaluateAutoModChatRules(string player, string message)
         {
-            var bannedExpressions = new List<string> { "badword1", "griefbot", "fudge" };
-
-            foreach (string expression in bannedExpressions)
-            {
-                if (message.IndexOf(expression, StringComparison.OrdinalIgnoreCase) >= 0)
+            // Fire the payload into the background thread pool interceptor.
+            // We pass an anonymous Action delegate that safely Invokes the UI thread to print action logs.
+            BDSUtil.Helpers.AutoMod.TelemetryInterceptor.EvaluateChatEventAsync(
+                player,
+                message,
+                _serverProcess,
+                (logActionStr) =>
                 {
-                    if (_serverProcess != null && !_serverProcess.HasExited)
+                    // This callback allows the background thread to safely print to the UI Console 
+                    // without causing a Cross-Thread Exception.
+                    if (this.InvokeRequired)
                     {
-                        _serverProcess.StandardInput.WriteLine($"kick \"{player}\" AutoMod Trigger: Chat policy violation.");
-                        _serverProcess.StandardInput.WriteLine($"say §e[AutoMod] Kicked player {player} for using filtered phrases.");
+                        this.BeginInvoke(new Action(() =>
+                        {
+                            ConsoleOutputTextBox.AppendText(logActionStr + "\r\n");
+                            ConsoleOutputTextBox.SelectionStart = ConsoleOutputTextBox.Text.Length;
+                            ConsoleOutputTextBox.ScrollToCaret();
+                        }));
                     }
-                    break;
+                    else
+                    {
+                        ConsoleOutputTextBox.AppendText(logActionStr + "\r\n");
+                        ConsoleOutputTextBox.SelectionStart = ConsoleOutputTextBox.Text.Length;
+                        ConsoleOutputTextBox.ScrollToCaret();
+                    }
                 }
-            }
+            );
         }
 
         /// <summary>
@@ -1019,13 +1053,13 @@ namespace BDSUtil
 
                 BKCompleteLBL.Visible = true;
 
-                DialogResult promptResult = ReaLTaiizor.Controls.MaterialMessageBox.Show(
+                DialogResult promptResult = MaterialMessageBox.Show(
                     this,
                     $"Backup package successfully created:\n'{savedName}'\n\nWould you like to open the local Backups archive directory in File Explorer now?",
                     "Backup Operations Successful",
                     MessageBoxButtons.YesNo,
                     false,
-                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
+                    MaterialFlexibleForm.ButtonsPosition.Center
                 );
 
                 if (promptResult == DialogResult.Yes)
@@ -1160,11 +1194,11 @@ namespace BDSUtil
             string serverDir = AppSettings.Instance.ServerExecutablePath;
             if (string.IsNullOrWhiteSpace(serverDir) || !System.IO.Directory.Exists(serverDir))
             {
-                ReaLTaiizor.Controls.MaterialMessageBox.Show(
+                MaterialMessageBox.Show(
                     "Please configure a valid server path in Settings before running backup operations.",
                     "Missing Configuration Parameters",
                     MessageBoxButtons.OK,
-                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
+                    MaterialFlexibleForm.ButtonsPosition.Center
                 );
                 return;
             }
@@ -1173,12 +1207,12 @@ namespace BDSUtil
 
             if (_serverProcess != null && !_serverProcess.HasExited)
             {
-                DialogResult result = ReaLTaiizor.Controls.MaterialMessageBox.Show(
+                DialogResult result = MaterialMessageBox.Show(
                     "The Minecraft Bedrock server must be completely stopped before a backup can safely compile to prevent LevelDB file corruption.\n\n" +
                     "Would you like to issue a clean 'stop' command to the server now and automatically proceed with the backup once it fully exits?",
                     "Server Shutdown Required",
                     MessageBoxButtons.YesNo,
-                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
+                    MaterialFlexibleForm.ButtonsPosition.Center
                 );
 
                 if (result == DialogResult.Yes)
@@ -1203,11 +1237,11 @@ namespace BDSUtil
             string serverDir = AppSettings.Instance.ServerExecutablePath;
             if (string.IsNullOrWhiteSpace(serverDir) || !System.IO.Directory.Exists(serverDir))
             {
-                ReaLTaiizor.Controls.MaterialMessageBox.Show(
+                MaterialMessageBox.Show(
                     "Please configure a valid server path in Settings before running backup operations.",
                     "Missing Configuration Parameters",
                     MessageBoxButtons.OK,
-                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
+                    MaterialFlexibleForm.ButtonsPosition.Center
                 );
                 return;
             }
@@ -1216,12 +1250,12 @@ namespace BDSUtil
 
             if (_serverProcess != null && !_serverProcess.HasExited)
             {
-                DialogResult result = ReaLTaiizor.Controls.MaterialMessageBox.Show(
+                DialogResult result = MaterialMessageBox.Show(
                     "The Minecraft Bedrock server must be completely stopped before a backup can safely compile to prevent file corruption.\n\n" +
                     "Would you like to issue a clean 'stop' command to the server now and automatically proceed with the backup once it fully exits?",
                     "Server Shutdown Required",
                     MessageBoxButtons.YesNo,
-                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
+                    MaterialFlexibleForm.ButtonsPosition.Center
                 );
 
                 if (result == DialogResult.Yes)
@@ -1247,11 +1281,11 @@ namespace BDSUtil
             string serverDir = AppSettings.Instance.ServerExecutablePath;
             if (string.IsNullOrWhiteSpace(serverDir) || !System.IO.Directory.Exists(serverDir))
             {
-                ReaLTaiizor.Controls.MaterialMessageBox.Show(
+                MaterialMessageBox.Show(
                     "Please configure a valid server path in Settings before running backup operations.",
                     "Missing Configuration Parameters",
                     MessageBoxButtons.OK,
-                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
+                    MaterialFlexibleForm.ButtonsPosition.Center
                 );
                 return;
             }
@@ -1260,12 +1294,12 @@ namespace BDSUtil
 
             if (_serverProcess != null && !_serverProcess.HasExited)
             {
-                DialogResult result = ReaLTaiizor.Controls.MaterialMessageBox.Show(
+                DialogResult result = MaterialMessageBox.Show(
                     "The Minecraft Bedrock server must be completely stopped before a backup can safely compile to prevent file corruption.\n\n" +
                     "Would you like to issue a clean 'stop' command to the server now and automatically proceed with the backup once it fully exits?",
                     "Server Shutdown Required",
                     MessageBoxButtons.YesNo,
-                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
+                    MaterialFlexibleForm.ButtonsPosition.Center
                 );
 
                 if (result == DialogResult.Yes)
@@ -1294,24 +1328,24 @@ namespace BDSUtil
 
             if (_serverProcess != null && !_serverProcess.HasExited)
             {
-                ReaLTaiizor.Controls.MaterialMessageBox.Show(
+                MaterialMessageBox.Show(
                     this,
                     "The Bedrock Server process is currently active. You must completely 'Stop Server' before overwriting server states to avoid catastrophic data corruption.",
                     "Active Server Process Blocked",
                     MessageBoxButtons.OK,
                     false,
-                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
+                    MaterialFlexibleForm.ButtonsPosition.Center
                 );
                 return;
             }
 
-            DialogResult confirmResult = ReaLTaiizor.Controls.MaterialMessageBox.Show(
+            DialogResult confirmResult = MaterialMessageBox.Show(
                 this,
                 "WARNING: Proceeding will completely OVERWRITE your existing data matching the snapshot type chosen.\n\nAre you absolutely sure you want to execute recovery?",
                 "Confirm Snapshot Overwrite",
                 MessageBoxButtons.YesNo,
                 false,
-                ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
+                MaterialFlexibleForm.ButtonsPosition.Center
             );
 
             if (confirmResult != DialogResult.Yes) return;
@@ -1419,25 +1453,25 @@ namespace BDSUtil
                 RunRestoreBTN.Visible = false;
                 PopulateRestoreSnapshotsList();
 
-                ReaLTaiizor.Controls.MaterialMessageBox.Show(
+                MaterialMessageBox.Show(
                     this,
                     "Snapshot recovery extraction loop finished successfully! Your active server environment has been rolled back.",
                     "Recovery Process Complete",
                     MessageBoxButtons.OK,
                     false,
-                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
+                    MaterialFlexibleForm.ButtonsPosition.Center
                 );
             }
             catch (Exception ex)
             {
                 AppendTerminalLine("[MANAGER ERROR] Recovery execution pipeline failed: " + ex.Message);
-                ReaLTaiizor.Controls.MaterialMessageBox.Show(
+                MaterialMessageBox.Show(
                     this,
                     "A critical exception error occurred during restoration loops:\n\n" + ex.Message,
                     "Recovery Fatal Failure",
                     MessageBoxButtons.OK,
                     false,
-                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
+                    MaterialFlexibleForm.ButtonsPosition.Center
                 );
             }
         }
@@ -1538,12 +1572,12 @@ namespace BDSUtil
             string serverDirectory = AppSettings.Instance.ServerExecutablePath;
             if (string.IsNullOrWhiteSpace(serverDirectory) || !System.IO.Directory.Exists(serverDirectory))
             {
-                DialogResult promptResult = ReaLTaiizor.Controls.MaterialMessageBox.Show(
+                DialogResult promptResult = MaterialMessageBox.Show(
                     "The Minecraft Bedrock Server path has not been configured, or 'bedrock_server.exe' could not be found.\n\n" +
                     "Would you like to open the application Settings panel now to link a valid server directory target path?",
                     "Server Routing Target Missing",
                     MessageBoxButtons.YesNo,
-                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
+                    MaterialFlexibleForm.ButtonsPosition.Center
                 );
 
                 if (promptResult == DialogResult.Yes)
@@ -1583,11 +1617,11 @@ namespace BDSUtil
             string fullBinaryPath = System.IO.Path.Combine(serverDirectory, "bedrock_server.exe");
             if (!System.IO.File.Exists(fullBinaryPath))
             {
-                ReaLTaiizor.Controls.MaterialMessageBox.Show(
+                MaterialMessageBox.Show(
                     "The binary execution module 'bedrock_server.exe' could not be found in the specified server root path.",
                     "Target Executable Missing",
                     MessageBoxButtons.OK,
-                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
+                    MaterialFlexibleForm.ButtonsPosition.Center
                 );
                 return;
             }
@@ -1635,13 +1669,13 @@ namespace BDSUtil
         {
             if (_serverProcess != null && !_serverProcess.HasExited)
             {
-                ReaLTaiizor.Controls.MaterialMessageBox.Show(
+                MaterialMessageBox.Show(
                     this,
                     "The Bedrock Server process is currently active. You must completely 'Stop Server' before editing core server configurations to prevent disk write collisions.",
                     "Active Server Process Blocked",
                     MessageBoxButtons.OK,
                     false,
-                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
+                    MaterialFlexibleForm.ButtonsPosition.Center
                 );
                 return;
             }
@@ -1667,12 +1701,12 @@ namespace BDSUtil
 
             if (!isEnvironmentValid)
             {
-                DialogResult promptResult = ReaLTaiizor.Controls.MaterialMessageBox.Show(
+                DialogResult promptResult = MaterialMessageBox.Show(
                     "You cant edit the server configuration since you didnt set its path...\n\n" +
                     "Would you like to open the application Settings panel now to link a valid server directory target path?",
                     "Silly Goose :D",
                     MessageBoxButtons.YesNo,
-                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
+                    MaterialFlexibleForm.ButtonsPosition.Center
                 );
 
                 if (promptResult == DialogResult.Yes)
@@ -1726,14 +1760,101 @@ namespace BDSUtil
             this.Update();
         }
 
-        public void NavigateToSettingsTab()
+        private void SV_PM_BTN_Click(object sender, EventArgs e)
         {
-            if (MaterialTabControl1 != null)
+            if (_serverProcess != null && !_serverProcess.HasExited)
             {
-                int settingsIndex = MaterialTabControl1.TabCount - 1;
-                MaterialTabControl1.SelectedIndex = settingsIndex;
-                MaterialTabControl1.Update();
+                MaterialMessageBox.Show(
+                    this,
+                    "The Bedrock Server process is currently active. You must completely 'Stop Server' before accessing the Pack Manager.",
+                    "Active Server Process Blocked",
+                    MessageBoxButtons.OK,
+                    false,
+                    MaterialFlexibleForm.ButtonsPosition.Center
+                );
+                return;
             }
+
+            string targetDir = AppSettings.Instance?.ServerExecutablePath;
+            bool isEnvironmentValid = false;
+
+            if (!string.IsNullOrWhiteSpace(targetDir))
+            {
+                if (targetDir.EndsWith("bedrock_server.exe", StringComparison.OrdinalIgnoreCase))
+                {
+                    targetDir = Path.GetDirectoryName(targetDir);
+                }
+
+                if (!string.IsNullOrEmpty(targetDir) && Directory.Exists(targetDir))
+                {
+                    string bpDirCheck = Path.Combine(targetDir, "behavior_packs");
+                    string rpDirCheck = Path.Combine(targetDir, "resource_packs");
+
+                    isEnvironmentValid = Directory.Exists(bpDirCheck) && Directory.Exists(rpDirCheck);
+                }
+            }
+
+            if (!isEnvironmentValid)
+            {
+                DialogResult promptResult = MaterialMessageBox.Show(
+                    "You cant use the Pack Manager without a valid server directory path.\n\n" +
+                    "Would you like to open the application Settings panel now to link a valid server directory target path?",
+                    "Silly Goose :D",
+                    MessageBoxButtons.YesNo,
+                    MaterialFlexibleForm.ButtonsPosition.Center
+                );
+
+                if (promptResult == DialogResult.Yes)
+                {
+                    if (MaterialTabControl1 != null)
+                    {
+                        int settingsIndex = MaterialTabControl1.TabCount - 1;
+
+                        System.Windows.Forms.Timer redirectTimer = new System.Windows.Forms.Timer { Interval = 1 };
+                        redirectTimer.Tick += (s, args) =>
+                        {
+                            redirectTimer.Stop();
+
+                            _isRedirecting = true;
+                            MaterialTabControl1.SelectedIndex = settingsIndex;
+                            _isRedirecting = false;
+
+                            MaterialTabControl1.Update();
+
+                            if (this.settingsProvider1 != null)
+                            {
+                                this.settingsProvider1.InitializeControl();
+                                this.settingsProvider1.ClearSelectionFocus();
+                            }
+
+                            AppendTerminalLine("[MANAGER INFO] Swapped to Settings panel. Please link a valid server directory path.");
+                            UpdateControlButtonStates();
+
+                            redirectTimer.Dispose();
+                        };
+                        redirectTimer.Start();
+                    }
+                }
+
+                return;
+            }
+
+            ProceedToPackManager();
         }
+
+        private void ProceedToPackManager()
+        {
+            this.Hide();
+
+            using (var packManager = new Modals.Content_Controls.Packs.AddonManager(this))
+            {
+                packManager.ShowDialog(this);
+            }
+
+            this.Show();
+            this.Update();
+        }
+
+
     }
 }
