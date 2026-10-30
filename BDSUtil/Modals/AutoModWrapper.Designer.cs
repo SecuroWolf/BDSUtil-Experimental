@@ -28,153 +28,161 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
+            components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AutoModWrapper));
-            this.AMTabControl = new ReaLTaiizor.Controls.MaterialTabControl();
-            this.CFTab = new System.Windows.Forms.TabPage();
-            this.filterTab1 = new BDSUtil.Modals.Content_Controls.AutoMod.FilterTab();
-            this.AMTab = new System.Windows.Forms.TabPage();
-            this.autoModOptions1 = new BDSUtil.Modals.Content_Controls.AutoMod.AutoModOptions();
-            this.AMATab = new System.Windows.Forms.TabPage();
-            this.SaveTab = new System.Windows.Forms.TabPage();
-            this.IconList_Cfg = new System.Windows.Forms.ImageList(this.components);
-            this.activeEnforcement1 = new BDSUtil.Modals.Content_Controls.AutoMod.ActiveEnforcement();
-            this.AMTabControl.SuspendLayout();
-            this.CFTab.SuspendLayout();
-            this.AMTab.SuspendLayout();
-            this.AMATab.SuspendLayout();
-            this.SuspendLayout();
+            AMTabControl = new ReaLTaiizor.Controls.MaterialTabControl();
+            CFTab = new System.Windows.Forms.TabPage();
+            filterTab1 = new BDSUtil.Modals.Content_Controls.AutoMod.FilterTab();
+            AMTab = new System.Windows.Forms.TabPage();
+            autoModOptions1 = new BDSUtil.Modals.Content_Controls.AutoMod.AutoModOptions();
+            AMATab = new System.Windows.Forms.TabPage();
+            activeEnforcement1 = new BDSUtil.Modals.Content_Controls.AutoMod.ActiveEnforcement();
+            SaveTab = new System.Windows.Forms.TabPage();
+            IconList_Cfg = new System.Windows.Forms.ImageList(components);
+            AMTabControl.SuspendLayout();
+            CFTab.SuspendLayout();
+            AMTab.SuspendLayout();
+            AMATab.SuspendLayout();
+            SuspendLayout();
             // 
             // AMTabControl
             // 
-            this.AMTabControl.Controls.Add(this.CFTab);
-            this.AMTabControl.Controls.Add(this.AMTab);
-            this.AMTabControl.Controls.Add(this.AMATab);
-            this.AMTabControl.Controls.Add(this.SaveTab);
-            this.AMTabControl.Cursor = System.Windows.Forms.Cursors.Default;
-            this.AMTabControl.Depth = 0;
-            this.AMTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.AMTabControl.ImageList = this.IconList_Cfg;
-            this.AMTabControl.Location = new System.Drawing.Point(0, 0);
-            this.AMTabControl.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.AMTabControl.Multiline = true;
-            this.AMTabControl.Name = "AMTabControl";
-            this.AMTabControl.SelectedIndex = 0;
-            this.AMTabControl.ShowToolTips = true;
-            this.AMTabControl.Size = new System.Drawing.Size(797, 597);
-            this.AMTabControl.TabIndex = 0;
+            AMTabControl.Controls.Add(CFTab);
+            AMTabControl.Controls.Add(AMTab);
+            AMTabControl.Controls.Add(AMATab);
+            AMTabControl.Controls.Add(SaveTab);
+            AMTabControl.Depth = 0;
+            AMTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            AMTabControl.ImageList = IconList_Cfg;
+            AMTabControl.Location = new System.Drawing.Point(0, 0);
+            AMTabControl.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            AMTabControl.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            AMTabControl.Multiline = true;
+            AMTabControl.Name = "AMTabControl";
+            AMTabControl.SelectedIndex = 0;
+            AMTabControl.ShowToolTips = true;
+            AMTabControl.Size = new System.Drawing.Size(929, 689);
+            AMTabControl.TabIndex = 0;
             // 
             // CFTab
             // 
-            this.CFTab.Controls.Add(this.filterTab1);
-            this.CFTab.ImageKey = "chat_info_24dp.png";
-            this.CFTab.Location = new System.Drawing.Point(4, 31);
-            this.CFTab.Margin = new System.Windows.Forms.Padding(0);
-            this.CFTab.Name = "CFTab";
-            this.CFTab.Size = new System.Drawing.Size(789, 562);
-            this.CFTab.TabIndex = 0;
-            this.CFTab.Text = "Chat Filter";
-            this.CFTab.ToolTipText = "Server.Properties";
-            this.CFTab.UseVisualStyleBackColor = true;
+            CFTab.Controls.Add(filterTab1);
+            CFTab.ImageKey = "chat_info_24dp.png";
+            CFTab.Location = new System.Drawing.Point(4, 31);
+            CFTab.Margin = new System.Windows.Forms.Padding(0);
+            CFTab.Name = "CFTab";
+            CFTab.Size = new System.Drawing.Size(921, 654);
+            CFTab.TabIndex = 0;
+            CFTab.Text = "Chat Filter";
+            CFTab.ToolTipText = "Server.Properties";
+            CFTab.UseVisualStyleBackColor = true;
             // 
             // filterTab1
             // 
-            this.filterTab1.AutoScroll = true;
-            this.filterTab1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.filterTab1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.filterTab1.Location = new System.Drawing.Point(0, 0);
-            this.filterTab1.MaximumSize = new System.Drawing.Size(738, 10000);
-            this.filterTab1.Name = "filterTab1";
-            this.filterTab1.Size = new System.Drawing.Size(738, 562);
-            this.filterTab1.TabIndex = 0;
+            filterTab1.AutoScroll = true;
+            filterTab1.BackColor = System.Drawing.Color.FromArgb(50, 50, 50);
+            filterTab1.Dock = System.Windows.Forms.DockStyle.Fill;
+            filterTab1.Location = new System.Drawing.Point(0, 0);
+            filterTab1.Margin = new System.Windows.Forms.Padding(5, 3, 5, 3);
+            filterTab1.MaximumSize = new System.Drawing.Size(861, 11538);
+            filterTab1.Name = "filterTab1";
+            filterTab1.Size = new System.Drawing.Size(861, 654);
+            filterTab1.TabIndex = 0;
             // 
             // AMTab
             // 
-            this.AMTab.Controls.Add(this.autoModOptions1);
-            this.AMTab.ImageKey = "ic_settings_white_24dp_1x.png";
-            this.AMTab.Location = new System.Drawing.Point(4, 31);
-            this.AMTab.Name = "AMTab";
-            this.AMTab.Size = new System.Drawing.Size(789, 562);
-            this.AMTab.TabIndex = 1;
-            this.AMTab.Text = "AutoMod";
-            this.AMTab.ToolTipText = "Whitelist";
-            this.AMTab.UseVisualStyleBackColor = true;
+            AMTab.Controls.Add(autoModOptions1);
+            AMTab.ImageKey = "ic_settings_white_24dp_1x.png";
+            AMTab.Location = new System.Drawing.Point(4, 31);
+            AMTab.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            AMTab.Name = "AMTab";
+            AMTab.Size = new System.Drawing.Size(922, 654);
+            AMTab.TabIndex = 1;
+            AMTab.Text = "AutoMod";
+            AMTab.ToolTipText = "Whitelist";
+            AMTab.UseVisualStyleBackColor = true;
             // 
             // autoModOptions1
             // 
-            this.autoModOptions1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.autoModOptions1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.autoModOptions1.Location = new System.Drawing.Point(0, 0);
-            this.autoModOptions1.MaximumSize = new System.Drawing.Size(738, 10000);
-            this.autoModOptions1.Name = "autoModOptions1";
-            this.autoModOptions1.Size = new System.Drawing.Size(738, 562);
-            this.autoModOptions1.TabIndex = 0;
+            autoModOptions1.BackColor = System.Drawing.Color.FromArgb(50, 50, 50);
+            autoModOptions1.Dock = System.Windows.Forms.DockStyle.Fill;
+            autoModOptions1.Location = new System.Drawing.Point(0, 0);
+            autoModOptions1.Margin = new System.Windows.Forms.Padding(5, 3, 5, 3);
+            autoModOptions1.MaximumSize = new System.Drawing.Size(861, 11538);
+            autoModOptions1.Name = "autoModOptions1";
+            autoModOptions1.Size = new System.Drawing.Size(861, 654);
+            autoModOptions1.TabIndex = 0;
             // 
             // AMATab
             // 
-            this.AMATab.Controls.Add(this.activeEnforcement1);
-            this.AMATab.ImageKey = "admin_panel_settings_24dp.png";
-            this.AMATab.Location = new System.Drawing.Point(4, 31);
-            this.AMATab.Name = "AMATab";
-            this.AMATab.Size = new System.Drawing.Size(789, 562);
-            this.AMATab.TabIndex = 2;
-            this.AMATab.Text = "Actions Taken";
-            this.AMATab.UseVisualStyleBackColor = true;
-            // 
-            // SaveTab
-            // 
-            this.SaveTab.ImageKey = "save_24dp.png";
-            this.SaveTab.Location = new System.Drawing.Point(4, 31);
-            this.SaveTab.Name = "SaveTab";
-            this.SaveTab.Padding = new System.Windows.Forms.Padding(3);
-            this.SaveTab.Size = new System.Drawing.Size(789, 562);
-            this.SaveTab.TabIndex = 6;
-            this.SaveTab.Text = "Save and Exit";
-            this.SaveTab.UseVisualStyleBackColor = true;
-            // 
-            // IconList_Cfg
-            // 
-            this.IconList_Cfg.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("IconList_Cfg.ImageStream")));
-            this.IconList_Cfg.TransparentColor = System.Drawing.Color.Transparent;
-            this.IconList_Cfg.Images.SetKeyName(0, "ic_settings_white_24dp_1x.png");
-            this.IconList_Cfg.Images.SetKeyName(1, "admin_panel_settings_24dp.png");
-            this.IconList_Cfg.Images.SetKeyName(2, "chat_info_24dp.png");
-            this.IconList_Cfg.Images.SetKeyName(3, "gate_24dp.png");
-            this.IconList_Cfg.Images.SetKeyName(4, "key_24dp.png");
-            this.IconList_Cfg.Images.SetKeyName(5, "");
-            this.IconList_Cfg.Images.SetKeyName(6, "save_24dp.png");
-            this.IconList_Cfg.Images.SetKeyName(7, "network_node_24dp.png");
+            AMATab.Controls.Add(activeEnforcement1);
+            AMATab.ImageKey = "admin_panel_settings_24dp.png";
+            AMATab.Location = new System.Drawing.Point(4, 31);
+            AMATab.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            AMATab.Name = "AMATab";
+            AMATab.Size = new System.Drawing.Size(922, 654);
+            AMATab.TabIndex = 2;
+            AMATab.Text = "Actions Taken";
+            AMATab.UseVisualStyleBackColor = true;
             // 
             // activeEnforcement1
             // 
-            this.activeEnforcement1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.activeEnforcement1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.activeEnforcement1.Location = new System.Drawing.Point(0, 0);
-            this.activeEnforcement1.Name = "activeEnforcement1";
-            this.activeEnforcement1.Size = new System.Drawing.Size(789, 562);
-            this.activeEnforcement1.TabIndex = 0;
+            activeEnforcement1.BackColor = System.Drawing.Color.FromArgb(50, 50, 50);
+            activeEnforcement1.Dock = System.Windows.Forms.DockStyle.Fill;
+            activeEnforcement1.Location = new System.Drawing.Point(0, 0);
+            activeEnforcement1.Margin = new System.Windows.Forms.Padding(5, 3, 5, 3);
+            activeEnforcement1.Name = "activeEnforcement1";
+            activeEnforcement1.Size = new System.Drawing.Size(922, 654);
+            activeEnforcement1.TabIndex = 0;
+            // 
+            // SaveTab
+            // 
+            SaveTab.ImageKey = "save_24dp.png";
+            SaveTab.Location = new System.Drawing.Point(4, 31);
+            SaveTab.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            SaveTab.Name = "SaveTab";
+            SaveTab.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            SaveTab.Size = new System.Drawing.Size(922, 654);
+            SaveTab.TabIndex = 6;
+            SaveTab.Text = "Save and Exit";
+            SaveTab.UseVisualStyleBackColor = true;
+            // 
+            // IconList_Cfg
+            // 
+            IconList_Cfg.ColorDepth = System.Windows.Forms.ColorDepth.Depth32Bit;
+            IconList_Cfg.ImageStream = (System.Windows.Forms.ImageListStreamer)resources.GetObject("IconList_Cfg.ImageStream");
+            IconList_Cfg.TransparentColor = System.Drawing.Color.Transparent;
+            IconList_Cfg.Images.SetKeyName(0, "ic_settings_white_24dp_1x.png");
+            IconList_Cfg.Images.SetKeyName(1, "admin_panel_settings_24dp.png");
+            IconList_Cfg.Images.SetKeyName(2, "chat_info_24dp.png");
+            IconList_Cfg.Images.SetKeyName(3, "gate_24dp.png");
+            IconList_Cfg.Images.SetKeyName(4, "key_24dp.png");
+            IconList_Cfg.Images.SetKeyName(5, "");
+            IconList_Cfg.Images.SetKeyName(6, "save_24dp.png");
+            IconList_Cfg.Images.SetKeyName(7, "network_node_24dp.png");
             // 
             // AutoModWrapper
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.ClientSize = new System.Drawing.Size(800, 600);
-            this.ControlBox = false;
-            this.Controls.Add(this.AMTabControl);
-            this.DrawerShowIconsWhenHidden = true;
-            this.DrawerTabControl = this.AMTabControl;
-            this.FormStyle = ReaLTaiizor.Enum.Material.FormStyles.StatusAndActionBar_None;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Name = "AutoModWrapper";
-            this.Padding = new System.Windows.Forms.Padding(0, 0, 3, 3);
-            this.Text = "AutoModWrapper";
-            this.Load += new System.EventHandler(this.AutoModWrapper_Load);
-            this.AMTabControl.ResumeLayout(false);
-            this.CFTab.ResumeLayout(false);
-            this.AMTab.ResumeLayout(false);
-            this.AMATab.ResumeLayout(false);
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            BackColor = System.Drawing.Color.FromArgb(50, 50, 50);
+            ClientSize = new System.Drawing.Size(933, 692);
+            ControlBox = false;
+            Controls.Add(AMTabControl);
+            DrawerShowIconsWhenHidden = true;
+            DrawerTabControl = AMTabControl;
+            FormStyle = ReaLTaiizor.Enum.Material.FormStyles.StatusAndActionBar_None;
+            Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
+            Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            Name = "AutoModWrapper";
+            Padding = new System.Windows.Forms.Padding(0, 0, 4, 3);
+            Text = "AutoModWrapper";
+            Load += AutoModWrapper_Load;
+            AMTabControl.ResumeLayout(false);
+            CFTab.ResumeLayout(false);
+            AMTab.ResumeLayout(false);
+            AMATab.ResumeLayout(false);
+            ResumeLayout(false);
 
         }
         #endregion
