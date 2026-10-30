@@ -14,558 +14,573 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
+            components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
-            this.MaterialTabControl1 = new ReaLTaiizor.Controls.MaterialTabControl();
-            this.tabLiveMonitor = new System.Windows.Forms.TabPage();
-            this.IconList = new System.Windows.Forms.ImageList(this.components);
-            this.CommandInputTextBox = new ReaLTaiizor.Controls.MaterialTextBoxEdit();
-            this.ConsoleOutputTextBox = new System.Windows.Forms.RichTextBox();
-            this.BkRsTab = new System.Windows.Forms.TabPage();
-            this.BackupWrapper = new ReaLTaiizor.Controls.MaterialCard();
-            this.BackupProgressBar = new ReaLTaiizor.Controls.MaterialProgressBar();
-            this.BKCompleteLBL = new ReaLTaiizor.Controls.MaterialLabel();
-            this.BackupServerBTN = new ReaLTaiizor.Controls.MaterialButton();
-            this.BackupPacksBTN = new ReaLTaiizor.Controls.MaterialButton();
-            this.BackupWorldBTN = new ReaLTaiizor.Controls.MaterialButton();
-            this.RestoreWrapper = new ReaLTaiizor.Controls.MaterialCard();
-            this.RunRestoreBTN = new ReaLTaiizor.Controls.MaterialButton();
-            this.BackupPointsListBox = new ReaLTaiizor.Controls.MaterialListBox();
-            this.RestoreTypeComboBox = new ReaLTaiizor.Controls.MaterialComboBox();
-            this.RestorTitleLBL = new ReaLTaiizor.Controls.MaterialLabel();
-            this.AutoModTab = new System.Windows.Forms.TabPage();
-            this.label2 = new System.Windows.Forms.Label();
-            this.LETab = new System.Windows.Forms.TabPage();
-            this.editorProvider1 = new BDSUtil.Modals.Content_Controls.Level_Editor.EditorProvider();
-            this.SettingsTabPage = new System.Windows.Forms.TabPage();
-            this.settingsProvider1 = new BDSUtil.Modals.Content_Controls.Settings.SettingsProvider();
-            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105 = new ReaLTaiizor.Controls.MaterialTabControl();
-            this.SV_PM_BTN = new ReaLTaiizor.Controls.MaterialFloatingActionButton();
-            this.StartServerBTN_New = new ReaLTaiizor.Controls.MaterialFloatingActionButton();
-            this.SvConfigButton = new ReaLTaiizor.Controls.MaterialFloatingActionButton();
-            this.StopServerBTN_New = new ReaLTaiizor.Controls.MaterialFloatingActionButton();
-            this.MaterialTabControl1.SuspendLayout();
-            this.tabLiveMonitor.SuspendLayout();
-            this.BkRsTab.SuspendLayout();
-            this.BackupWrapper.SuspendLayout();
-            this.RestoreWrapper.SuspendLayout();
-            this.AutoModTab.SuspendLayout();
-            this.LETab.SuspendLayout();
-            this.SettingsTabPage.SuspendLayout();
-            this.SuspendLayout();
+            MaterialTabControl1 = new ReaLTaiizor.Controls.MaterialTabControl();
+            tabLiveMonitor = new System.Windows.Forms.TabPage();
+            SV_PM_BTN = new ReaLTaiizor.Controls.MaterialFloatingActionButton();
+            IconList = new System.Windows.Forms.ImageList(components);
+            StartServerBTN_New = new ReaLTaiizor.Controls.MaterialFloatingActionButton();
+            SvConfigButton = new ReaLTaiizor.Controls.MaterialFloatingActionButton();
+            StopServerBTN_New = new ReaLTaiizor.Controls.MaterialFloatingActionButton();
+            CommandInputTextBox = new ReaLTaiizor.Controls.MaterialTextBoxEdit();
+            ConsoleOutputTextBox = new System.Windows.Forms.RichTextBox();
+            BkRsTab = new System.Windows.Forms.TabPage();
+            BackupWrapper = new ReaLTaiizor.Controls.MaterialCard();
+            BackupProgressBar = new ReaLTaiizor.Controls.MaterialProgressBar();
+            BKCompleteLBL = new ReaLTaiizor.Controls.MaterialLabel();
+            BackupServerBTN = new ReaLTaiizor.Controls.MaterialButton();
+            BackupPacksBTN = new ReaLTaiizor.Controls.MaterialButton();
+            BackupWorldBTN = new ReaLTaiizor.Controls.MaterialButton();
+            RestoreWrapper = new ReaLTaiizor.Controls.MaterialCard();
+            RunRestoreBTN = new ReaLTaiizor.Controls.MaterialButton();
+            BackupPointsListBox = new ReaLTaiizor.Controls.MaterialListBox();
+            RestoreTypeComboBox = new ReaLTaiizor.Controls.MaterialComboBox();
+            RestorTitleLBL = new ReaLTaiizor.Controls.MaterialLabel();
+            AutoModTab = new System.Windows.Forms.TabPage();
+            label2 = new System.Windows.Forms.Label();
+            LETab = new System.Windows.Forms.TabPage();
+            editorProvider1 = new BDSUtil.Modals.Content_Controls.Level_Editor.EditorProvider();
+            SettingsTabPage = new System.Windows.Forms.TabPage();
+            settingsProvider1 = new BDSUtil.Modals.Content_Controls.Settings.SettingsProvider();
+            object_7f028359_dd1b_422d_83c9_6faf6dccb105 = new ReaLTaiizor.Controls.MaterialTabControl();
+            MaterialTabControl1.SuspendLayout();
+            tabLiveMonitor.SuspendLayout();
+            BkRsTab.SuspendLayout();
+            BackupWrapper.SuspendLayout();
+            RestoreWrapper.SuspendLayout();
+            AutoModTab.SuspendLayout();
+            LETab.SuspendLayout();
+            SettingsTabPage.SuspendLayout();
+            SuspendLayout();
             // 
             // MaterialTabControl1
             // 
-            this.MaterialTabControl1.Controls.Add(this.tabLiveMonitor);
-            this.MaterialTabControl1.Controls.Add(this.BkRsTab);
-            this.MaterialTabControl1.Controls.Add(this.AutoModTab);
-            this.MaterialTabControl1.Controls.Add(this.LETab);
-            this.MaterialTabControl1.Controls.Add(this.SettingsTabPage);
-            this.MaterialTabControl1.Depth = 0;
-            this.MaterialTabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MaterialTabControl1.ImageList = this.IconList;
-            this.MaterialTabControl1.Location = new System.Drawing.Point(0, 64);
-            this.MaterialTabControl1.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.MaterialTabControl1.Multiline = true;
-            this.MaterialTabControl1.Name = "MaterialTabControl1";
-            this.MaterialTabControl1.SelectedIndex = 0;
-            this.MaterialTabControl1.Size = new System.Drawing.Size(950, 483);
-            this.MaterialTabControl1.TabIndex = 0;
-            this.MaterialTabControl1.SelectedIndexChanged += new System.EventHandler(this.MaterialTabControl1_SelectedIndexChanged);
+            MaterialTabControl1.Controls.Add(tabLiveMonitor);
+            MaterialTabControl1.Controls.Add(BkRsTab);
+            MaterialTabControl1.Controls.Add(AutoModTab);
+            MaterialTabControl1.Controls.Add(LETab);
+            MaterialTabControl1.Controls.Add(SettingsTabPage);
+            MaterialTabControl1.Depth = 0;
+            MaterialTabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            MaterialTabControl1.ImageList = IconList;
+            MaterialTabControl1.Location = new System.Drawing.Point(0, 74);
+            MaterialTabControl1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            MaterialTabControl1.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            MaterialTabControl1.Multiline = true;
+            MaterialTabControl1.Name = "MaterialTabControl1";
+            MaterialTabControl1.SelectedIndex = 0;
+            MaterialTabControl1.Size = new System.Drawing.Size(950, 558);
+            MaterialTabControl1.TabIndex = 0;
+            MaterialTabControl1.SelectedIndexChanged += MaterialTabControl1_SelectedIndexChanged;
             // 
             // tabLiveMonitor
             // 
-            this.tabLiveMonitor.Controls.Add(this.SV_PM_BTN);
-            this.tabLiveMonitor.Controls.Add(this.StartServerBTN_New);
-            this.tabLiveMonitor.Controls.Add(this.SvConfigButton);
-            this.tabLiveMonitor.Controls.Add(this.StopServerBTN_New);
-            this.tabLiveMonitor.Controls.Add(this.CommandInputTextBox);
-            this.tabLiveMonitor.Controls.Add(this.ConsoleOutputTextBox);
-            this.tabLiveMonitor.ImageKey = "terminal_24dp.png";
-            this.tabLiveMonitor.Location = new System.Drawing.Point(4, 31);
-            this.tabLiveMonitor.Name = "tabLiveMonitor";
-            this.tabLiveMonitor.Padding = new System.Windows.Forms.Padding(3);
-            this.tabLiveMonitor.Size = new System.Drawing.Size(942, 448);
-            this.tabLiveMonitor.TabIndex = 0;
-            this.tabLiveMonitor.Text = "Server Console";
-            this.tabLiveMonitor.UseVisualStyleBackColor = true;
-            // 
-            // IconList
-            // 
-            this.IconList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("IconList.ImageStream")));
-            this.IconList.TransparentColor = System.Drawing.Color.Transparent;
-            this.IconList.Images.SetKeyName(0, "baseline_bluetooth_black_24dp.png");
-            this.IconList.Images.SetKeyName(1, "baseline_build_black_24dp.png");
-            this.IconList.Images.SetKeyName(2, "baseline_favorite_border_black_24dp.png");
-            this.IconList.Images.SetKeyName(3, "baseline_fingerprint_black_24dp.png");
-            this.IconList.Images.SetKeyName(4, "baseline_thumb_up_black_24dp.png");
-            this.IconList.Images.SetKeyName(5, "ic_settings_black_24dp_1x.png");
-            this.IconList.Images.SetKeyName(6, "ic_settings_white_24dp_1x.png");
-            this.IconList.Images.SetKeyName(7, "minus.png");
-            this.IconList.Images.SetKeyName(8, "plus.png");
-            this.IconList.Images.SetKeyName(9, "round_add_black_24dp.png");
-            this.IconList.Images.SetKeyName(10, "round_assessment_white_24dp.png");
-            this.IconList.Images.SetKeyName(11, "round_backup_white_24dp.png");
-            this.IconList.Images.SetKeyName(12, "round_bluetooth_white_24dp.png");
-            this.IconList.Images.SetKeyName(13, "round_bookmark_white_24dp.png");
-            this.IconList.Images.SetKeyName(14, "round_build_white_24dp.png");
-            this.IconList.Images.SetKeyName(15, "round_gps_fixed_white_24dp.png");
-            this.IconList.Images.SetKeyName(16, "round_http_white_24dp.png");
-            this.IconList.Images.SetKeyName(17, "round_phone_black_24dp.png");
-            this.IconList.Images.SetKeyName(18, "round_report_problem_white_24dp.png");
-            this.IconList.Images.SetKeyName(19, "round_swap_vert_white_24dp.png");
-            this.IconList.Images.SetKeyName(20, "terminal_24dp.png");
-            this.IconList.Images.SetKeyName(21, "chat_info_24dp.png");
-            this.IconList.Images.SetKeyName(22, "globe_24dp.png");
-            // 
-            // CommandInputTextBox
-            // 
-            this.CommandInputTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.CommandInputTextBox.AnimateReadOnly = false;
-            this.CommandInputTextBox.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.None;
-            this.CommandInputTextBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.None;
-            this.CommandInputTextBox.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.CommandInputTextBox.CharacterCasing = System.Windows.Forms.CharacterCasing.Normal;
-            this.CommandInputTextBox.Depth = 0;
-            this.CommandInputTextBox.Font = new System.Drawing.Font("Roboto", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
-            this.CommandInputTextBox.HideSelection = true;
-            this.CommandInputTextBox.Hint = "Enter Console Command";
-            this.CommandInputTextBox.LeadingIcon = null;
-            this.CommandInputTextBox.Location = new System.Drawing.Point(12, 388);
-            this.CommandInputTextBox.MaxLength = 32767;
-            this.CommandInputTextBox.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.OUT;
-            this.CommandInputTextBox.Name = "CommandInputTextBox";
-            this.CommandInputTextBox.PasswordChar = '\0';
-            this.CommandInputTextBox.PrefixSuffixText = null;
-            this.CommandInputTextBox.ReadOnly = false;
-            this.CommandInputTextBox.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.CommandInputTextBox.SelectedText = "";
-            this.CommandInputTextBox.SelectionLength = 0;
-            this.CommandInputTextBox.SelectionStart = 0;
-            this.CommandInputTextBox.ShortcutsEnabled = true;
-            this.CommandInputTextBox.Size = new System.Drawing.Size(760, 48);
-            this.CommandInputTextBox.TabIndex = 1;
-            this.CommandInputTextBox.TabStop = false;
-            this.CommandInputTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Left;
-            this.CommandInputTextBox.TrailingIcon = null;
-            this.CommandInputTextBox.UseSystemPasswordChar = false;
-            this.CommandInputTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.CommandInputTextBox_KeyDown);
-            this.CommandInputTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.CommandInputTextBox_KeyPress);
-            // 
-            // ConsoleOutputTextBox
-            // 
-            this.ConsoleOutputTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.ConsoleOutputTextBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
-            this.ConsoleOutputTextBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.ConsoleOutputTextBox.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ConsoleOutputTextBox.ForeColor = System.Drawing.Color.White;
-            this.ConsoleOutputTextBox.Location = new System.Drawing.Point(12, 12);
-            this.ConsoleOutputTextBox.Name = "ConsoleOutputTextBox";
-            this.ConsoleOutputTextBox.ReadOnly = true;
-            this.ConsoleOutputTextBox.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical;
-            this.ConsoleOutputTextBox.Size = new System.Drawing.Size(760, 360);
-            this.ConsoleOutputTextBox.TabIndex = 0;
-            this.ConsoleOutputTextBox.Text = "";
-            // 
-            // BkRsTab
-            // 
-            this.BkRsTab.Controls.Add(this.BackupWrapper);
-            this.BkRsTab.Controls.Add(this.RestoreWrapper);
-            this.BkRsTab.ImageKey = "round_backup_white_24dp.png";
-            this.BkRsTab.Location = new System.Drawing.Point(4, 31);
-            this.BkRsTab.Name = "BkRsTab";
-            this.BkRsTab.Padding = new System.Windows.Forms.Padding(3, 13, 3, 13);
-            this.BkRsTab.Size = new System.Drawing.Size(942, 448);
-            this.BkRsTab.TabIndex = 1;
-            this.BkRsTab.Text = "Backup & Restore";
-            this.BkRsTab.UseVisualStyleBackColor = true;
-            // 
-            // BackupWrapper
-            // 
-            this.BackupWrapper.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.BackupWrapper.Controls.Add(this.BackupProgressBar);
-            this.BackupWrapper.Controls.Add(this.BKCompleteLBL);
-            this.BackupWrapper.Controls.Add(this.BackupServerBTN);
-            this.BackupWrapper.Controls.Add(this.BackupPacksBTN);
-            this.BackupWrapper.Controls.Add(this.BackupWorldBTN);
-            this.BackupWrapper.Depth = 0;
-            this.BackupWrapper.Dock = System.Windows.Forms.DockStyle.Top;
-            this.BackupWrapper.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(222)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.BackupWrapper.Location = new System.Drawing.Point(3, 13);
-            this.BackupWrapper.Margin = new System.Windows.Forms.Padding(14);
-            this.BackupWrapper.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.BackupWrapper.Name = "BackupWrapper";
-            this.BackupWrapper.Padding = new System.Windows.Forms.Padding(14);
-            this.BackupWrapper.Size = new System.Drawing.Size(936, 91);
-            this.BackupWrapper.TabIndex = 0;
-            // 
-            // BackupProgressBar
-            // 
-            this.BackupProgressBar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.BackupProgressBar.Depth = 0;
-            this.BackupProgressBar.Location = new System.Drawing.Point(14, 83);
-            this.BackupProgressBar.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.BackupProgressBar.Name = "BackupProgressBar";
-            this.BackupProgressBar.Size = new System.Drawing.Size(918, 5);
-            this.BackupProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
-            this.BackupProgressBar.TabIndex = 5;
-            this.BackupProgressBar.UseAccentColor = false;
-            this.BackupProgressBar.Value = 75;
-            this.BackupProgressBar.Visible = false;
-            // 
-            // BKCompleteLBL
-            // 
-            this.BKCompleteLBL.AutoSize = true;
-            this.BKCompleteLBL.Depth = 0;
-            this.BKCompleteLBL.Font = new System.Drawing.Font("Roboto", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
-            this.BKCompleteLBL.Location = new System.Drawing.Point(692, 38);
-            this.BKCompleteLBL.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.BKCompleteLBL.Name = "BKCompleteLBL";
-            this.BKCompleteLBL.Size = new System.Drawing.Size(129, 19);
-            this.BKCompleteLBL.TabIndex = 3;
-            this.BKCompleteLBL.Text = "Backup Complete!";
-            this.BKCompleteLBL.Visible = false;
-            // 
-            // BackupServerBTN
-            // 
-            this.BackupServerBTN.AutoSize = false;
-            this.BackupServerBTN.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.BackupServerBTN.Density = ReaLTaiizor.Controls.MaterialButton.MaterialButtonDensity.Default;
-            this.BackupServerBTN.Depth = 0;
-            this.BackupServerBTN.HighEmphasis = true;
-            this.BackupServerBTN.Icon = null;
-            this.BackupServerBTN.IconType = ReaLTaiizor.Controls.MaterialButton.MaterialIconType.Rebase;
-            this.BackupServerBTN.Location = new System.Drawing.Point(404, 14);
-            this.BackupServerBTN.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.BackupServerBTN.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.BackupServerBTN.Name = "BackupServerBTN";
-            this.BackupServerBTN.NoAccentTextColor = System.Drawing.Color.Empty;
-            this.BackupServerBTN.Size = new System.Drawing.Size(173, 63);
-            this.BackupServerBTN.TabIndex = 2;
-            this.BackupServerBTN.Text = "Full Server Backup";
-            this.BackupServerBTN.Type = ReaLTaiizor.Controls.MaterialButton.MaterialButtonType.Contained;
-            this.BackupServerBTN.UseAccentColor = false;
-            this.BackupServerBTN.UseVisualStyleBackColor = true;
-            this.BackupServerBTN.Click += new System.EventHandler(this.BackupServerBTN_Click);
-            // 
-            // BackupPacksBTN
-            // 
-            this.BackupPacksBTN.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.BackupPacksBTN.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.BackupPacksBTN.Density = ReaLTaiizor.Controls.MaterialButton.MaterialButtonDensity.Default;
-            this.BackupPacksBTN.Depth = 0;
-            this.BackupPacksBTN.HighEmphasis = true;
-            this.BackupPacksBTN.Icon = null;
-            this.BackupPacksBTN.IconType = ReaLTaiizor.Controls.MaterialButton.MaterialIconType.Rebase;
-            this.BackupPacksBTN.Location = new System.Drawing.Point(223, 14);
-            this.BackupPacksBTN.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.BackupPacksBTN.MaximumSize = new System.Drawing.Size(173, 63);
-            this.BackupPacksBTN.MinimumSize = new System.Drawing.Size(173, 63);
-            this.BackupPacksBTN.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.BackupPacksBTN.Name = "BackupPacksBTN";
-            this.BackupPacksBTN.NoAccentTextColor = System.Drawing.Color.Empty;
-            this.BackupPacksBTN.Padding = new System.Windows.Forms.Padding(5);
-            this.BackupPacksBTN.Size = new System.Drawing.Size(173, 63);
-            this.BackupPacksBTN.TabIndex = 1;
-            this.BackupPacksBTN.Text = "Backup Packs";
-            this.BackupPacksBTN.Type = ReaLTaiizor.Controls.MaterialButton.MaterialButtonType.Contained;
-            this.BackupPacksBTN.UseAccentColor = false;
-            this.BackupPacksBTN.UseVisualStyleBackColor = true;
-            this.BackupPacksBTN.Click += new System.EventHandler(this.BackupPacksBTN_Click);
-            // 
-            // BackupWorldBTN
-            // 
-            this.BackupWorldBTN.AutoSize = false;
-            this.BackupWorldBTN.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.BackupWorldBTN.Density = ReaLTaiizor.Controls.MaterialButton.MaterialButtonDensity.Default;
-            this.BackupWorldBTN.Depth = 0;
-            this.BackupWorldBTN.Dock = System.Windows.Forms.DockStyle.Left;
-            this.BackupWorldBTN.HighEmphasis = true;
-            this.BackupWorldBTN.Icon = null;
-            this.BackupWorldBTN.IconType = ReaLTaiizor.Controls.MaterialButton.MaterialIconType.Rebase;
-            this.BackupWorldBTN.Location = new System.Drawing.Point(14, 14);
-            this.BackupWorldBTN.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.BackupWorldBTN.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.BackupWorldBTN.Name = "BackupWorldBTN";
-            this.BackupWorldBTN.NoAccentTextColor = System.Drawing.Color.Empty;
-            this.BackupWorldBTN.Size = new System.Drawing.Size(201, 63);
-            this.BackupWorldBTN.TabIndex = 0;
-            this.BackupWorldBTN.Text = "Backup World(s)";
-            this.BackupWorldBTN.Type = ReaLTaiizor.Controls.MaterialButton.MaterialButtonType.Contained;
-            this.BackupWorldBTN.UseAccentColor = false;
-            this.BackupWorldBTN.UseVisualStyleBackColor = true;
-            this.BackupWorldBTN.Click += new System.EventHandler(this.BackupWorldBTN_Click);
-            // 
-            // RestoreWrapper
-            // 
-            this.RestoreWrapper.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.RestoreWrapper.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.RestoreWrapper.Controls.Add(this.RunRestoreBTN);
-            this.RestoreWrapper.Controls.Add(this.BackupPointsListBox);
-            this.RestoreWrapper.Controls.Add(this.RestoreTypeComboBox);
-            this.RestoreWrapper.Controls.Add(this.RestorTitleLBL);
-            this.RestoreWrapper.Depth = 0;
-            this.RestoreWrapper.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.RestoreWrapper.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(222)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.RestoreWrapper.Location = new System.Drawing.Point(3, 84);
-            this.RestoreWrapper.Margin = new System.Windows.Forms.Padding(14);
-            this.RestoreWrapper.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.RestoreWrapper.Name = "RestoreWrapper";
-            this.RestoreWrapper.Padding = new System.Windows.Forms.Padding(14);
-            this.RestoreWrapper.Size = new System.Drawing.Size(936, 351);
-            this.RestoreWrapper.TabIndex = 1;
-            // 
-            // RunRestoreBTN
-            // 
-            this.RunRestoreBTN.AutoSize = false;
-            this.RunRestoreBTN.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.RunRestoreBTN.Density = ReaLTaiizor.Controls.MaterialButton.MaterialButtonDensity.Default;
-            this.RunRestoreBTN.Depth = 0;
-            this.RunRestoreBTN.HighEmphasis = true;
-            this.RunRestoreBTN.Icon = null;
-            this.RunRestoreBTN.IconType = ReaLTaiizor.Controls.MaterialButton.MaterialIconType.Rebase;
-            this.RunRestoreBTN.Location = new System.Drawing.Point(14, 285);
-            this.RunRestoreBTN.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            this.RunRestoreBTN.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.RunRestoreBTN.Name = "RunRestoreBTN";
-            this.RunRestoreBTN.NoAccentTextColor = System.Drawing.Color.Empty;
-            this.RunRestoreBTN.Size = new System.Drawing.Size(286, 49);
-            this.RunRestoreBTN.TabIndex = 3;
-            this.RunRestoreBTN.Text = "Restore Selected Snapshot";
-            this.RunRestoreBTN.Type = ReaLTaiizor.Controls.MaterialButton.MaterialButtonType.Contained;
-            this.RunRestoreBTN.UseAccentColor = false;
-            this.RunRestoreBTN.UseVisualStyleBackColor = true;
-            this.RunRestoreBTN.Visible = false;
-            this.RunRestoreBTN.Click += new System.EventHandler(this.RunRestoreBTN_Click);
-            // 
-            // BackupPointsListBox
-            // 
-            this.BackupPointsListBox.BackColor = System.Drawing.Color.White;
-            this.BackupPointsListBox.BorderColor = System.Drawing.Color.LightGray;
-            this.BackupPointsListBox.Depth = 0;
-            this.BackupPointsListBox.Font = new System.Drawing.Font("Roboto", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
-            this.BackupPointsListBox.Location = new System.Drawing.Point(306, 42);
-            this.BackupPointsListBox.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.BackupPointsListBox.Name = "BackupPointsListBox";
-            this.BackupPointsListBox.SelectedIndex = -1;
-            this.BackupPointsListBox.SelectedItem = null;
-            this.BackupPointsListBox.Size = new System.Drawing.Size(571, 289);
-            this.BackupPointsListBox.TabIndex = 2;
-            this.BackupPointsListBox.SelectedIndexChanged += new ReaLTaiizor.Controls.MaterialListBox.SelectedIndexChangedEventHandler(this.BackupPointsListBox_SelectedIndexChanged);
-            // 
-            // RestoreTypeComboBox
-            // 
-            this.RestoreTypeComboBox.AutoResize = false;
-            this.RestoreTypeComboBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.RestoreTypeComboBox.Depth = 0;
-            this.RestoreTypeComboBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
-            this.RestoreTypeComboBox.DropDownHeight = 174;
-            this.RestoreTypeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.RestoreTypeComboBox.DropDownWidth = 121;
-            this.RestoreTypeComboBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Pixel);
-            this.RestoreTypeComboBox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(222)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.RestoreTypeComboBox.FormattingEnabled = true;
-            this.RestoreTypeComboBox.IntegralHeight = false;
-            this.RestoreTypeComboBox.ItemHeight = 43;
-            this.RestoreTypeComboBox.Items.AddRange(new object[] {
-            "Worlds Backups",
-            "Packs/Addons Backups",
-            "Full Server Backups"});
-            this.RestoreTypeComboBox.Location = new System.Drawing.Point(17, 42);
-            this.RestoreTypeComboBox.MaxDropDownItems = 4;
-            this.RestoreTypeComboBox.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.OUT;
-            this.RestoreTypeComboBox.Name = "RestoreTypeComboBox";
-            this.RestoreTypeComboBox.Size = new System.Drawing.Size(283, 49);
-            this.RestoreTypeComboBox.StartIndex = 0;
-            this.RestoreTypeComboBox.TabIndex = 1;
-            this.RestoreTypeComboBox.SelectedIndexChanged += new System.EventHandler(this.RestoreTypeComboBox_SelectedIndexChanged);
-            // 
-            // RestorTitleLBL
-            // 
-            this.RestorTitleLBL.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.RestorTitleLBL.AutoSize = true;
-            this.RestorTitleLBL.Depth = 0;
-            this.RestorTitleLBL.Font = new System.Drawing.Font("Roboto", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
-            this.RestorTitleLBL.Location = new System.Drawing.Point(351, 10);
-            this.RestorTitleLBL.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.RestorTitleLBL.Name = "RestorTitleLBL";
-            this.RestorTitleLBL.Size = new System.Drawing.Size(185, 19);
-            this.RestorTitleLBL.TabIndex = 0;
-            this.RestorTitleLBL.Text = "Server Snapshot Recovery";
-            // 
-            // AutoModTab
-            // 
-            this.AutoModTab.Controls.Add(this.label2);
-            this.AutoModTab.ImageKey = "chat_info_24dp.png";
-            this.AutoModTab.Location = new System.Drawing.Point(4, 31);
-            this.AutoModTab.Name = "AutoModTab";
-            this.AutoModTab.Padding = new System.Windows.Forms.Padding(3);
-            this.AutoModTab.Size = new System.Drawing.Size(942, 448);
-            this.AutoModTab.TabIndex = 2;
-            this.AutoModTab.Text = "Chat AutoMod";
-            this.AutoModTab.UseVisualStyleBackColor = true;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Consolas", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(172, 176);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(598, 96);
-            this.label2.TabIndex = 2;
-            this.label2.Text = "This is a dummy tab(AutoMod).\r\nIn release you should never see this. \r\nIf you see" +
-    " this you\'re somewhere you shouldnt be.\r\nMaybe you should come work for me :D";
-            // 
-            // LETab
-            // 
-            this.LETab.Controls.Add(this.editorProvider1);
-            this.LETab.ImageKey = "globe_24dp.png";
-            this.LETab.Location = new System.Drawing.Point(4, 31);
-            this.LETab.Name = "LETab";
-            this.LETab.Padding = new System.Windows.Forms.Padding(3);
-            this.LETab.Size = new System.Drawing.Size(942, 448);
-            this.LETab.TabIndex = 4;
-            this.LETab.Text = "Level Editor";
-            this.LETab.UseVisualStyleBackColor = true;
-            // 
-            // editorProvider1
-            // 
-            this.editorProvider1.AutoScroll = true;
-            this.editorProvider1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.editorProvider1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.editorProvider1.Location = new System.Drawing.Point(3, 3);
-            this.editorProvider1.Name = "editorProvider1";
-            this.editorProvider1.Size = new System.Drawing.Size(936, 442);
-            this.editorProvider1.TabIndex = 0;
-            // 
-            // SettingsTabPage
-            // 
-            this.SettingsTabPage.Controls.Add(this.settingsProvider1);
-            this.SettingsTabPage.ImageKey = "ic_settings_white_24dp_1x.png";
-            this.SettingsTabPage.Location = new System.Drawing.Point(4, 31);
-            this.SettingsTabPage.Name = "SettingsTabPage";
-            this.SettingsTabPage.Size = new System.Drawing.Size(942, 448);
-            this.SettingsTabPage.TabIndex = 3;
-            this.SettingsTabPage.Text = "Settings";
-            this.SettingsTabPage.UseVisualStyleBackColor = true;
-            // 
-            // settingsProvider1
-            // 
-            this.settingsProvider1.AutoScroll = true;
-            this.settingsProvider1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.settingsProvider1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.settingsProvider1.Location = new System.Drawing.Point(0, 0);
-            this.settingsProvider1.Name = "settingsProvider1";
-            this.settingsProvider1.Size = new System.Drawing.Size(942, 448);
-            this.settingsProvider1.TabIndex = 0;
-            // 
-            // object_7f028359_dd1b_422d_83c9_6faf6dccb105
-            // 
-            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105.Depth = 0;
-            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105.Location = new System.Drawing.Point(0, 64);
-            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105.Multiline = true;
-            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105.Name = "object_7f028359_dd1b_422d_83c9_6faf6dccb105";
-            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105.SelectedIndex = 0;
-            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105.Size = new System.Drawing.Size(950, 483);
-            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105.TabIndex = 0;
-            this.object_7f028359_dd1b_422d_83c9_6faf6dccb105.Visible = false;
+            tabLiveMonitor.Controls.Add(SV_PM_BTN);
+            tabLiveMonitor.Controls.Add(StartServerBTN_New);
+            tabLiveMonitor.Controls.Add(SvConfigButton);
+            tabLiveMonitor.Controls.Add(StopServerBTN_New);
+            tabLiveMonitor.Controls.Add(CommandInputTextBox);
+            tabLiveMonitor.Controls.Add(ConsoleOutputTextBox);
+            tabLiveMonitor.ImageKey = "terminal_24dp.png";
+            tabLiveMonitor.Location = new System.Drawing.Point(4, 31);
+            tabLiveMonitor.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            tabLiveMonitor.Name = "tabLiveMonitor";
+            tabLiveMonitor.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            tabLiveMonitor.Size = new System.Drawing.Size(942, 523);
+            tabLiveMonitor.TabIndex = 0;
+            tabLiveMonitor.Text = "Server Console";
+            tabLiveMonitor.UseVisualStyleBackColor = true;
             // 
             // SV_PM_BTN
             // 
-            this.SV_PM_BTN.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.SV_PM_BTN.Depth = 0;
-            this.SV_PM_BTN.Icon = global::BDSUtil.Properties.Resources.extension_24dp;
-            this.SV_PM_BTN.ImageList = this.IconList;
-            this.SV_PM_BTN.Location = new System.Drawing.Point(862, 380);
-            this.SV_PM_BTN.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.SV_PM_BTN.Name = "SV_PM_BTN";
-            this.SV_PM_BTN.Size = new System.Drawing.Size(56, 56);
-            this.SV_PM_BTN.TabIndex = 24;
-            this.SV_PM_BTN.Text = "materialFloatingActionButton1";
-            this.SV_PM_BTN.UseVisualStyleBackColor = true;
-            this.SV_PM_BTN.Click += new System.EventHandler(this.SV_PM_BTN_Click);
+            SV_PM_BTN.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            SV_PM_BTN.Depth = 0;
+            SV_PM_BTN.Icon = Properties.Resources.extension_24dp;
+            SV_PM_BTN.ImageList = IconList;
+            SV_PM_BTN.Location = new System.Drawing.Point(873, 449);
+            SV_PM_BTN.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            SV_PM_BTN.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            SV_PM_BTN.Name = "SV_PM_BTN";
+            SV_PM_BTN.Size = new System.Drawing.Size(65, 65);
+            SV_PM_BTN.TabIndex = 24;
+            SV_PM_BTN.Text = "materialFloatingActionButton1";
+            SV_PM_BTN.UseVisualStyleBackColor = true;
+            SV_PM_BTN.Click += SV_PM_BTN_Click;
+            // 
+            // IconList
+            // 
+            IconList.ColorDepth = System.Windows.Forms.ColorDepth.Depth32Bit;
+            IconList.ImageStream = (System.Windows.Forms.ImageListStreamer)resources.GetObject("IconList.ImageStream");
+            IconList.TransparentColor = System.Drawing.Color.Transparent;
+            IconList.Images.SetKeyName(0, "baseline_bluetooth_black_24dp.png");
+            IconList.Images.SetKeyName(1, "baseline_build_black_24dp.png");
+            IconList.Images.SetKeyName(2, "baseline_favorite_border_black_24dp.png");
+            IconList.Images.SetKeyName(3, "baseline_fingerprint_black_24dp.png");
+            IconList.Images.SetKeyName(4, "baseline_thumb_up_black_24dp.png");
+            IconList.Images.SetKeyName(5, "ic_settings_black_24dp_1x.png");
+            IconList.Images.SetKeyName(6, "ic_settings_white_24dp_1x.png");
+            IconList.Images.SetKeyName(7, "minus.png");
+            IconList.Images.SetKeyName(8, "plus.png");
+            IconList.Images.SetKeyName(9, "round_add_black_24dp.png");
+            IconList.Images.SetKeyName(10, "round_assessment_white_24dp.png");
+            IconList.Images.SetKeyName(11, "round_backup_white_24dp.png");
+            IconList.Images.SetKeyName(12, "round_bluetooth_white_24dp.png");
+            IconList.Images.SetKeyName(13, "round_bookmark_white_24dp.png");
+            IconList.Images.SetKeyName(14, "round_build_white_24dp.png");
+            IconList.Images.SetKeyName(15, "round_gps_fixed_white_24dp.png");
+            IconList.Images.SetKeyName(16, "round_http_white_24dp.png");
+            IconList.Images.SetKeyName(17, "round_phone_black_24dp.png");
+            IconList.Images.SetKeyName(18, "round_report_problem_white_24dp.png");
+            IconList.Images.SetKeyName(19, "round_swap_vert_white_24dp.png");
+            IconList.Images.SetKeyName(20, "terminal_24dp.png");
+            IconList.Images.SetKeyName(21, "chat_info_24dp.png");
+            IconList.Images.SetKeyName(22, "globe_24dp.png");
             // 
             // StartServerBTN_New
             // 
-            this.StartServerBTN_New.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.StartServerBTN_New.Depth = 0;
-            this.StartServerBTN_New.Icon = global::BDSUtil.Properties.Resources.power_settings_new_24dp_green;
-            this.StartServerBTN_New.ImageList = this.IconList;
-            this.StartServerBTN_New.Location = new System.Drawing.Point(830, 316);
-            this.StartServerBTN_New.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.StartServerBTN_New.Name = "StartServerBTN_New";
-            this.StartServerBTN_New.Size = new System.Drawing.Size(56, 56);
-            this.StartServerBTN_New.TabIndex = 23;
-            this.StartServerBTN_New.Text = "materialFloatingActionButton3";
-            this.StartServerBTN_New.UseVisualStyleBackColor = true;
-            this.StartServerBTN_New.Click += new System.EventHandler(this.StartServerBTN_New_Click);
+            StartServerBTN_New.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            StartServerBTN_New.Depth = 0;
+            StartServerBTN_New.Icon = Properties.Resources.power_settings_new_24dp_green;
+            StartServerBTN_New.ImageList = IconList;
+            StartServerBTN_New.Location = new System.Drawing.Point(835, 376);
+            StartServerBTN_New.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            StartServerBTN_New.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            StartServerBTN_New.Name = "StartServerBTN_New";
+            StartServerBTN_New.Size = new System.Drawing.Size(65, 65);
+            StartServerBTN_New.TabIndex = 23;
+            StartServerBTN_New.Text = "materialFloatingActionButton3";
+            StartServerBTN_New.UseVisualStyleBackColor = true;
+            StartServerBTN_New.Click += StartServerBTN_New_Click;
             // 
             // SvConfigButton
             // 
-            this.SvConfigButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.SvConfigButton.Depth = 0;
-            this.SvConfigButton.Icon = global::BDSUtil.Properties.Resources.round_build_white_24dp;
-            this.SvConfigButton.ImageList = this.IconList;
-            this.SvConfigButton.Location = new System.Drawing.Point(800, 380);
-            this.SvConfigButton.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.SvConfigButton.Name = "SvConfigButton";
-            this.SvConfigButton.Size = new System.Drawing.Size(56, 56);
-            this.SvConfigButton.TabIndex = 22;
-            this.SvConfigButton.Text = "SvConfigButton";
-            this.SvConfigButton.UseVisualStyleBackColor = true;
-            this.SvConfigButton.Click += new System.EventHandler(this.SvConfigButton_Click);
+            SvConfigButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            SvConfigButton.Depth = 0;
+            SvConfigButton.Icon = Properties.Resources.round_build_white_24dp;
+            SvConfigButton.ImageList = IconList;
+            SvConfigButton.Location = new System.Drawing.Point(800, 449);
+            SvConfigButton.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            SvConfigButton.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            SvConfigButton.Name = "SvConfigButton";
+            SvConfigButton.Size = new System.Drawing.Size(65, 65);
+            SvConfigButton.TabIndex = 22;
+            SvConfigButton.Text = "SvConfigButton";
+            SvConfigButton.UseVisualStyleBackColor = true;
+            SvConfigButton.Click += SvConfigButton_Click;
             // 
             // StopServerBTN_New
             // 
-            this.StopServerBTN_New.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.StopServerBTN_New.Depth = 0;
-            this.StopServerBTN_New.Icon = global::BDSUtil.Properties.Resources.power_settings_new_24dp_red;
-            this.StopServerBTN_New.ImageList = this.IconList;
-            this.StopServerBTN_New.Location = new System.Drawing.Point(830, 316);
-            this.StopServerBTN_New.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            this.StopServerBTN_New.Name = "StopServerBTN_New";
-            this.StopServerBTN_New.Size = new System.Drawing.Size(56, 56);
-            this.StopServerBTN_New.TabIndex = 21;
-            this.StopServerBTN_New.Text = "materialFloatingActionButton1";
-            this.StopServerBTN_New.UseVisualStyleBackColor = true;
-            this.StopServerBTN_New.Visible = false;
-            this.StopServerBTN_New.Click += new System.EventHandler(this.StopServerBTN_New_Click);
+            StopServerBTN_New.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            StopServerBTN_New.Depth = 0;
+            StopServerBTN_New.Icon = Properties.Resources.power_settings_new_24dp_red;
+            StopServerBTN_New.ImageList = IconList;
+            StopServerBTN_New.Location = new System.Drawing.Point(835, 376);
+            StopServerBTN_New.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            StopServerBTN_New.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            StopServerBTN_New.Name = "StopServerBTN_New";
+            StopServerBTN_New.Size = new System.Drawing.Size(65, 65);
+            StopServerBTN_New.TabIndex = 21;
+            StopServerBTN_New.Text = "materialFloatingActionButton1";
+            StopServerBTN_New.UseVisualStyleBackColor = true;
+            StopServerBTN_New.Visible = false;
+            StopServerBTN_New.Click += StopServerBTN_New_Click;
+            // 
+            // CommandInputTextBox
+            // 
+            CommandInputTextBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            CommandInputTextBox.AnimateReadOnly = false;
+            CommandInputTextBox.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.None;
+            CommandInputTextBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.None;
+            CommandInputTextBox.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            CommandInputTextBox.CharacterCasing = System.Windows.Forms.CharacterCasing.Normal;
+            CommandInputTextBox.Depth = 0;
+            CommandInputTextBox.Font = new System.Drawing.Font("Roboto", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
+            CommandInputTextBox.HideSelection = true;
+            CommandInputTextBox.Hint = "Enter Console Command";
+            CommandInputTextBox.LeadingIcon = null;
+            CommandInputTextBox.Location = new System.Drawing.Point(14, 449);
+            CommandInputTextBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            CommandInputTextBox.MaxLength = 32767;
+            CommandInputTextBox.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.OUT;
+            CommandInputTextBox.Name = "CommandInputTextBox";
+            CommandInputTextBox.PasswordChar = '\0';
+            CommandInputTextBox.PrefixSuffixText = null;
+            CommandInputTextBox.ReadOnly = false;
+            CommandInputTextBox.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            CommandInputTextBox.SelectedText = "";
+            CommandInputTextBox.SelectionLength = 0;
+            CommandInputTextBox.SelectionStart = 0;
+            CommandInputTextBox.ShortcutsEnabled = true;
+            CommandInputTextBox.Size = new System.Drawing.Size(770, 48);
+            CommandInputTextBox.TabIndex = 1;
+            CommandInputTextBox.TabStop = false;
+            CommandInputTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Left;
+            CommandInputTextBox.TrailingIcon = null;
+            CommandInputTextBox.UseSystemPasswordChar = false;
+            CommandInputTextBox.KeyDown += CommandInputTextBox_KeyDown;
+            CommandInputTextBox.KeyPress += CommandInputTextBox_KeyPress;
+            // 
+            // ConsoleOutputTextBox
+            // 
+            ConsoleOutputTextBox.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            ConsoleOutputTextBox.BackColor = System.Drawing.Color.FromArgb(64, 64, 64);
+            ConsoleOutputTextBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            ConsoleOutputTextBox.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+            ConsoleOutputTextBox.ForeColor = System.Drawing.Color.White;
+            ConsoleOutputTextBox.Location = new System.Drawing.Point(14, 14);
+            ConsoleOutputTextBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            ConsoleOutputTextBox.Name = "ConsoleOutputTextBox";
+            ConsoleOutputTextBox.ReadOnly = true;
+            ConsoleOutputTextBox.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical;
+            ConsoleOutputTextBox.Size = new System.Drawing.Size(770, 416);
+            ConsoleOutputTextBox.TabIndex = 0;
+            ConsoleOutputTextBox.Text = "";
+            // 
+            // BkRsTab
+            // 
+            BkRsTab.Controls.Add(BackupWrapper);
+            BkRsTab.Controls.Add(RestoreWrapper);
+            BkRsTab.ImageKey = "round_backup_white_24dp.png";
+            BkRsTab.Location = new System.Drawing.Point(4, 31);
+            BkRsTab.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            BkRsTab.Name = "BkRsTab";
+            BkRsTab.Padding = new System.Windows.Forms.Padding(4, 15, 4, 15);
+            BkRsTab.Size = new System.Drawing.Size(942, 523);
+            BkRsTab.TabIndex = 1;
+            BkRsTab.Text = "Backup & Restore";
+            BkRsTab.UseVisualStyleBackColor = true;
+            // 
+            // BackupWrapper
+            // 
+            BackupWrapper.BackColor = System.Drawing.Color.FromArgb(255, 255, 255);
+            BackupWrapper.Controls.Add(BackupProgressBar);
+            BackupWrapper.Controls.Add(BKCompleteLBL);
+            BackupWrapper.Controls.Add(BackupServerBTN);
+            BackupWrapper.Controls.Add(BackupPacksBTN);
+            BackupWrapper.Controls.Add(BackupWorldBTN);
+            BackupWrapper.Depth = 0;
+            BackupWrapper.Dock = System.Windows.Forms.DockStyle.Top;
+            BackupWrapper.ForeColor = System.Drawing.Color.FromArgb(222, 0, 0, 0);
+            BackupWrapper.Location = new System.Drawing.Point(4, 15);
+            BackupWrapper.Margin = new System.Windows.Forms.Padding(16);
+            BackupWrapper.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            BackupWrapper.Name = "BackupWrapper";
+            BackupWrapper.Padding = new System.Windows.Forms.Padding(16);
+            BackupWrapper.Size = new System.Drawing.Size(934, 105);
+            BackupWrapper.TabIndex = 0;
+            // 
+            // BackupProgressBar
+            // 
+            BackupProgressBar.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            BackupProgressBar.Depth = 0;
+            BackupProgressBar.Location = new System.Drawing.Point(-142, 96);
+            BackupProgressBar.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            BackupProgressBar.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            BackupProgressBar.Name = "BackupProgressBar";
+            BackupProgressBar.Size = new System.Drawing.Size(1071, 6);
+            BackupProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            BackupProgressBar.TabIndex = 5;
+            BackupProgressBar.UseAccentColor = false;
+            BackupProgressBar.Value = 75;
+            BackupProgressBar.Visible = false;
+            // 
+            // BKCompleteLBL
+            // 
+            BKCompleteLBL.AutoSize = true;
+            BKCompleteLBL.Depth = 0;
+            BKCompleteLBL.Font = new System.Drawing.Font("Roboto", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
+            BKCompleteLBL.Location = new System.Drawing.Point(723, 44);
+            BKCompleteLBL.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            BKCompleteLBL.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            BKCompleteLBL.Name = "BKCompleteLBL";
+            BKCompleteLBL.Size = new System.Drawing.Size(129, 19);
+            BKCompleteLBL.TabIndex = 3;
+            BKCompleteLBL.Text = "Backup Complete!";
+            BKCompleteLBL.Visible = false;
+            // 
+            // BackupServerBTN
+            // 
+            BackupServerBTN.AutoSize = false;
+            BackupServerBTN.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            BackupServerBTN.Density = ReaLTaiizor.Controls.MaterialButton.MaterialButtonDensity.Default;
+            BackupServerBTN.Depth = 0;
+            BackupServerBTN.HighEmphasis = true;
+            BackupServerBTN.Icon = null;
+            BackupServerBTN.IconType = ReaLTaiizor.Controls.MaterialButton.MaterialIconType.Rebase;
+            BackupServerBTN.Location = new System.Drawing.Point(471, 16);
+            BackupServerBTN.Margin = new System.Windows.Forms.Padding(5, 7, 5, 7);
+            BackupServerBTN.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            BackupServerBTN.Name = "BackupServerBTN";
+            BackupServerBTN.NoAccentTextColor = System.Drawing.Color.Empty;
+            BackupServerBTN.Size = new System.Drawing.Size(202, 73);
+            BackupServerBTN.TabIndex = 2;
+            BackupServerBTN.Text = "Full Server Backup";
+            BackupServerBTN.Type = ReaLTaiizor.Controls.MaterialButton.MaterialButtonType.Contained;
+            BackupServerBTN.UseAccentColor = false;
+            BackupServerBTN.UseVisualStyleBackColor = true;
+            BackupServerBTN.Click += BackupServerBTN_Click;
+            // 
+            // BackupPacksBTN
+            // 
+            BackupPacksBTN.Anchor = System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            BackupPacksBTN.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            BackupPacksBTN.Density = ReaLTaiizor.Controls.MaterialButton.MaterialButtonDensity.Default;
+            BackupPacksBTN.Depth = 0;
+            BackupPacksBTN.HighEmphasis = true;
+            BackupPacksBTN.Icon = null;
+            BackupPacksBTN.IconType = ReaLTaiizor.Controls.MaterialButton.MaterialIconType.Rebase;
+            BackupPacksBTN.Location = new System.Drawing.Point(260, 16);
+            BackupPacksBTN.Margin = new System.Windows.Forms.Padding(5, 7, 5, 7);
+            BackupPacksBTN.MaximumSize = new System.Drawing.Size(202, 73);
+            BackupPacksBTN.MinimumSize = new System.Drawing.Size(202, 73);
+            BackupPacksBTN.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            BackupPacksBTN.Name = "BackupPacksBTN";
+            BackupPacksBTN.NoAccentTextColor = System.Drawing.Color.Empty;
+            BackupPacksBTN.Padding = new System.Windows.Forms.Padding(6);
+            BackupPacksBTN.Size = new System.Drawing.Size(202, 73);
+            BackupPacksBTN.TabIndex = 1;
+            BackupPacksBTN.Text = "Backup Packs";
+            BackupPacksBTN.Type = ReaLTaiizor.Controls.MaterialButton.MaterialButtonType.Contained;
+            BackupPacksBTN.UseAccentColor = false;
+            BackupPacksBTN.UseVisualStyleBackColor = true;
+            BackupPacksBTN.Click += BackupPacksBTN_Click;
+            // 
+            // BackupWorldBTN
+            // 
+            BackupWorldBTN.AutoSize = false;
+            BackupWorldBTN.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            BackupWorldBTN.Density = ReaLTaiizor.Controls.MaterialButton.MaterialButtonDensity.Default;
+            BackupWorldBTN.Depth = 0;
+            BackupWorldBTN.Dock = System.Windows.Forms.DockStyle.Left;
+            BackupWorldBTN.HighEmphasis = true;
+            BackupWorldBTN.Icon = null;
+            BackupWorldBTN.IconType = ReaLTaiizor.Controls.MaterialButton.MaterialIconType.Rebase;
+            BackupWorldBTN.Location = new System.Drawing.Point(16, 16);
+            BackupWorldBTN.Margin = new System.Windows.Forms.Padding(5, 7, 5, 7);
+            BackupWorldBTN.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            BackupWorldBTN.Name = "BackupWorldBTN";
+            BackupWorldBTN.NoAccentTextColor = System.Drawing.Color.Empty;
+            BackupWorldBTN.Size = new System.Drawing.Size(234, 73);
+            BackupWorldBTN.TabIndex = 0;
+            BackupWorldBTN.Text = "Backup World(s)";
+            BackupWorldBTN.Type = ReaLTaiizor.Controls.MaterialButton.MaterialButtonType.Contained;
+            BackupWorldBTN.UseAccentColor = false;
+            BackupWorldBTN.UseVisualStyleBackColor = true;
+            BackupWorldBTN.Click += BackupWorldBTN_Click;
+            // 
+            // RestoreWrapper
+            // 
+            RestoreWrapper.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            RestoreWrapper.BackColor = System.Drawing.Color.FromArgb(255, 255, 255);
+            RestoreWrapper.Controls.Add(RunRestoreBTN);
+            RestoreWrapper.Controls.Add(BackupPointsListBox);
+            RestoreWrapper.Controls.Add(RestoreTypeComboBox);
+            RestoreWrapper.Controls.Add(RestorTitleLBL);
+            RestoreWrapper.Depth = 0;
+            RestoreWrapper.Dock = System.Windows.Forms.DockStyle.Bottom;
+            RestoreWrapper.ForeColor = System.Drawing.Color.FromArgb(222, 0, 0, 0);
+            RestoreWrapper.Location = new System.Drawing.Point(4, 103);
+            RestoreWrapper.Margin = new System.Windows.Forms.Padding(16);
+            RestoreWrapper.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            RestoreWrapper.Name = "RestoreWrapper";
+            RestoreWrapper.Padding = new System.Windows.Forms.Padding(16);
+            RestoreWrapper.Size = new System.Drawing.Size(934, 405);
+            RestoreWrapper.TabIndex = 1;
+            // 
+            // RunRestoreBTN
+            // 
+            RunRestoreBTN.AutoSize = false;
+            RunRestoreBTN.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            RunRestoreBTN.Density = ReaLTaiizor.Controls.MaterialButton.MaterialButtonDensity.Default;
+            RunRestoreBTN.Depth = 0;
+            RunRestoreBTN.HighEmphasis = true;
+            RunRestoreBTN.Icon = null;
+            RunRestoreBTN.IconType = ReaLTaiizor.Controls.MaterialButton.MaterialIconType.Rebase;
+            RunRestoreBTN.Location = new System.Drawing.Point(16, 329);
+            RunRestoreBTN.Margin = new System.Windows.Forms.Padding(5, 7, 5, 7);
+            RunRestoreBTN.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            RunRestoreBTN.Name = "RunRestoreBTN";
+            RunRestoreBTN.NoAccentTextColor = System.Drawing.Color.Empty;
+            RunRestoreBTN.Size = new System.Drawing.Size(334, 57);
+            RunRestoreBTN.TabIndex = 3;
+            RunRestoreBTN.Text = "Restore Selected Snapshot";
+            RunRestoreBTN.Type = ReaLTaiizor.Controls.MaterialButton.MaterialButtonType.Contained;
+            RunRestoreBTN.UseAccentColor = false;
+            RunRestoreBTN.UseVisualStyleBackColor = true;
+            RunRestoreBTN.Visible = false;
+            RunRestoreBTN.Click += RunRestoreBTN_Click;
+            // 
+            // BackupPointsListBox
+            // 
+            BackupPointsListBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            BackupPointsListBox.BackColor = System.Drawing.Color.White;
+            BackupPointsListBox.BorderColor = System.Drawing.Color.LightGray;
+            BackupPointsListBox.Depth = 0;
+            BackupPointsListBox.Font = new System.Drawing.Font("Roboto", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
+            BackupPointsListBox.Location = new System.Drawing.Point(373, 48);
+            BackupPointsListBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            BackupPointsListBox.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            BackupPointsListBox.Name = "BackupPointsListBox";
+            BackupPointsListBox.SelectedIndex = -1;
+            BackupPointsListBox.SelectedItem = null;
+            BackupPointsListBox.Size = new System.Drawing.Size(541, 333);
+            BackupPointsListBox.TabIndex = 2;
+            BackupPointsListBox.SelectedIndexChanged += BackupPointsListBox_SelectedIndexChanged;
+            // 
+            // RestoreTypeComboBox
+            // 
+            RestoreTypeComboBox.AutoResize = false;
+            RestoreTypeComboBox.BackColor = System.Drawing.Color.FromArgb(255, 255, 255);
+            RestoreTypeComboBox.Depth = 0;
+            RestoreTypeComboBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
+            RestoreTypeComboBox.DropDownHeight = 174;
+            RestoreTypeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            RestoreTypeComboBox.DropDownWidth = 121;
+            RestoreTypeComboBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Pixel);
+            RestoreTypeComboBox.ForeColor = System.Drawing.Color.FromArgb(222, 0, 0, 0);
+            RestoreTypeComboBox.FormattingEnabled = true;
+            RestoreTypeComboBox.IntegralHeight = false;
+            RestoreTypeComboBox.ItemHeight = 43;
+            RestoreTypeComboBox.Items.AddRange(new object[] { "Worlds Backups", "Packs/Addons Backups", "Full Server Backups" });
+            RestoreTypeComboBox.Location = new System.Drawing.Point(20, 48);
+            RestoreTypeComboBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            RestoreTypeComboBox.MaxDropDownItems = 4;
+            RestoreTypeComboBox.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.OUT;
+            RestoreTypeComboBox.Name = "RestoreTypeComboBox";
+            RestoreTypeComboBox.Size = new System.Drawing.Size(330, 49);
+            RestoreTypeComboBox.StartIndex = 0;
+            RestoreTypeComboBox.TabIndex = 1;
+            RestoreTypeComboBox.SelectedIndexChanged += RestoreTypeComboBox_SelectedIndexChanged;
+            // 
+            // RestorTitleLBL
+            // 
+            RestorTitleLBL.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            RestorTitleLBL.AutoSize = true;
+            RestorTitleLBL.Depth = 0;
+            RestorTitleLBL.Font = new System.Drawing.Font("Roboto", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
+            RestorTitleLBL.Location = new System.Drawing.Point(410, 12);
+            RestorTitleLBL.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            RestorTitleLBL.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            RestorTitleLBL.Name = "RestorTitleLBL";
+            RestorTitleLBL.Size = new System.Drawing.Size(185, 19);
+            RestorTitleLBL.TabIndex = 0;
+            RestorTitleLBL.Text = "Server Snapshot Recovery";
+            // 
+            // AutoModTab
+            // 
+            AutoModTab.Controls.Add(label2);
+            AutoModTab.ImageKey = "chat_info_24dp.png";
+            AutoModTab.Location = new System.Drawing.Point(4, 31);
+            AutoModTab.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            AutoModTab.Name = "AutoModTab";
+            AutoModTab.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            AutoModTab.Size = new System.Drawing.Size(942, 523);
+            AutoModTab.TabIndex = 2;
+            AutoModTab.Text = "Chat AutoMod";
+            AutoModTab.UseVisualStyleBackColor = true;
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Font = new System.Drawing.Font("Consolas", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+            label2.Location = new System.Drawing.Point(201, 203);
+            label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            label2.Name = "label2";
+            label2.Size = new System.Drawing.Size(598, 96);
+            label2.TabIndex = 2;
+            label2.Text = "This is a dummy tab(AutoMod).\r\nIn release you should never see this. \r\nIf you see this you're somewhere you shouldnt be.\r\nMaybe you should come work for me :D";
+            // 
+            // LETab
+            // 
+            LETab.Controls.Add(editorProvider1);
+            LETab.ImageKey = "globe_24dp.png";
+            LETab.Location = new System.Drawing.Point(4, 31);
+            LETab.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            LETab.Name = "LETab";
+            LETab.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            LETab.Size = new System.Drawing.Size(942, 523);
+            LETab.TabIndex = 4;
+            LETab.Text = "Level Editor";
+            LETab.UseVisualStyleBackColor = true;
+            // 
+            // editorProvider1
+            // 
+            editorProvider1.AutoScroll = true;
+            editorProvider1.BackColor = System.Drawing.Color.FromArgb(50, 50, 50);
+            editorProvider1.Dock = System.Windows.Forms.DockStyle.Fill;
+            editorProvider1.Location = new System.Drawing.Point(4, 3);
+            editorProvider1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            editorProvider1.Name = "editorProvider1";
+            editorProvider1.Size = new System.Drawing.Size(934, 517);
+            editorProvider1.TabIndex = 0;
+            // 
+            // SettingsTabPage
+            // 
+            SettingsTabPage.Controls.Add(settingsProvider1);
+            SettingsTabPage.ImageKey = "ic_settings_white_24dp_1x.png";
+            SettingsTabPage.Location = new System.Drawing.Point(4, 31);
+            SettingsTabPage.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            SettingsTabPage.Name = "SettingsTabPage";
+            SettingsTabPage.Size = new System.Drawing.Size(942, 523);
+            SettingsTabPage.TabIndex = 3;
+            SettingsTabPage.Text = "Settings";
+            SettingsTabPage.UseVisualStyleBackColor = true;
+            // 
+            // settingsProvider1
+            // 
+            settingsProvider1.AutoScroll = true;
+            settingsProvider1.BackColor = System.Drawing.Color.FromArgb(50, 50, 50);
+            settingsProvider1.Dock = System.Windows.Forms.DockStyle.Fill;
+            settingsProvider1.Location = new System.Drawing.Point(0, 0);
+            settingsProvider1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            settingsProvider1.Name = "settingsProvider1";
+            settingsProvider1.Size = new System.Drawing.Size(942, 523);
+            settingsProvider1.TabIndex = 0;
+            // 
+            // object_7f028359_dd1b_422d_83c9_6faf6dccb105
+            // 
+            object_7f028359_dd1b_422d_83c9_6faf6dccb105.Depth = 0;
+            object_7f028359_dd1b_422d_83c9_6faf6dccb105.Dock = System.Windows.Forms.DockStyle.Fill;
+            object_7f028359_dd1b_422d_83c9_6faf6dccb105.Location = new System.Drawing.Point(0, 64);
+            object_7f028359_dd1b_422d_83c9_6faf6dccb105.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            object_7f028359_dd1b_422d_83c9_6faf6dccb105.Multiline = true;
+            object_7f028359_dd1b_422d_83c9_6faf6dccb105.Name = "object_7f028359_dd1b_422d_83c9_6faf6dccb105";
+            object_7f028359_dd1b_422d_83c9_6faf6dccb105.SelectedIndex = 0;
+            object_7f028359_dd1b_422d_83c9_6faf6dccb105.Size = new System.Drawing.Size(950, 483);
+            object_7f028359_dd1b_422d_83c9_6faf6dccb105.TabIndex = 0;
+            object_7f028359_dd1b_422d_83c9_6faf6dccb105.Visible = false;
             // 
             // MainWindow
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(950, 550);
-            this.Controls.Add(this.MaterialTabControl1);
-            this.DrawerShowIconsWhenHidden = true;
-            this.DrawerTabControl = this.MaterialTabControl1;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MaximizeBox = false;
-            this.Name = "MainWindow";
-            this.Padding = new System.Windows.Forms.Padding(0, 64, 0, 3);
-            this.Sizable = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Minecraft BDS Utility";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainWindow_FormClosing);
-            this.Load += new System.EventHandler(this.MainWindow_Load);
-            this.MaterialTabControl1.ResumeLayout(false);
-            this.tabLiveMonitor.ResumeLayout(false);
-            this.BkRsTab.ResumeLayout(false);
-            this.BackupWrapper.ResumeLayout(false);
-            this.BackupWrapper.PerformLayout();
-            this.RestoreWrapper.ResumeLayout(false);
-            this.RestoreWrapper.PerformLayout();
-            this.AutoModTab.ResumeLayout(false);
-            this.AutoModTab.PerformLayout();
-            this.LETab.ResumeLayout(false);
-            this.SettingsTabPage.ResumeLayout(false);
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            ClientSize = new System.Drawing.Size(950, 635);
+            Controls.Add(MaterialTabControl1);
+            DrawerShowIconsWhenHidden = true;
+            DrawerTabControl = MaterialTabControl1;
+            Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
+            Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            MaximizeBox = false;
+            Name = "MainWindow";
+            Padding = new System.Windows.Forms.Padding(0, 74, 0, 3);
+            Sizable = false;
+            StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            Text = "Minecraft BDS Utility";
+            FormClosing += MainWindow_FormClosing;
+            Load += MainWindow_Load;
+            MaterialTabControl1.ResumeLayout(false);
+            tabLiveMonitor.ResumeLayout(false);
+            BkRsTab.ResumeLayout(false);
+            BackupWrapper.ResumeLayout(false);
+            BackupWrapper.PerformLayout();
+            RestoreWrapper.ResumeLayout(false);
+            RestoreWrapper.PerformLayout();
+            AutoModTab.ResumeLayout(false);
+            AutoModTab.PerformLayout();
+            LETab.ResumeLayout(false);
+            SettingsTabPage.ResumeLayout(false);
+            ResumeLayout(false);
 
         }
 

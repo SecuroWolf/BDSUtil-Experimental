@@ -105,9 +105,9 @@ namespace BDSUtil
                                 string key = trimmed.Substring(0, equalsIdx).Trim();
                                 string val = trimmed.Substring(equalsIdx + 1).Trim();
 
-                                if (key.Equals("server-port", StringComparison.OrdinalIgnoreCase)) int.TryParse(val, out primaryPortV4);
-                                else if (key.Equals("server-portv6", StringComparison.OrdinalIgnoreCase)) int.TryParse(val, out primaryPortV6);
-                                else if (key.Equals("max-players", StringComparison.OrdinalIgnoreCase)) int.TryParse(val, out maxPlayersCount);
+                                if (key.Equals("server-port", StringComparison.OrdinalIgnoreCase)) _ = int.TryParse(val, out primaryPortV4);
+                                else if (key.Equals("server-portv6", StringComparison.OrdinalIgnoreCase)) _ = int.TryParse(val, out primaryPortV6);
+                                else if (key.Equals("max-players", StringComparison.OrdinalIgnoreCase)) _ = int.TryParse(val, out maxPlayersCount);
                             }
                         }
 

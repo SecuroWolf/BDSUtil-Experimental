@@ -55,7 +55,7 @@
             CfgTabControl.Name = "CfgTabControl";
             CfgTabControl.SelectedIndex = 0;
             CfgTabControl.ShowToolTips = true;
-            CfgTabControl.Size = new System.Drawing.Size(929, 689);
+            CfgTabControl.Size = new System.Drawing.Size(887, 689);
             CfgTabControl.TabIndex = 0;
             // 
             // PropTab
@@ -66,7 +66,7 @@
             PropTab.Location = new System.Drawing.Point(4, 31);
             PropTab.Margin = new System.Windows.Forms.Padding(0);
             PropTab.Name = "PropTab";
-            PropTab.Size = new System.Drawing.Size(921, 654);
+            PropTab.Size = new System.Drawing.Size(879, 654);
             PropTab.TabIndex = 0;
             PropTab.Text = "Server Properties";
             PropTab.ToolTipText = "Server.Properties";
@@ -91,7 +91,7 @@
             WLTab.Location = new System.Drawing.Point(4, 31);
             WLTab.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             WLTab.Name = "WLTab";
-            WLTab.Size = new System.Drawing.Size(922, 654);
+            WLTab.Size = new System.Drawing.Size(879, 654);
             WLTab.TabIndex = 1;
             WLTab.Text = "Whitelist";
             WLTab.ToolTipText = "Whitelist";
@@ -116,7 +116,7 @@
             PermTab.Location = new System.Drawing.Point(4, 31);
             PermTab.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             PermTab.Name = "PermTab";
-            PermTab.Size = new System.Drawing.Size(922, 654);
+            PermTab.Size = new System.Drawing.Size(879, 654);
             PermTab.TabIndex = 2;
             PermTab.Text = "Permissions";
             PermTab.UseVisualStyleBackColor = true;
@@ -139,7 +139,7 @@
             NetTab.Location = new System.Drawing.Point(4, 31);
             NetTab.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             NetTab.Name = "NetTab";
-            NetTab.Size = new System.Drawing.Size(922, 654);
+            NetTab.Size = new System.Drawing.Size(879, 654);
             NetTab.TabIndex = 5;
             NetTab.Text = "Networking";
             NetTab.UseVisualStyleBackColor = true;
@@ -164,7 +164,7 @@
             ExitTab.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             ExitTab.Name = "ExitTab";
             ExitTab.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            ExitTab.Size = new System.Drawing.Size(922, 654);
+            ExitTab.Size = new System.Drawing.Size(879, 654);
             ExitTab.TabIndex = 6;
             ExitTab.Text = "Exit";
             ExitTab.UseVisualStyleBackColor = true;
@@ -189,7 +189,7 @@
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             BackColor = System.Drawing.Color.FromArgb(50, 50, 50);
-            ClientSize = new System.Drawing.Size(933, 692);
+            ClientSize = new System.Drawing.Size(891, 692);
             ControlBox = false;
             Controls.Add(CfgTabControl);
             DrawerShowIconsWhenHidden = true;

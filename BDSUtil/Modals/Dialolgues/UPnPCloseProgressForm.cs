@@ -20,7 +20,7 @@ namespace BDSUtil.Modals
             // Explicitly inherit your main application's theme colors right on creation
             var skinManager = MaterialSkinManager.Instance;
             skinManager.AddFormToManage(this);
-
+            
             // Slim visual dimensions optimized for a clean, single-label alert prompt layout
             this.Width = 380;
             this.Height = 140;

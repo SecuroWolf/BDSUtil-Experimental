@@ -96,7 +96,7 @@
             AMTab.Location = new System.Drawing.Point(4, 31);
             AMTab.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             AMTab.Name = "AMTab";
-            AMTab.Size = new System.Drawing.Size(922, 654);
+            AMTab.Size = new System.Drawing.Size(921, 654);
             AMTab.TabIndex = 1;
             AMTab.Text = "AutoMod";
             AMTab.ToolTipText = "Whitelist";
@@ -120,7 +120,7 @@
             AMATab.Location = new System.Drawing.Point(4, 31);
             AMATab.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             AMATab.Name = "AMATab";
-            AMATab.Size = new System.Drawing.Size(922, 654);
+            AMATab.Size = new System.Drawing.Size(921, 654);
             AMATab.TabIndex = 2;
             AMATab.Text = "Actions Taken";
             AMATab.UseVisualStyleBackColor = true;
@@ -132,7 +132,7 @@
             activeEnforcement1.Location = new System.Drawing.Point(0, 0);
             activeEnforcement1.Margin = new System.Windows.Forms.Padding(5, 3, 5, 3);
             activeEnforcement1.Name = "activeEnforcement1";
-            activeEnforcement1.Size = new System.Drawing.Size(922, 654);
+            activeEnforcement1.Size = new System.Drawing.Size(921, 654);
             activeEnforcement1.TabIndex = 0;
             // 
             // SaveTab
@@ -142,7 +142,7 @@
             SaveTab.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             SaveTab.Name = "SaveTab";
             SaveTab.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            SaveTab.Size = new System.Drawing.Size(922, 654);
+            SaveTab.Size = new System.Drawing.Size(921, 654);
             SaveTab.TabIndex = 6;
             SaveTab.Text = "Save and Exit";
             SaveTab.UseVisualStyleBackColor = true;
