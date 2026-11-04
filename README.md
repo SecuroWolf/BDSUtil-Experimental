@@ -1,12 +1,12 @@
-# BDSUtil ⚠️ NOTE: Nethernet seems to have been further broken as of 26.60(10/27/2026)
+# BDSUtil 
 
-⚠️ NOTE: Nethernet seems to have been further broken as of 26.60(10/27/2026)
-I will continue development and look out for community fixes along the way.
-Unfortunately, I may be forced to implement a 3rd party proxy that, unlike <redacted>, has a working NetherNet Implementation.
+## Note on recent Nethernet Changes:
+As of BDS v26.61 NetherNet is seemingly fixed. I am currently testing a Reverse Proxy that will serve the connection over TLS. If by chance Mojang breaks NetherNet in another update similar to 26.60, this feature would allow your server to continue to function...with a caveat: you must have a domain and valid TLS certificate.
+When this feature is implemented, it will be entirely optional. Further along the road it is planned to add the ability to bypass the domain requirement by using a service like NIP/SSLIP to map your external ip to a "domain" and then with a little cooperation from you, the user, automatically generate a cert via ACME.
 
 ![BDSUtil Main Dashboard](docs/home_screenshot.png)
 
-BDSUtil is a C# desktop wrapper I'm putting together to make managing Minecraft Bedrock Dedicated Servers (BDS) a lot less of a headache. It wraps the server console in a clean UI, handles backups, automatically forwards ports via UPnP, and I'm currently experimenting with a native AutoMod bridge.
+BDSUtil is a C# desktop wrapper I'm putting together to make managing Minecraft Bedrock Dedicated Servers (BDS) a lot less of a headache. It wraps the server console in a clean UI, handles backups, automatically forwards ports via UPnP, and includes a native AutoMod bridge.
 
 **Disclaimer:** BDSUtil is a personal project and is not affiliated with, endorsed by, or associated with Mojang Studios or Microsoft Corporation. Minecraft, Bedrock Edition, and BDS are trademarks or registered trademarks of their respective owners.
 
@@ -21,7 +21,7 @@ WITHOUT LIMITING THE FOREGOING, I ACCEPT ABSOLUTELY NO LIABILITY IF THIS SOFTWAR
 1. **Link Your Server:** Just launch BDSUtil. If you drop it in the same folder as your server, it will automatically find `bedrock_server.exe`. Otherwise, pop into the Settings tab and point it to your server's root folder.
 2. **Fire it Up:** Head to the Server Console tab and hit the green power button. You'll get a clean terminal feed without the usual Bedrock telemetry spam.
 3. **UPnP (Optional):** Tired of manual port forwarding? Turn on UPnP in the settings. On the next server boot, it will automatically lease the required TCP/UDP routes for you and your players.
-4. **AutoMod (WIP):** Head to the Chat AutoMod tab to enable the custom `bdsutil_monitor` behavior pack. *Note: Enabling this automatically patches your world's level.dat for Beta APIs, which permanently turns off Xbox achievements for that specific world.*
+4. **AutoMod:** Head to the Chat AutoMod tab to enable the custom `bdsutil_monitor` behavior pack. *Note: Enabling this automatically patches your world's level.dat for Beta APIs, which permanently turns off Xbox achievements for that specific world.*
 
 ---
 
@@ -33,11 +33,10 @@ WITHOUT LIMITING THE FOREGOING, I ACCEPT ABSOLUTELY NO LIABILITY IF THIS SOFTWAR
 - **Live Commands:** Send commands straight to the server via the built-in terminal.
 - **Quick Toggles:** Start and stop the server instantly with floating action buttons.
 
-### 🛡️ AutoMod & Telemetry Bridge (⚠️ Partially Implemented / WIP)
-*Note: This feature is currently in active development. The backend telemetry intercepts are working, but the rule configuration UI is still being built.*
+### 🛡️ AutoMod & Telemetry Bridge
 - **Behavior Pack Injection:** Automatically installs a custom `bdsutil_monitor` Script API behavior pack into your world to extract live game events.
 - **Live Parsing:** Translates raw JSON telemetry into clean, emoji-tagged terminal alerts for Chat, PVP Kills, and Environmental Deaths.
-- **Automated Enforcement (Coming Soon):** Will soon evaluate live chat against configurable filters to instantly auto-kick or mute griefers.
+- **Automated Enforcement:** Evaluates live chat against configurable filters to instantly auto-kick or mute griefers. (With deeper additions and future plugin support planned down the road).
 
 ### 🌐 UPnP & Network Management
 ![UPnP Startup](docs/upnp1_screenshot.png)
@@ -57,6 +56,12 @@ WITHOUT LIMITING THE FOREGOING, I ACCEPT ABSOLUTELY NO LIABILITY IF THIS SOFTWAR
 ### 📝 Configuration Editor
 - **GUI Management:** View, toggle, and update your `server.properties` and whitelist profiles right from a clean UI dashboard—no more digging through text files.
 
+### 📦 Addon & Pack Management (WIP)
+*Note: This feature is currently in active development. The foundational directory scanning is in place, but the dedicated graphical installer and manager are still being built.*
+- **Automated Directory Discovery:** Automatically detects and indexes your server's `behavior_packs` and `resource_packs` directories without manual navigation.
+- **One-Click Import (Coming Soon):** Will soon allow you to drag and drop `.mcpack` and `.mcaddon` files directly into the UI to unpack and register them to your active world profiles instantly.
+- **Conflict Resolution (Coming Soon):** Designed to safely parse manifest dependencies and alert you to version conflicts or missing Script API requirements before packs break your world load.
+
 ---
 
 ## 📚 Libraries & Credits
@@ -67,6 +72,6 @@ This project leverages a couple of incredible open-source libraries:
 ---
 
 ## 🗺️ Roadmap
-- 📦 **Addon & Pack Management:** A dedicated in-app installer and manager for external custom server additions.
+
 - 🔄 **BDS Core Updates:** An automated updating pipeline to fetch and install the latest Bedrock Dedicated Server binaries.
 - 📱 **Remote Management API & Companion Apps:** An optional, lightweight remote management API allowing you to monitor and control your server on the go via upcoming Android and Web companion apps.
