@@ -80,7 +80,7 @@ namespace BDSUtil.Helpers
             sb.AppendLine("  \"dependencies\": [");
             sb.AppendLine("    {");
             sb.AppendLine("      \"module_name\": \"@minecraft/server\",");
-            sb.AppendLine("      \"version\": \"2.11.0-beta\"");
+            sb.AppendLine("      \"version\": \"2.12.0-beta\"");
             sb.AppendLine("    }");
             sb.AppendLine("  ]");
             sb.AppendLine("}");
