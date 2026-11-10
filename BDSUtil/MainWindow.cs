@@ -62,8 +62,42 @@ namespace BDSUtil
             InitializeBackupEngine();
         }
 
-        private void MainWindow_Load(object sender, EventArgs e)
+        private async void MainWindow_Load(object sender, EventArgs e)
         {
+
+            // --- BDS CORE STARTUP UPDATE CHECK ---
+            string serverRoot = AppSettings.Instance?.ServerExecutablePath;
+            if (!string.IsNullOrWhiteSpace(serverRoot) && Directory.Exists(serverRoot))
+            {
+                string currentVersion = BDSUtil.Helpers.Updates.ServerUpdates.GetServerVersion(serverRoot);
+                var updateInfo = await BDSUtil.Helpers.Updates.ServerUpdates.DoUpdateCheck(serverRoot);
+
+                if (updateInfo.UpdateAvailable)
+                {
+                    DialogResult updateResult = MaterialMessageBox.Show(
+                        this,
+                        $"A new version of the Bedrock Dedicated Server is available.\n\n" +
+                        $"• Current Version: v{currentVersion}\n" +
+                        $"• Latest Version: v{updateInfo.LatestVersion}\n\n" +
+                        $"Would you like to backup your current server and install the update now?\n",
+                        "Update Available",
+                        MessageBoxButtons.YesNo,
+                        false,
+                        MaterialFlexibleForm.ButtonsPosition.Center
+                    );
+
+                    if (updateResult == DialogResult.Yes)
+                    {
+                        using (var updateForm = new BDSUtil.Modals.ServerUpdateForm(serverRoot, updateInfo.LatestVersion, updateInfo.DownloadUrl))
+                        {
+                            updateForm.ShowDialog(this);
+                        }
+                    }
+                }
+            }
+
+
+
             UpdateControlButtonStates();
 
             //#################################################
@@ -78,7 +112,7 @@ namespace BDSUtil
                     StartServerBTN_New.Visible = false;
                 });
 
-                Task.Run(() =>
+                _ = Task.Run(() =>
                 {
                     try
                     {

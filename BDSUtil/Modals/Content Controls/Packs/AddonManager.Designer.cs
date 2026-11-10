@@ -30,6 +30,7 @@
             RP_EnableBTN = new ReaLTaiizor.Controls.MaterialButton();
             RP_DisableBTN = new ReaLTaiizor.Controls.MaterialButton();
             tabBehaviorPacks = new System.Windows.Forms.TabPage();
+            materialButton1 = new ReaLTaiizor.Controls.MaterialButton();
             BP_DeleteBTN = new ReaLTaiizor.Controls.MaterialButton();
             BP_ListView = new ReaLTaiizor.Controls.MaterialListView();
             colBPName = new System.Windows.Forms.ColumnHeader();
@@ -77,6 +78,8 @@
             PM_TabSelector.Name = "PM_TabSelector";
             PM_TabSelector.Size = new System.Drawing.Size(758, 55);
             PM_TabSelector.TabIndex = 0;
+            PM_TabSelector.MouseDown += SmartDrag_MouseDown;
+            PM_TabSelector.MouseMove += SmartDrag_MouseMove;
             // 
             // PM_TabControl
             // 
@@ -110,6 +113,8 @@
             tabResourcePacks.Size = new System.Drawing.Size(750, 461);
             tabResourcePacks.TabIndex = 0;
             tabResourcePacks.Text = "Resource Packs";
+            tabResourcePacks.MouseDown += SmartDrag_MouseDown;
+            tabResourcePacks.MouseMove += SmartDrag_MouseMove;
             // 
             // RP_DeleteBTN
             // 
@@ -250,6 +255,7 @@
             // tabBehaviorPacks
             // 
             tabBehaviorPacks.BackColor = System.Drawing.Color.FromArgb(50, 50, 50);
+            tabBehaviorPacks.Controls.Add(materialButton1);
             tabBehaviorPacks.Controls.Add(BP_DeleteBTN);
             tabBehaviorPacks.Controls.Add(BP_ListView);
             tabBehaviorPacks.Controls.Add(BP_ImportBTN);
@@ -259,19 +265,41 @@
             tabBehaviorPacks.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             tabBehaviorPacks.Name = "tabBehaviorPacks";
             tabBehaviorPacks.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            tabBehaviorPacks.Size = new System.Drawing.Size(750, 491);
+            tabBehaviorPacks.Size = new System.Drawing.Size(750, 461);
             tabBehaviorPacks.TabIndex = 1;
             tabBehaviorPacks.Text = "Behavior Packs";
             // 
+            // materialButton1
+            // 
+            materialButton1.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            materialButton1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            materialButton1.Density = ReaLTaiizor.Controls.MaterialButton.MaterialButtonDensity.Default;
+            materialButton1.Depth = 0;
+            materialButton1.HighEmphasis = true;
+            materialButton1.Icon = null;
+            materialButton1.IconType = ReaLTaiizor.Controls.MaterialButton.MaterialIconType.Rebase;
+            materialButton1.Location = new System.Drawing.Point(664, 411);
+            materialButton1.Margin = new System.Windows.Forms.Padding(5, 7, 5, 7);
+            materialButton1.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            materialButton1.Name = "materialButton1";
+            materialButton1.NoAccentTextColor = System.Drawing.Color.Empty;
+            materialButton1.Size = new System.Drawing.Size(66, 36);
+            materialButton1.TabIndex = 5;
+            materialButton1.Text = "CLOSE";
+            materialButton1.Type = ReaLTaiizor.Controls.MaterialButton.MaterialButtonType.Contained;
+            materialButton1.UseAccentColor = true;
+            materialButton1.Click += PM_CloseBTN_Click;
+            // 
             // BP_DeleteBTN
             // 
+            BP_DeleteBTN.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
             BP_DeleteBTN.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             BP_DeleteBTN.Density = ReaLTaiizor.Controls.MaterialButton.MaterialButtonDensity.Default;
             BP_DeleteBTN.Depth = 0;
             BP_DeleteBTN.HighEmphasis = true;
             BP_DeleteBTN.Icon = null;
             BP_DeleteBTN.IconType = ReaLTaiizor.Controls.MaterialButton.MaterialIconType.Rebase;
-            BP_DeleteBTN.Location = new System.Drawing.Point(167, 363);
+            BP_DeleteBTN.Location = new System.Drawing.Point(167, 361);
             BP_DeleteBTN.Margin = new System.Windows.Forms.Padding(5, 7, 5, 7);
             BP_DeleteBTN.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
             BP_DeleteBTN.Name = "BP_DeleteBTN";
@@ -285,6 +313,7 @@
             // 
             // BP_ListView
             // 
+            BP_ListView.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             BP_ListView.AutoSizeTable = false;
             BP_ListView.BackColor = System.Drawing.Color.FromArgb(255, 255, 255);
             BP_ListView.BorderStyle = System.Windows.Forms.BorderStyle.None;
@@ -298,7 +327,7 @@
             BP_ListView.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.OUT;
             BP_ListView.Name = "BP_ListView";
             BP_ListView.OwnerDraw = true;
-            BP_ListView.Size = new System.Drawing.Size(840, 323);
+            BP_ListView.Size = new System.Drawing.Size(710, 331);
             BP_ListView.TabIndex = 0;
             BP_ListView.UseCompatibleStateImageBehavior = false;
             BP_ListView.View = System.Windows.Forms.View.Details;
@@ -315,13 +344,14 @@
             // 
             // BP_ImportBTN
             // 
+            BP_ImportBTN.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
             BP_ImportBTN.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             BP_ImportBTN.Density = ReaLTaiizor.Controls.MaterialButton.MaterialButtonDensity.Default;
             BP_ImportBTN.Depth = 0;
             BP_ImportBTN.HighEmphasis = true;
             BP_ImportBTN.Icon = null;
             BP_ImportBTN.IconType = ReaLTaiizor.Controls.MaterialButton.MaterialIconType.Rebase;
-            BP_ImportBTN.Location = new System.Drawing.Point(20, 363);
+            BP_ImportBTN.Location = new System.Drawing.Point(20, 361);
             BP_ImportBTN.Margin = new System.Windows.Forms.Padding(5, 7, 5, 7);
             BP_ImportBTN.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
             BP_ImportBTN.Name = "BP_ImportBTN";
@@ -335,13 +365,14 @@
             // 
             // BP_EnableBTN
             // 
+            BP_EnableBTN.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
             BP_EnableBTN.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             BP_EnableBTN.Density = ReaLTaiizor.Controls.MaterialButton.MaterialButtonDensity.Default;
             BP_EnableBTN.Depth = 0;
             BP_EnableBTN.HighEmphasis = true;
             BP_EnableBTN.Icon = null;
             BP_EnableBTN.IconType = ReaLTaiizor.Controls.MaterialButton.MaterialIconType.Rebase;
-            BP_EnableBTN.Location = new System.Drawing.Point(663, 363);
+            BP_EnableBTN.Location = new System.Drawing.Point(545, 361);
             BP_EnableBTN.Margin = new System.Windows.Forms.Padding(5, 7, 5, 7);
             BP_EnableBTN.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
             BP_EnableBTN.Name = "BP_EnableBTN";
@@ -355,13 +386,14 @@
             // 
             // BP_DisableBTN
             // 
+            BP_DisableBTN.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
             BP_DisableBTN.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             BP_DisableBTN.Density = ReaLTaiizor.Controls.MaterialButton.MaterialButtonDensity.Default;
             BP_DisableBTN.Depth = 0;
             BP_DisableBTN.HighEmphasis = true;
             BP_DisableBTN.Icon = null;
             BP_DisableBTN.IconType = ReaLTaiizor.Controls.MaterialButton.MaterialIconType.Rebase;
-            BP_DisableBTN.Location = new System.Drawing.Point(768, 363);
+            BP_DisableBTN.Location = new System.Drawing.Point(651, 361);
             BP_DisableBTN.Margin = new System.Windows.Forms.Padding(5, 7, 5, 7);
             BP_DisableBTN.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
             BP_DisableBTN.Name = "BP_DisableBTN";
@@ -385,7 +417,7 @@
             tabCustomFeatures.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             tabCustomFeatures.Name = "tabCustomFeatures";
             tabCustomFeatures.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            tabCustomFeatures.Size = new System.Drawing.Size(750, 491);
+            tabCustomFeatures.Size = new System.Drawing.Size(750, 461);
             tabCustomFeatures.TabIndex = 2;
             tabCustomFeatures.Text = "Custom Features";
             // 
@@ -634,8 +666,11 @@
             FormStyle = ReaLTaiizor.Enum.Material.FormStyles.StatusAndActionBar_None;
             Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
             Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            MaximizeBox = false;
+            MinimizeBox = false;
             Name = "AddonManager";
             Padding = new System.Windows.Forms.Padding(3, 0, 4, 3);
+            Sizable = false;
             StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             Text = "Addon & Pack Management";
             Load += AddonManager_Load;
@@ -704,5 +739,6 @@
         private ReaLTaiizor.Controls.MaterialButton PM_CloseBTN;
         private ReaLTaiizor.Controls.MaterialButton RP_DeleteBTN;
         private ReaLTaiizor.Controls.MaterialButton BP_DeleteBTN;
+        private ReaLTaiizor.Controls.MaterialButton materialButton1;
     }
 }

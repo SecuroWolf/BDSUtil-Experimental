@@ -1,10 +1,11 @@
-﻿using ReaLTaiizor.Controls;
+﻿using BDSUtil.Helpers;
+using ReaLTaiizor.Controls;
 using ReaLTaiizor.Forms;
 using System;
-using System.Drawing;
-using System.Windows.Forms;
-using BDSUtil.Helpers;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace BDSUtil.Modals.Content_Controls.Packs
 {
@@ -365,5 +366,39 @@ namespace BDSUtil.Modals.Content_Controls.Packs
                 default: return defaultColor;
             }
         }
+
+        private Point _dragStartPoint;
+
+        private void SmartDrag_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                // Log the exact pixel the mouse clicked down on
+                _dragStartPoint = e.Location;
+            }
+        }
+
+        private void SmartDrag_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                // If the mouse moves beyond the system's default drag threshold, it's a window drag
+                if (Math.Abs(e.X - _dragStartPoint.X) > SystemInformation.DragSize.Width / 2 ||
+                    Math.Abs(e.Y - _dragStartPoint.Y) > SystemInformation.DragSize.Height / 2)
+                {
+                    ReleaseCapture();
+                    SendMessage(this.Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
+                }
+            }
+        }
+
+        [DllImport("user32.dll")]
+        public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+
+        [DllImport("user32.dll")]
+        public static extern bool ReleaseCapture();
+
+        public const int WM_NCLBUTTONDOWN = 0xA1;
+        public const int HT_CAPTION = 0x2;
     }
 }

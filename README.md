@@ -56,11 +56,14 @@ WITHOUT LIMITING THE FOREGOING, I ACCEPT ABSOLUTELY NO LIABILITY IF THIS SOFTWAR
 ### 📝 Configuration Editor
 - **GUI Management:** View, toggle, and update your `server.properties` and whitelist profiles right from a clean UI dashboard—no more digging through text files.
 
-### 📦 Addon & Pack Management (WIP)
-*Note: This feature is currently in active development. The foundational directory scanning is in place, but the dedicated graphical installer and manager are still being built.*
+### 📦 Addon & Pack Management
 - **Automated Directory Discovery:** Automatically detects and indexes your server's `behavior_packs` and `resource_packs` directories without manual navigation.
-- **One-Click Import (Coming Soon):** Will soon allow you to drag and drop `.mcpack` and `.mcaddon` files directly into the UI to unpack and register them to your active world profiles instantly.
-- **Conflict Resolution (Coming Soon):** Designed to safely parse manifest dependencies and alert you to version conflicts or missing Script API requirements before packs break your world load.
+- **One-Click Import:** Drag and drop `.mcpack` and `.mcaddon` files directly into the UI to unpack and register them to your active world profiles instantly.
+- **Conflict Resolution:** Safely parses manifest dependencies and alerts you to version conflicts or missing Script API requirements before packs break your world load.
+
+### 🔄 BDS Core Updates
+- **Automated Update Pipeline:** Natively scrapes, fetches, and installs the latest Bedrock Dedicated Server binaries directly from the official endpoints.
+- **Safe File Swapping:** Intelligently migrates and preserves your configurations, active worlds, and custom packs during the upgrade process so no data is lost.
 
 ---
 
@@ -73,5 +76,4 @@ This project leverages a couple of incredible open-source libraries:
 
 ## 🗺️ Roadmap
 
-- 🔄 **BDS Core Updates:** An automated updating pipeline to fetch and install the latest Bedrock Dedicated Server binaries.
 - 📱 **Remote Management API & Companion Apps:** An optional, lightweight remote management API allowing you to monitor and control your server on the go via upcoming Android and Web companion apps.

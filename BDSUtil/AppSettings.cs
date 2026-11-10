@@ -1,9 +1,13 @@
-﻿using System;
+﻿using BDSUtil.Helpers;
+using Microsoft.Win32;
+using ReaLTaiizor.Controls;
+using ReaLTaiizor.Forms;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.Win32;
+using System.Windows.Forms;
 
 namespace BDSUtil
 {
@@ -11,6 +15,7 @@ namespace BDSUtil
     {
         private static AppSettings _instance;
         private static readonly object _lock = new object();
+        private static readonly string AppBaseDirectory = Path.GetDirectoryName(Environment.ProcessPath) ?? AppDomain.CurrentDomain.BaseDirectory;
         private static readonly string ConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
 
         // FIXED: Infinite storage backing indexer tracking array handles any settings dynamically
@@ -313,6 +318,75 @@ namespace BDSUtil
             catch (Exception ex)
             {
                 throw new IOException("Failed to write dynamic manual text configuration changes to storage bounds.", ex);
+            }
+        }
+    }
+
+    public static class AutoModValidator
+    {
+        public static void ValidateStateOnDirectoryChange(string newServerRoot, Form parentForm)
+        {
+            // If AutoMod is already off, we don't need to validate anything
+            if (!AppSettings.Instance.AutoModEnabled) return;
+
+            if (string.IsNullOrWhiteSpace(newServerRoot) || !Directory.Exists(newServerRoot))
+            {
+                DisableAutoMod(parentForm, "The server directory is invalid or missing.");
+                return;
+            }
+
+            string targetWorldName = "Dedicated Server";
+            string serverPropsPath = Path.Combine(newServerRoot, "server.properties");
+
+            if (File.Exists(serverPropsPath))
+            {
+                try
+                {
+                    foreach (string rawLine in File.ReadLines(serverPropsPath))
+                    {
+                        string line = rawLine.Trim();
+                        if (line.StartsWith("level-name=", StringComparison.OrdinalIgnoreCase))
+                        {
+                            string val = line.Substring(11).Trim();
+                            if (!string.IsNullOrWhiteSpace(val)) targetWorldName = val;
+                            break;
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            string levelDatPath = Path.Combine(newServerRoot, "worlds", targetWorldName, "level.dat");
+
+            // Scan for prerequisites
+            bool isApiActive = LevelDatPatcher.IsExperimentEnabled(levelDatPath, "gametest");
+            bool isFolderInstalled = PackManager.IsPackInstalled(newServerRoot, BDSPackInstaller.MONITOR_PACK_FOLDER, isBehaviorPack: true);
+            bool isPackEnabled = PackManager.IsPackEnabledInWorld(newServerRoot, targetWorldName, BDSPackInstaller.MONITOR_PACK_UUID, isBehaviorPack: true);
+
+            if (!isApiActive || !isFolderInstalled || !isPackEnabled)
+            {
+                DisableAutoMod(parentForm,
+                    "You have switched server directories.\n\n" +
+                    "AutoMod has been temporarily disabled because the target world lacks the required monitor pack or Beta APIs. " +
+                    "Navigate back to the AutoMod tab to re-enable and apply the prerequisites to this new environment.");
+            }
+        }
+
+        private static void DisableAutoMod(Form parentForm, string message)
+        {
+            AppSettings.Instance.AutoModEnabled = false;
+            AppSettings.Instance.SaveSettings();
+
+            if (parentForm is MaterialForm materialForm)
+            {
+                MaterialMessageBox.Show(
+                    materialForm,
+                    message,
+                    "AutoMod Disabled",
+                    MessageBoxButtons.OK,
+                    false,
+                    MaterialFlexibleForm.ButtonsPosition.Center
+                );
             }
         }
     }

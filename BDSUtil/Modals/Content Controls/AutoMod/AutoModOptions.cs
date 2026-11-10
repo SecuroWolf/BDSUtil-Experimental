@@ -29,8 +29,14 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
         {
             _isInitializing = true;
 
+            string currentRoot = AppSettings.Instance.ServerExecutablePath;
+            bool hasValidServer = !string.IsNullOrWhiteSpace(currentRoot) && Directory.Exists(currentRoot);
+
             if (CfgEAM != null)
-                CfgEAM.Checked = AppSettings.Instance.AutoModEnabled;
+            {
+                CfgEAM.Enabled = hasValidServer;
+                CfgEAM.Checked = hasValidServer && AppSettings.Instance.AutoModEnabled;
+            }
 
             if (AMCCard != null)
                 AMCCard.Visible = AppSettings.Instance.AutoModEnabled;

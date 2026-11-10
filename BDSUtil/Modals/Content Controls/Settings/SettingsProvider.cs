@@ -1,5 +1,4 @@
-﻿using BDSUtil.Helpers;
-using ReaLTaiizor.Controls;
+﻿using ReaLTaiizor.Controls;
 using ReaLTaiizor.Forms;
 using System;
 using System.IO;
@@ -28,10 +27,6 @@ namespace BDSUtil.Modals.Content_Controls.Settings
             };
             this.Controls.Add(_focusTrapLabel);
             // =========================================================================
-
-            // Explicitly bind layout event triggers to avoid visual designer dropped hooks
-            if (BrowseBTN != null)
-                BrowseBTN.Click += BrowseBTN_Click;
 
             if (CompressionTypeComboBox != null)
                 CompressionTypeComboBox.SelectedIndexChanged += CompressionTypeComboBox_SelectedIndexChanged;
@@ -161,17 +156,17 @@ namespace BDSUtil.Modals.Content_Controls.Settings
             ClearSelectionFocus();
         }
 
-        /// <summary>
-        /// Spawns a platform explorer folder selection window to locate and store the bedrock_server root installation path.
-        /// </summary>
         private void BrowseBTN_Click(object sender, EventArgs e)
         {
+            // Capture the original working directory before the dialog mutates it
+            string originalWorkingDir = Directory.GetCurrentDirectory();
+
             using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
             {
                 folderDialog.Description = "Select the base installation directory hosting your Bedrock Dedicated Server files (bedrock_server.exe).";
                 folderDialog.ShowNewFolderButton = false;
 
-                // Pre-seed search coordinates to current configuration if it evaluates as structurally valid
+                // Pre-seed search coordinates to current configuration if valid
                 if (!string.IsNullOrWhiteSpace(AppSettings.Instance.ServerExecutablePath) && Directory.Exists(AppSettings.Instance.ServerExecutablePath))
                 {
                     folderDialog.SelectedPath = AppSettings.Instance.ServerExecutablePath;
@@ -181,6 +176,9 @@ namespace BDSUtil.Modals.Content_Controls.Settings
                 {
                     string selectedDirectory = folderDialog.SelectedPath;
 
+                    // Immediately restore the working directory back to base before saving settings
+                    try { Directory.SetCurrentDirectory(originalWorkingDir); } catch { }
+
                     if (ServerPathTextBox != null)
                     {
                         ServerPathTextBox.Text = selectedDirectory;
@@ -188,10 +186,13 @@ namespace BDSUtil.Modals.Content_Controls.Settings
 
                     AppSettings.Instance.ServerExecutablePath = selectedDirectory;
                     AppSettings.Instance.SaveSettings();
+                    AutoModValidator.ValidateStateOnDirectoryChange(selectedDirectory, this.FindForm());
                 }
             }
 
-            // ✅ GO BACK TO NOTHING SELECTED (After Folder Picker Shuts Down)
+            // Ensure working directory is restored in all exit paths
+            try { Directory.SetCurrentDirectory(originalWorkingDir); } catch { }
+
             ClearSelectionFocus();
         }
     }
