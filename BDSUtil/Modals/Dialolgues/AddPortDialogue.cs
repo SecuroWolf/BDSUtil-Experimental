@@ -41,7 +41,7 @@ namespace BDSUtil.Modals
                 Left = 20,
                 Top = 85,
                 Width = 340,
-                Hint = "External Port (e.g. 19134)"
+                Hint = "External Port (e.g. 19133)"
             };
             extPortBox.KeyPress += OnlyAllowNumericInputs;
 

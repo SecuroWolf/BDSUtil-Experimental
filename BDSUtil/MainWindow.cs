@@ -1,4 +1,5 @@
-﻿using BDSUtil.Modals;
+﻿using BDSUtil.Helpers;
+using BDSUtil.Modals;
 using ReaLTaiizor.Colors;
 using ReaLTaiizor.Controls;
 using ReaLTaiizor.Forms;
@@ -66,9 +67,14 @@ namespace BDSUtil
         {
 
             // --- BDS CORE STARTUP UPDATE CHECK ---
-            string serverRoot = AppSettings.Instance?.ServerExecutablePath;
+            string serverRoot = AppSettings.Instance?.General.ServerExecutablePath;
             if (!string.IsNullOrWhiteSpace(serverRoot) && Directory.Exists(serverRoot))
             {
+                if (ServerPropertiesDocument.CommentOutServerPortV6(serverRoot))
+                {
+                    AppendTerminalLine("[MANAGER INFO] Commented out 'server-portv6' in server.properties (ignored under NetherNet).");
+                }
+
                 string currentVersion = BDSUtil.Helpers.Updates.ServerUpdates.GetServerVersion(serverRoot);
                 var updateInfo = await BDSUtil.Helpers.Updates.ServerUpdates.DoUpdateCheck(serverRoot);
 
@@ -100,207 +106,243 @@ namespace BDSUtil
 
             UpdateControlButtonStates();
 
+            BDSUtil.Helpers.RemoteApi.RemoteApiManager.Instance.AttachHost(this, msg => AppendTerminalLine(msg));
+
             //#################################################
             //##            UPnP NETWORK MAPPING             ##
             //#################################################
-            if (AppSettings.Instance.EnableUPnP)
+            if (AppSettings.Instance.Networking.EnableUPnP)
             {
-                AppendTerminalLine("[MANAGER INFO] UPnP is active. Initiating network mapping synchronization...");
+                AppendTerminalLine("[UPnP] Setting up ports...");
 
                 this.Invoke((MethodInvoker)delegate
                 {
                     StartServerBTN_New.Visible = false;
                 });
 
-                _ = Task.Run(() =>
+                _ = Task.Run(async () =>
                 {
+                    void LogSafe(string msg)
+                    {
+                        if (this.IsDisposed || !this.IsHandleCreated) return;
+                        try
+                        {
+                            this.Invoke((MethodInvoker)delegate { AppendTerminalLine(msg); });
+                        }
+                        catch { }
+                    }
+
+                    void RestoreStartButtonSafe()
+                    {
+                        if (this.IsDisposed || !this.IsHandleCreated) return;
+                        try
+                        {
+                            this.Invoke((MethodInvoker)delegate { StartServerBTN_New.Visible = true; });
+                        }
+                        catch { }
+                    }
+
                     try
                     {
-                        string serverDirectory = AppSettings.Instance.ServerExecutablePath;
-                        if (string.IsNullOrWhiteSpace(serverDirectory)) return;
+                        string serverDirectory = AppSettings.Instance.General.ServerExecutablePath;
+                        ServerPropertiesDocument.CommentOutServerPortV6(serverDirectory);
+                        var portSnapshot = BDSUtil.Helpers.RemoteApi.ServerPortDiscovery.ReadServerPortSnapshot(serverDirectory);
+                        bool remoteApiEnabled = AppSettings.Instance.RemoteApi.Enabled;
 
-                        string propertiesFilePath = System.IO.Path.Combine(serverDirectory, "server.properties");
-                        if (!System.IO.File.Exists(propertiesFilePath)) return;
+                        Task<string> externalIpTask = UPnPEngine.GetExternalIPAddressAsync();
+                        Task<UpnpGatewayClient> gatewayTask = UPnPEngine.DiscoverGatewayAsync(TimeSpan.FromMilliseconds(2500), forceRefresh: true);
+                        await Task.WhenAll(externalIpTask, gatewayTask).ConfigureAwait(false);
 
-                        string[] originalLines = System.IO.File.ReadAllLines(propertiesFilePath);
+                        string externalPublicIp = externalIpTask.Result;
+                        UpnpGatewayClient gateway = gatewayTask.Result;
 
-                        int primaryPortV4 = 19132;
-                        int primaryPortV6 = 19133;
-                        int maxPlayersCount = 10;
+                        string localSubnetIp = gateway != null
+                            ? UPnPEngine.GetLocalIpForGateway(gateway)
+                            : UPnPEngine.GetLocalIPAddress();
 
-                        foreach (string line in originalLines)
+                        var hostIpSet = new HashSet<string>(UPnPEngine.GetLocalIPAddresses(), StringComparer.OrdinalIgnoreCase)
                         {
-                            string trimmed = line.Trim();
-                            if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith("#")) continue;
+                            localSubnetIp,
+                            UPnPEngine.GetLocalIPAddress()
+                        };
 
-                            int equalsIdx = trimmed.IndexOf('=');
-                            if (equalsIdx > 0)
+                        if (gateway != null && !UPnPEngine.IsValidPublicIPv4(externalPublicIp))
+                        {
+                            try
                             {
-                                string key = trimmed.Substring(0, equalsIdx).Trim();
-                                string val = trimmed.Substring(equalsIdx + 1).Trim();
-
-                                if (key.Equals("server-port", StringComparison.OrdinalIgnoreCase)) _ = int.TryParse(val, out primaryPortV4);
-                                else if (key.Equals("server-portv6", StringComparison.OrdinalIgnoreCase)) _ = int.TryParse(val, out primaryPortV6);
-                                else if (key.Equals("max-players", StringComparison.OrdinalIgnoreCase)) _ = int.TryParse(val, out maxPlayersCount);
-                            }
-                        }
-
-                        string localSubnetIp = BDSUtil.Helpers.UPnPEngine.GetLocalIPAddress();
-                        string externalPublicIp = BDSUtil.Helpers.UPnPEngine.GetExternalIPAddress();
-
-                        var discoverer = new Open.Nat.NatDiscoverer();
-                        var cts = new CancellationTokenSource(2500);
-                        var device = discoverer.DiscoverDeviceAsync(Open.Nat.PortMapper.Upnp, cts).GetAwaiter().GetResult();
-
-                        if (device == null)
-                        {
-                            this.Invoke((MethodInvoker)delegate
-                            {
-                                AppendTerminalLine("[UPnP ERROR] Gateway hardware discovery timed out. Pipeline aborted.");
-                                StartServerBTN_New.Visible = true;
-                            });
-                            return;
-                        }
-
-                        var hardwareMappings = device.GetAllMappingsAsync().GetAwaiter().GetResult() ?? new List<Open.Nat.Mapping>();
-                        var activeUdpMappings = new Dictionary<int, string>();
-                        var activeTcpMappings = new Dictionary<int, string>();
-
-                        foreach (var mapping in hardwareMappings)
-                        {
-                            if (mapping.Protocol == Open.Nat.Protocol.Udp)
-                                activeUdpMappings[mapping.PublicPort] = mapping.PrivateIP.ToString();
-                            else if (mapping.Protocol == Open.Nat.Protocol.Tcp)
-                                activeTcpMappings[mapping.PublicPort] = mapping.PrivateIP.ToString();
-                        }
-
-                        bool EnsurePortIsLeased(int port, string protocolType)
-                        {
-                            var activeMap = (protocolType == "TCP") ? activeTcpMappings : activeUdpMappings;
-
-                            if (activeMap.ContainsKey(port) && activeMap[port] == localSubnetIp) return true;
-                            if (activeMap.ContainsKey(port) && activeMap[port] != localSubnetIp) return false;
-
-                            return BDSUtil.Helpers.UPnPEngine.ForwardPort(port, port, localSubnetIp, protocolType);
-                        }
-
-                        this.Invoke((MethodInvoker)delegate
-                        {
-                            AppendTerminalLine($"[UPnP ENGINE] Synchronizing primary game endpoints (IPv4: {primaryPortV4}, IPv6: {primaryPortV6})...");
-                        });
-
-                        bool v4UdpOk = EnsurePortIsLeased(primaryPortV4, "UDP");
-                        bool v4TcpOk = EnsurePortIsLeased(primaryPortV4, "TCP");
-                        bool v6UdpOk = EnsurePortIsLeased(primaryPortV6, "UDP");
-                        bool v6TcpOk = EnsurePortIsLeased(primaryPortV6, "TCP");
-
-                        this.Invoke((MethodInvoker)delegate
-                        {
-                            if (v4UdpOk && v4TcpOk)
-                                AppendTerminalLine($"[UPnP SUCCESS] Primary IPv4 core confirmed active on port: {primaryPortV4} (TCP/UDP)");
-                            else
-                                AppendTerminalLine($"[UPnP COLLISION] Primary IPv4 port {primaryPortV4} is assigned to an alternate machine.");
-
-                            if (v6UdpOk && v6TcpOk)
-                                AppendTerminalLine($"[UPnP SUCCESS] Primary IPv6 core confirmed active on port: {primaryPortV6} (TCP/UDP)");
-                            else
-                                AppendTerminalLine($"[UPnP COLLISION] Primary IPv6 port {primaryPortV6} is assigned to an alternate machine.");
-                        });
-
-                        List<string> successfulUdpTokens = new List<string>();
-                        int targetPortCandidate = 19134;
-
-                        while (successfulUdpTokens.Count < maxPlayersCount)
-                        {
-                            if (targetPortCandidate > 65535) break;
-
-                            if (targetPortCandidate == primaryPortV4 || targetPortCandidate == primaryPortV6)
-                            {
-                                targetPortCandidate++;
-                                continue;
-                            }
-
-                            bool nodeLeaseOk = EnsurePortIsLeased(targetPortCandidate, "UDP");
-
-                            if (nodeLeaseOk)
-                            {
-                                string formattedToken = $"{externalPublicIp}:{targetPortCandidate}:{targetPortCandidate}";
-                                successfulUdpTokens.Add(formattedToken);
-
-                                int currentCount = successfulUdpTokens.Count;
-                                int loggedPort = targetPortCandidate;
-                                this.Invoke((MethodInvoker)delegate
+                                string gatewayWanIp = await gateway.GetExternalIPAddressAsync().ConfigureAwait(false);
+                                if (UPnPEngine.IsValidPublicIPv4(gatewayWanIp))
                                 {
-                                    AppendTerminalLine($"[UPnP SUCCESS] Allocated node {currentCount}/{maxPlayersCount} onto UDP port: {loggedPort}");
-                                });
-                            }
-                            else
-                            {
-                                int failedPort = targetPortCandidate;
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    AppendTerminalLine($"[UPnP COLLISION] Port UDP {failedPort} claimed by an alternate device. Skipping node...");
-                                });
-                            }
-
-                            targetPortCandidate++;
-                        }
-
-                        bool isValidIpNode = System.Text.RegularExpressions.Regex.IsMatch(externalPublicIp, @"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$");
-
-                        if (successfulUdpTokens.Count > 0 && isValidIpNode)
-                        {
-                            if (successfulUdpTokens.Count > 16) successfulUdpTokens = successfulUdpTokens.GetRange(0, 16);
-
-                            string consolidatedPortsPayloadString = string.Join(",", successfulUdpTokens);
-                            List<string> optimizedOutputBuffer = new List<string>();
-                            bool targetKeyFoundAndUpdated = false;
-                            string strictKeyAssignmentPattern = @"^\s*#?\s*server-udp-ports\s*=";
-
-                            foreach (string currentRawLine in originalLines)
-                            {
-                                if (System.Text.RegularExpressions.Regex.IsMatch(currentRawLine, strictKeyAssignmentPattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
-                                {
-                                    if (targetKeyFoundAndUpdated) continue;
-                                    optimizedOutputBuffer.Add($"server-udp-ports={consolidatedPortsPayloadString}");
-                                    targetKeyFoundAndUpdated = true;
-                                }
-                                else
-                                {
-                                    optimizedOutputBuffer.Add(currentRawLine);
+                                    externalPublicIp = gatewayWanIp;
                                 }
                             }
+                            catch { }
+                        }
 
-                            if (!targetKeyFoundAndUpdated)
+                        IReadOnlyList<UpnpPortMapping> existingMappings = null;
+                        var activeTcpMappings = new Dictionary<int, UpnpPortMapping>();
+
+                        if (gateway != null)
+                        {
+                            try
                             {
-                                optimizedOutputBuffer.Add($"server-udp-ports={consolidatedPortsPayloadString}");
+                                existingMappings = await gateway.GetAllPortMappingsAsync().ConfigureAwait(false);
+                                foreach (var mapping in existingMappings)
+                                {
+                                    if (mapping.Protocol == UpnpProtocol.Tcp)
+                                    {
+                                        activeTcpMappings[mapping.ExternalPort] = mapping;
+                                    }
+                                }
                             }
-
-                            System.IO.File.WriteAllLines(propertiesFilePath, optimizedOutputBuffer, System.Text.Encoding.UTF8);
-
-                            this.Invoke((MethodInvoker)delegate
+                            catch
                             {
-                                AppendTerminalLine("[MANAGER INFO] Network pipeline initialization complete. External connections authorized.");
-                                StartServerBTN_New.Visible = true;
-                            });
+                                existingMappings = null;
+                            }
+                        }
+
+                        int apiPort = 0;
+                        if (remoteApiEnabled)
+                        {
+                            apiPort = await BDSUtil.Helpers.RemoteApi.RemoteApiManager.Instance.BindListenerForBatchUpnpAsync(
+                                AppSettings.Instance.RemoteApi,
+                                portSnapshot,
+                                activeTcpMappings.Count > 0 ? activeTcpMappings : null,
+                                hostIpSet,
+                                localSubnetIp,
+                                externalPublicIp).ConfigureAwait(false);
                         }
                         else
                         {
-                            this.Invoke((MethodInvoker)delegate
+                            await BDSUtil.Helpers.RemoteApi.RemoteApiManager.Instance.StopAsync(releaseUpnpLease: false).ConfigureAwait(false);
+                        }
+
+                        var plannedPorts = new List<UpnpPortSpec>();
+                        bool consolidateUdpPorts = AppSettings.Instance?.Networking?.ConsolidateUdpPorts ?? false;
+
+                        if (portSnapshot.PropertiesFileExists)
+                        {
+                            plannedPorts.AddRange(UPnPEngine.PlanGameServerPorts(
+                                portSnapshot.PrimaryPortV4,
+                                portSnapshot.MaxPlayers,
+                                consolidateUdpPorts,
+                                excludedApiPort: apiPort,
+                                existingMappings: existingMappings,
+                                hostIps: hostIpSet));
+                        }
+
+                        if (remoteApiEnabled && apiPort > 0)
+                        {
+                            plannedPorts.Add(new UpnpPortSpec
                             {
-                                AppendTerminalLine("[UPnP ERROR] Public IP format was invalid. Aborting configuration changes to protect file integrity.");
-                                StartServerBTN_New.Visible = true;
+                                ExternalPort = apiPort,
+                                InternalPort = apiPort,
+                                Protocol = UpnpProtocol.Tcp,
+                                Label = "Remote Management API",
+                                Description = $"BDSUtil Remote API {apiPort}",
+                                IsGameUdpNode = false
                             });
                         }
 
+                        if (plannedPorts.Count == 0)
+                        {
+                            LogSafe("[UPnP INFO] server.properties not yet linked; skipping game server port mappings.");
+                            return;
+                        }
+
+                        LogSafe("[UPnP] Ports queued for requisition & verification:");
+                        if (portSnapshot.PropertiesFileExists)
+                        {
+                            LogSafe($"  - {portSnapshot.PrimaryPortV4} (TCP, UDP) [Server Port]");
+                            var udpNodePorts = new List<int>();
+                            foreach (UpnpPortSpec spec in plannedPorts)
+                            {
+                                if (spec.IsGameUdpNode)
+                                {
+                                    udpNodePorts.Add(spec.ExternalPort);
+                                }
+                            }
+                            if (udpNodePorts.Count > 0)
+                            {
+                                LogSafe($"  - {string.Join(", ", udpNodePorts)} (UDP) [server-udp-ports]");
+                            }
+                        }
+                        if (remoteApiEnabled && apiPort > 0)
+                        {
+                            LogSafe($"  - {apiPort} (TCP) [Remote Management API]");
+                        }
+
+                        LogSafe("[UPnP] Verifying...");
+
+                        var batch = await UPnPEngine.RequisitionAndVerifyPortsBatchAsync(
+                            plannedPorts,
+                            new PortVerificationOptions
+                            {
+                                Gateway = gateway,
+                                SkipGatewayDiscovery = gateway == null,
+                                LocalIpOverride = localSubnetIp,
+                                PublicExternalIpOverride = UPnPEngine.IsValidPublicIPv4(externalPublicIp) ? externalPublicIp : null,
+                                ExternalProbeUrl = AppSettings.Instance.Networking.ResolveEffectiveExternalProbeUrl()
+                            },
+                            existingMappingsOverride: existingMappings).ConfigureAwait(false);
+
+                        if (remoteApiEnabled && apiPort > 0)
+                        {
+                            UpnpPortSetupResult apiOutcome = null;
+                            foreach (UpnpPortSetupResult result in batch.PortResults)
+                            {
+                                if (!result.IsGameUdpNode && result.ExternalPort == apiPort && result.Protocol == UpnpProtocol.Tcp)
+                                {
+                                    apiOutcome = result;
+                                    break;
+                                }
+                            }
+
+                            await BDSUtil.Helpers.RemoteApi.RemoteApiManager.Instance.ApplyBatchUpnpOutcomeAsync(
+                                portSnapshot.LowestServerPort,
+                                batch.LocalIp,
+                                batch.PublicExternalIp,
+                                batch.GatewayFound,
+                                apiOutcome).ConfigureAwait(false);
+                        }
+
+                        if (portSnapshot.PropertiesFileExists && batch.SuccessfulUdpNodeTokens.Count > 0)
+                        {
+                            List<string> tokens = batch.SuccessfulUdpNodeTokens.Count > 16
+                                ? batch.SuccessfulUdpNodeTokens.GetRange(0, 16)
+                                : batch.SuccessfulUdpNodeTokens;
+
+                            ServerPropertiesDocument.SetServerUdpPorts(portSnapshot.PropertiesFilePath, string.Join(",", tokens));
+                            UPnPEngine.RecordActiveGameServerMapping(portSnapshot.PrimaryPortV4, tokens);
+                        }
+
+                        if (batch.AllPortsVerified)
+                        {
+                            LogSafe($"[UPNP Success] {batch.SummaryMessage}");
+                        }
+                        else
+                        {
+                            LogSafe($"[UPnP FAILED] {batch.SummaryMessage}");
+                        }
                     }
                     catch (Exception ex)
                     {
-                        this.Invoke((MethodInvoker)delegate
-                        {
-                            AppendTerminalLine($"[UPnP SYSTEM EXCEPTION] Boot pipeline failure: {ex.Message}");
-                            StartServerBTN_New.Visible = true;
-                        });
+                        LogSafe($"[UPnP SYSTEM EXCEPTION] Boot pipeline failure: {ex.Message}");
+                    }
+                    finally
+                    {
+                        RestoreStartButtonSafe();
+                    }
+                });
+            }
+            else if (AppSettings.Instance.RemoteApi.Enabled)
+            {
+                _ = Task.Run(async () =>
+                {
+                    var localApiRes = await BDSUtil.Helpers.RemoteApi.RemoteApiManager.Instance.SynchronizeFromSettingsAsync(allowUpnpDiscovery: false).ConfigureAwait(false);
+                    if (!this.IsDisposed && this.IsHandleCreated)
+                    {
+                        try { this.BeginInvoke((MethodInvoker)delegate { AppendTerminalLine($"[REMOTE API] {localApiRes.Message}"); }); } catch { }
                     }
                 });
             }
@@ -310,33 +352,14 @@ namespace BDSUtil
         {
             try
             {
-                string serverDirectory = AppSettings.Instance?.ServerExecutablePath;
+                string serverDirectory = AppSettings.Instance?.General.ServerExecutablePath;
                 if (!string.IsNullOrWhiteSpace(serverDirectory))
                 {
                     string propertiesFilePath = System.IO.Path.Combine(serverDirectory, "server.properties");
-
-                    if (System.IO.File.Exists(propertiesFilePath))
-                    {
-                        string[] currentLines = System.IO.File.ReadAllLines(propertiesFilePath);
-                        List<string> cleanOutputBuffer = new List<string>();
-                        string strictKeyAssignmentPattern = @"^\s*#?\s*server-udp-ports\s*=";
-
-                        foreach (string line in currentLines)
-                        {
-                            if (System.Text.RegularExpressions.Regex.IsMatch(line, strictKeyAssignmentPattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
-                            {
-                                cleanOutputBuffer.Add("# server-udp-ports=");
-                            }
-                            else
-                            {
-                                cleanOutputBuffer.Add(line);
-                            }
-                        }
-
-                        System.IO.File.WriteAllLines(propertiesFilePath, cleanOutputBuffer, System.Text.Encoding.UTF8);
-                    }
+                    ServerPropertiesDocument.CommentOutProperty(propertiesFilePath, "server-udp-ports");
                 }
 
+                try { BDSUtil.Helpers.RemoteApi.RemoteApiManager.Instance.StopAsync(releaseUpnpLease: true).GetAwaiter().GetResult(); } catch { }
                 BDSUtil.Helpers.UPnPEngine.TearDownPorts();
             }
             catch (Exception ex)
@@ -347,7 +370,7 @@ namespace BDSUtil
 
         private void UpdateControlButtonStates()
         {
-            string configuredPath = AppSettings.Instance?.ServerExecutablePath;
+            string configuredPath = AppSettings.Instance?.General.ServerExecutablePath;
             bool isPathConfigured = false;
 
             if (!string.IsNullOrWhiteSpace(configuredPath))
@@ -436,6 +459,8 @@ namespace BDSUtil
         {
             if (string.IsNullOrEmpty(text)) return;
 
+            TrackPlayerConnectionLine(text);
+
             // Intercept player connection to enforce bans instantly on join
             if (text.Contains("Player connected:"))
             {
@@ -491,7 +516,7 @@ namespace BDSUtil
             }
 
             // 2. Stateful block interceptor for the multi-line Telemetry warning
-            if (AppSettings.Instance.HideTelemetryWarnings)
+            if (AppSettings.Instance.General.HideTelemetryWarnings)
             {
                 // Detect the start of the block
                 if (text.Contains("======== TELEMETRY MESSAGE ========"))
@@ -516,6 +541,7 @@ namespace BDSUtil
             }
 
             // Write to UI
+            RecordConsoleEntry(text);
             ConsoleOutputTextBox.AppendText(text + Environment.NewLine);
             ConsoleOutputTextBox.SelectionStart = ConsoleOutputTextBox.Text.Length;
             ConsoleOutputTextBox.ScrollToCaret();
@@ -570,13 +596,15 @@ namespace BDSUtil
                 // 1. REAL-TIME CHAT INTERCEPTION & MODERATION VECTOR
                 if (text.Contains("[CHAT]"))
                 {
-                    string player = ExtractBridgeTokenValue(text, "player=");
-                    string message = ExtractBridgeTokenValue(text, "message=");
+                    string player = JsonHelper.ExtractBridgeTokenValue(text, "player=");
+                    string message = JsonHelper.ExtractBridgeTokenValue(text, "message=");
 
                     if (!string.IsNullOrEmpty(player) && !string.IsNullOrEmpty(message))
                     {
                         // Clean, readable translation pushed to UI directly
-                        ConsoleOutputTextBox.AppendText($"[AutoMod] 💬 {player}: {message}\r\n");
+                        string formattedChat = $"[AutoMod] 💬 {player}: {message}";
+                        RecordConsoleEntry(formattedChat);
+                        ConsoleOutputTextBox.AppendText(formattedChat + "\r\n");
                         ConsoleOutputTextBox.SelectionStart = ConsoleOutputTextBox.Text.Length;
                         ConsoleOutputTextBox.ScrollToCaret();
 
@@ -587,13 +615,15 @@ namespace BDSUtil
                 // 2. REAL-TIME DEATH & PVP GRIEF TELEMETRY CAPTURE
                 else if (text.Contains("[DEATH][PVP]"))
                 {
-                    string victim = ExtractBridgeTokenValue(text, "victim=");
-                    string killer = ExtractBridgeTokenValue(text, "killer=");
-                    string cause = ExtractBridgeTokenValue(text, "cause=");
+                    string victim = JsonHelper.ExtractBridgeTokenValue(text, "victim=");
+                    string killer = JsonHelper.ExtractBridgeTokenValue(text, "killer=");
+                    string cause = JsonHelper.ExtractBridgeTokenValue(text, "cause=");
 
                     if (!string.IsNullOrEmpty(killer) && !string.IsNullOrEmpty(victim))
                     {
-                        ConsoleOutputTextBox.AppendText($"[AutoMod] ⚔️ PVP: {killer} killed {victim} ({cause})\r\n");
+                        string formattedPvp = $"[AutoMod] ⚔️ PVP: {killer} killed {victim} ({cause})";
+                        RecordConsoleEntry(formattedPvp);
+                        ConsoleOutputTextBox.AppendText(formattedPvp + "\r\n");
                         ConsoleOutputTextBox.SelectionStart = ConsoleOutputTextBox.Text.Length;
                         ConsoleOutputTextBox.ScrollToCaret();
 
@@ -606,13 +636,15 @@ namespace BDSUtil
                 // 3. ENVIRONMENT DEATH CAPTURE
                 else if (text.Contains("[DEATH][ENV]"))
                 {
-                    string victim = ExtractBridgeTokenValue(text, "victim=");
-                    string source = ExtractBridgeTokenValue(text, "source=");
-                    string cause = ExtractBridgeTokenValue(text, "cause=");
+                    string victim = JsonHelper.ExtractBridgeTokenValue(text, "victim=");
+                    string source = JsonHelper.ExtractBridgeTokenValue(text, "source=");
+                    string cause = JsonHelper.ExtractBridgeTokenValue(text, "cause=");
 
                     if (!string.IsNullOrEmpty(victim))
                     {
-                        ConsoleOutputTextBox.AppendText($"[AutoMod] 💀 ENV: {victim} died to {source} ({cause})\r\n");
+                        string formattedEnv = $"[AutoMod] 💀 ENV: {victim} died to {source} ({cause})";
+                        RecordConsoleEntry(formattedEnv);
+                        ConsoleOutputTextBox.AppendText(formattedEnv + "\r\n");
                         ConsoleOutputTextBox.SelectionStart = ConsoleOutputTextBox.Text.Length;
                         ConsoleOutputTextBox.ScrollToCaret();
                     }
@@ -623,7 +655,9 @@ namespace BDSUtil
                     int initIndex = text.IndexOf("[INIT]");
                     string cleanInit = text.Substring(initIndex).Replace("[INIT]", "").Trim();
 
-                    ConsoleOutputTextBox.AppendText($"[AutoMod] ⚙️ {cleanInit}\r\n");
+                    string formattedInit = $"[AutoMod] ⚙️ {cleanInit}";
+                    RecordConsoleEntry(formattedInit);
+                    ConsoleOutputTextBox.AppendText(formattedInit + "\r\n");
                     ConsoleOutputTextBox.SelectionStart = ConsoleOutputTextBox.Text.Length;
                     ConsoleOutputTextBox.ScrollToCaret();
                 }
@@ -668,21 +702,6 @@ namespace BDSUtil
             );
         }
 
-        /// <summary>
-        /// Surgically extracts value strings bound between structural quotation tokens in bridge lines.
-        /// </summary>
-        private string ExtractBridgeTokenValue(string line, string tokenName)
-        {
-            int start = line.IndexOf(tokenName);
-            if (start == -1) return string.Empty;
-
-            start += tokenName.Length + 1;
-            int end = line.IndexOf('"', start);
-            if (end == -1) return string.Empty;
-
-            return line.Substring(start, end - start);
-        }
-
         private void ServerProcess_Exited(object sender, EventArgs e)
         {
             if (this.InvokeRequired)
@@ -692,6 +711,7 @@ namespace BDSUtil
             }
 
             _isServerFullyInitialized = false;
+            ClearTrackedOnlinePlayers();
             UpdateControlButtonStates();
 
             ConsoleOutputTextBox.AppendText(Environment.NewLine + "==================================================" + Environment.NewLine + "Server has shutdown successfully." + Environment.NewLine + "==================================================" + Environment.NewLine);
@@ -776,7 +796,7 @@ namespace BDSUtil
 
             if (activeIndex == 3)
             {
-                if (AppSettings.Instance.WorldEditorEnabled)
+                if (AppSettings.Instance.General.WorldEditorEnabled)
                 {
                     if (this.editorProvider1 != null)
                     {
@@ -871,9 +891,9 @@ namespace BDSUtil
         private void BackupWorker_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
             var worker = sender as System.ComponentModel.BackgroundWorker;
-            string serverDir = AppSettings.Instance.ServerExecutablePath;
+            string serverDir = AppSettings.Instance.General.ServerExecutablePath;
             string timestamp = DateTime.Now.ToString("MM_dd_yyyy_HHmmss");
-            int compressionType = AppSettings.Instance.CompressionMode;
+            int compressionType = AppSettings.Instance.General.CompressionMode;
             bool winRarExists = File.Exists(_winRarRegistryPath);
 
             if (!winRarExists && (compressionType == 0 || compressionType == 1))
@@ -1078,6 +1098,7 @@ namespace BDSUtil
 
             if (e.Error != null)
             {
+                _suppressNextBackupExplorerPrompt = false;
                 AppendTerminalLine($"[MANAGER ERROR] Background compression failed: {e.Error.Message}");
             }
             else
@@ -1087,27 +1108,33 @@ namespace BDSUtil
 
                 BKCompleteLBL.Visible = true;
 
-                DialogResult promptResult = MaterialMessageBox.Show(
-                    this,
-                    $"Backup package successfully created:\n'{savedName}'\n\nWould you like to open the local Backups archive directory in File Explorer now?",
-                    "Backup Operations Successful",
-                    MessageBoxButtons.YesNo,
-                    false,
-                    MaterialFlexibleForm.ButtonsPosition.Center
-                );
+                bool suppressPrompt = _suppressNextBackupExplorerPrompt;
+                _suppressNextBackupExplorerPrompt = false;
 
-                if (promptResult == DialogResult.Yes)
+                if (!suppressPrompt)
                 {
-                    try
+                    DialogResult promptResult = MaterialMessageBox.Show(
+                        this,
+                        $"Backup package successfully created:\n'{savedName}'\n\nWould you like to open the local Backups archive directory in File Explorer now?",
+                        "Backup Operations Successful",
+                        MessageBoxButtons.YesNo,
+                        false,
+                        MaterialFlexibleForm.ButtonsPosition.Center
+                    );
+
+                    if (promptResult == DialogResult.Yes)
                     {
-                        if (!string.IsNullOrEmpty(_backupDestinationRoot) && Directory.Exists(_backupDestinationRoot))
+                        try
                         {
-                            Process.Start("explorer.exe", _backupDestinationRoot);
+                            if (!string.IsNullOrEmpty(_backupDestinationRoot) && Directory.Exists(_backupDestinationRoot))
+                            {
+                                Process.Start("explorer.exe", _backupDestinationRoot);
+                            }
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        AppendTerminalLine($"[MANAGER ERROR] Failed to automatically initialize File Explorer context loop: {ex.Message}");
+                        catch (Exception ex)
+                        {
+                            AppendTerminalLine($"[MANAGER ERROR] Failed to automatically initialize File Explorer context loop: {ex.Message}");
+                        }
                     }
                 }
             }
@@ -1225,7 +1252,7 @@ namespace BDSUtil
         {
             if (_backupWorker.IsBusy) return;
 
-            string serverDir = AppSettings.Instance.ServerExecutablePath;
+            string serverDir = AppSettings.Instance.General.ServerExecutablePath;
             if (string.IsNullOrWhiteSpace(serverDir) || !System.IO.Directory.Exists(serverDir))
             {
                 MaterialMessageBox.Show(
@@ -1268,7 +1295,7 @@ namespace BDSUtil
         {
             if (_backupWorker.IsBusy) return;
 
-            string serverDir = AppSettings.Instance.ServerExecutablePath;
+            string serverDir = AppSettings.Instance.General.ServerExecutablePath;
             if (string.IsNullOrWhiteSpace(serverDir) || !System.IO.Directory.Exists(serverDir))
             {
                 MaterialMessageBox.Show(
@@ -1312,7 +1339,7 @@ namespace BDSUtil
         {
             if (_backupWorker.IsBusy) return;
 
-            string serverDir = AppSettings.Instance.ServerExecutablePath;
+            string serverDir = AppSettings.Instance.General.ServerExecutablePath;
             if (string.IsNullOrWhiteSpace(serverDir) || !System.IO.Directory.Exists(serverDir))
             {
                 MaterialMessageBox.Show(
@@ -1384,7 +1411,7 @@ namespace BDSUtil
 
             if (confirmResult != DialogResult.Yes) return;
 
-            string serverDir = AppSettings.Instance.ServerExecutablePath;
+            string serverDir = AppSettings.Instance.General.ServerExecutablePath;
             int targetType = RestoreTypeComboBox.SelectedIndex;
             string archivePath = selectedItem.SecondaryText;
             string extension = Path.GetExtension(archivePath).ToLower();
@@ -1436,7 +1463,7 @@ namespace BDSUtil
 
                 AppendTerminalLine("[RESTORE EXTRACTION] Extracting archive file bytes down to disk blocks...");
 
-                if (extension == ".rar" || (extension == ".zip" && File.Exists(_winRarRegistryPath) && AppSettings.Instance.CompressionMode != 2))
+                if (extension == ".rar" || (extension == ".zip" && File.Exists(_winRarRegistryPath) && AppSettings.Instance.General.CompressionMode != 2))
                 {
                     string winRarArgs = "x -o+ \"" + archivePath + "\" \"" + serverDir + "\\\"";
 
@@ -1512,14 +1539,21 @@ namespace BDSUtil
 
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (!_forceSystemExit && AppSettings.Instance.EnableUPnP && !_isUpnpCleanupComplete)
+            if (!_forceSystemExit && (AppSettings.Instance.Networking.EnableUPnP || BDSUtil.Helpers.RemoteApi.RemoteApiManager.Instance.IsRunning) && !_isUpnpCleanupComplete)
             {
                 e.Cancel = true;
                 this.Enabled = false;
 
                 Task.Run(() =>
                 {
-                    ExecuteUpnpTeardown();
+                    if (AppSettings.Instance.Networking.EnableUPnP)
+                    {
+                        ExecuteUpnpTeardown();
+                    }
+                    else
+                    {
+                        try { BDSUtil.Helpers.RemoteApi.RemoteApiManager.Instance.StopAsync(releaseUpnpLease: false).GetAwaiter().GetResult(); } catch { }
+                    }
 
                     this.BeginInvoke((MethodInvoker)delegate
                     {
@@ -1603,7 +1637,7 @@ namespace BDSUtil
         {
             if (_serverProcess != null && !_serverProcess.HasExited) return;
 
-            string serverDirectory = AppSettings.Instance.ServerExecutablePath;
+            string serverDirectory = AppSettings.Instance.General.ServerExecutablePath;
             if (string.IsNullOrWhiteSpace(serverDirectory) || !System.IO.Directory.Exists(serverDirectory))
             {
                 DialogResult promptResult = MaterialMessageBox.Show(
@@ -1663,6 +1697,11 @@ namespace BDSUtil
             ConsoleOutputTextBox.Clear();
             ConsoleOutputTextBox.AppendText("Initializing Server Boot Pipeline...\r\n");
 
+            if (ServerPropertiesDocument.CommentOutServerPortV6(serverDirectory))
+            {
+                AppendTerminalLine("[MANAGER INFO] Commented out 'server-portv6' in server.properties (ignored under NetherNet).");
+            }
+
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HHmm");
             System.IO.Directory.CreateDirectory("logs");
             _currentLogPath = $@"logs\server_{timestamp}.log";
@@ -1683,6 +1722,7 @@ namespace BDSUtil
             _serverProcess.Exited += ServerProcess_Exited;
 
             _serverProcess.Start();
+            _serverStartedAtUtc = DateTimeOffset.UtcNow;
             _serverProcess.BeginOutputReadLine();
             _serverProcess.BeginErrorReadLine();
 
@@ -1714,7 +1754,7 @@ namespace BDSUtil
                 return;
             }
 
-            string targetDir = AppSettings.Instance?.ServerExecutablePath;
+            string targetDir = AppSettings.Instance?.General.ServerExecutablePath;
             bool isEnvironmentValid = false;
 
             if (!string.IsNullOrWhiteSpace(targetDir))
@@ -1809,7 +1849,7 @@ namespace BDSUtil
                 return;
             }
 
-            string targetDir = AppSettings.Instance?.ServerExecutablePath;
+            string targetDir = AppSettings.Instance?.General.ServerExecutablePath;
             bool isEnvironmentValid = false;
 
             if (!string.IsNullOrWhiteSpace(targetDir))

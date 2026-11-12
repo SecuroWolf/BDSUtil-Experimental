@@ -40,7 +40,6 @@
             PMLBL = new ReaLTaiizor.Controls.MaterialLabel();
             materialDivider4 = new ReaLTaiizor.Controls.MaterialDivider();
             materialCard3 = new ReaLTaiizor.Controls.MaterialCard();
-            CfgUPnP = new ReaLTaiizor.Controls.MaterialSwitch();
             UPnPLBL = new ReaLTaiizor.Controls.MaterialLabel();
             materialDivider2 = new ReaLTaiizor.Controls.MaterialDivider();
             materialCard1.SuspendLayout();
@@ -230,7 +229,6 @@
             // materialCard3
             // 
             materialCard3.BackColor = System.Drawing.Color.FromArgb(255, 255, 255);
-            materialCard3.Controls.Add(CfgUPnP);
             materialCard3.Controls.Add(UPnPLBL);
             materialCard3.Depth = 0;
             materialCard3.Dock = System.Windows.Forms.DockStyle.Top;
@@ -243,33 +241,18 @@
             materialCard3.Size = new System.Drawing.Size(763, 66);
             materialCard3.TabIndex = 5;
             // 
-            // CfgUPnP
-            // 
-            CfgUPnP.AutoSize = true;
-            CfgUPnP.Depth = 0;
-            CfgUPnP.Location = new System.Drawing.Point(699, 14);
-            CfgUPnP.Margin = new System.Windows.Forms.Padding(0);
-            CfgUPnP.MouseLocation = new System.Drawing.Point(-1, -1);
-            CfgUPnP.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            CfgUPnP.Name = "CfgUPnP";
-            CfgUPnP.Ripple = true;
-            CfgUPnP.Size = new System.Drawing.Size(58, 37);
-            CfgUPnP.TabIndex = 13;
-            CfgUPnP.UseAccentColor = false;
-            CfgUPnP.UseVisualStyleBackColor = true;
-            // 
             // UPnPLBL
             // 
+            UPnPLBL.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             UPnPLBL.Depth = 0;
-            UPnPLBL.Dock = System.Windows.Forms.DockStyle.Top;
             UPnPLBL.Font = new System.Drawing.Font("Roboto", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
-            UPnPLBL.Location = new System.Drawing.Point(6, 6);
+            UPnPLBL.Location = new System.Drawing.Point(10, 6);
             UPnPLBL.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             UPnPLBL.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
             UPnPLBL.Name = "UPnPLBL";
-            UPnPLBL.Size = new System.Drawing.Size(751, 55);
+            UPnPLBL.Size = new System.Drawing.Size(600, 54);
             UPnPLBL.TabIndex = 1;
-            UPnPLBL.Text = "Enable UPnP";
+            UPnPLBL.Text = "UPnP automation is configured in Settings -> Networking";
             UPnPLBL.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // materialDivider2
@@ -323,7 +306,6 @@
         private ReaLTaiizor.Controls.MaterialCard PortBTNCard;
         private ReaLTaiizor.Controls.MaterialDivider materialDivider1;
         private ReaLTaiizor.Controls.MaterialLabel UPnPLBL;
-        private ReaLTaiizor.Controls.MaterialSwitch CfgUPnP;
         private ReaLTaiizor.Controls.MaterialCheckListBox PMList;
         private ReaLTaiizor.Controls.MaterialLabel PMLBL;
         private ReaLTaiizor.Controls.MaterialButton APBTN;

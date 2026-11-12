@@ -61,7 +61,7 @@ namespace BDSUtil.Modals
             warningBox.SelectionFont = new Font("Roboto", 10f, FontStyle.Regular);
             warningBox.SelectionColor = Color.FromArgb(178, 255, 255, 255);
             warningBox.AppendText("Manually pinning absolute port translation paths right inside your gateway's security dashboard offers a significantly more secure operational model:\n\n");
-            warningBox.AppendText(" • APPLICATION ISOLATION: Manual mappings isolate traffic exclusively to your designated Bedrock Dedicated Server port track (typically UDP 19132/19133), meaning stray applications cannot dynamically open random ports elsewhere on the system.\n");
+            warningBox.AppendText(" • APPLICATION ISOLATION: Manual mappings isolate traffic exclusively to your designated Bedrock Dedicated Server port track (typically starting at port 19132), meaning stray applications cannot dynamically open random ports elsewhere on the system.\n");
             warningBox.AppendText(" • RECONNAISSANCE MITIGATION: Adversaries scanning your public IP boundary can still locate and target the open server port directly, but the overall attack surface is vastly smaller because your system's edge gateway remains closed to automated reconfiguration loops.\n\n");
             warningBox.AppendText("Please click 'I understand the risks' to open the advanced networking documentation Dialogue.");
 

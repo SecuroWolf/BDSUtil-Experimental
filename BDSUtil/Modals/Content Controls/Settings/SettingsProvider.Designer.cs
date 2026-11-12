@@ -47,10 +47,34 @@
             materialCard2 = new ReaLTaiizor.Controls.MaterialCard();
             CfgHTel = new ReaLTaiizor.Controls.MaterialSwitch();
             TelHideLBL = new ReaLTaiizor.Controls.MaterialLabel();
+            materialCard5 = new ReaLTaiizor.Controls.MaterialCard();
+            CfgRemoteApi = new ReaLTaiizor.Controls.MaterialSwitch();
+            RemoteApiLBL = new ReaLTaiizor.Controls.MaterialLabel();
+            RemoteApiStatusLBL = new ReaLTaiizor.Controls.MaterialLabel();
+            CopyApiKeyBTN = new ReaLTaiizor.Controls.MaterialButton();
+            RotateApiKeyBTN = new ReaLTaiizor.Controls.MaterialButton();
+            NetworkingSectionCard = new ReaLTaiizor.Controls.MaterialCard();
+            NetworkingSectionLBL = new ReaLTaiizor.Controls.MaterialLabel();
+            UpnpSettingsCard = new ReaLTaiizor.Controls.MaterialCard();
+            CfgUPnP = new ReaLTaiizor.Controls.MaterialSwitch();
+            UpnpLBL = new ReaLTaiizor.Controls.MaterialLabel();
+            ConsolidateUdpCard = new ReaLTaiizor.Controls.MaterialCard();
+            CfgConsolidateUdp = new ReaLTaiizor.Controls.MaterialSwitch();
+            ConsolidateUdpLBL = new ReaLTaiizor.Controls.MaterialLabel();
+            ExternalPortCheckerCard = new ReaLTaiizor.Controls.MaterialCard();
+            ExternalPortCheckerLBL = new ReaLTaiizor.Controls.MaterialLabel();
+            PortCheckerProviderComboBox = new ReaLTaiizor.Controls.MaterialComboBox();
+            CustomPortCheckerTextBox = new ReaLTaiizor.Controls.MaterialTextBoxEdit();
+            CustomPortCheckerHintLBL = new ReaLTaiizor.Controls.MaterialLabel();
             materialCard1.SuspendLayout();
             materialCard4.SuspendLayout();
             materialCard3.SuspendLayout();
             materialCard2.SuspendLayout();
+            materialCard5.SuspendLayout();
+            NetworkingSectionCard.SuspendLayout();
+            UpnpSettingsCard.SuspendLayout();
+            ConsolidateUdpCard.SuspendLayout();
+            ExternalPortCheckerCard.SuspendLayout();
             SuspendLayout();
             // 
             // materialCard1
@@ -151,6 +175,7 @@
             // 
             // materialCard4
             // 
+            materialCard4.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             materialCard4.BackColor = System.Drawing.Color.FromArgb(255, 255, 255);
             materialCard4.Controls.Add(CfgWorldMod);
             materialCard4.Controls.Add(WorldModLBL);
@@ -195,6 +220,7 @@
             // 
             // materialCard3
             // 
+            materialCard3.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             materialCard3.BackColor = System.Drawing.Color.FromArgb(255, 255, 255);
             materialCard3.Controls.Add(CompressionTypeComboBox);
             materialCard3.Controls.Add(materialLabel2);
@@ -311,6 +337,7 @@
             // 
             // materialCard2
             // 
+            materialCard2.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             materialCard2.BackColor = System.Drawing.Color.FromArgb(255, 255, 255);
             materialCard2.Controls.Add(CfgHTel);
             materialCard2.Controls.Add(TelHideLBL);
@@ -354,25 +381,350 @@
             TelHideLBL.Text = "Hide \"Telemetry not enabled\" messages in the console\r\n(Privacy: Hides the message/warning without enabling Telemetry)";
             TelHideLBL.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
+            // NetworkingSectionCard
+            // 
+            NetworkingSectionCard.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            NetworkingSectionCard.BackColor = System.Drawing.Color.FromArgb(255, 255, 255);
+            NetworkingSectionCard.Controls.Add(NetworkingSectionLBL);
+            NetworkingSectionCard.Depth = 0;
+            NetworkingSectionCard.ForeColor = System.Drawing.Color.FromArgb(222, 0, 0, 0);
+            NetworkingSectionCard.Location = new System.Drawing.Point(14, 396);
+            NetworkingSectionCard.Margin = new System.Windows.Forms.Padding(14);
+            NetworkingSectionCard.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            NetworkingSectionCard.Name = "NetworkingSectionCard";
+            NetworkingSectionCard.Padding = new System.Windows.Forms.Padding(14);
+            NetworkingSectionCard.Size = new System.Drawing.Size(859, 51);
+            NetworkingSectionCard.TabIndex = 15;
+            // 
+            // NetworkingSectionLBL
+            // 
+            NetworkingSectionLBL.Depth = 0;
+            NetworkingSectionLBL.Dock = System.Windows.Forms.DockStyle.Fill;
+            NetworkingSectionLBL.Font = new System.Drawing.Font("Roboto", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
+            NetworkingSectionLBL.Location = new System.Drawing.Point(14, 14);
+            NetworkingSectionLBL.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            NetworkingSectionLBL.Name = "NetworkingSectionLBL";
+            NetworkingSectionLBL.Size = new System.Drawing.Size(831, 23);
+            NetworkingSectionLBL.TabIndex = 0;
+            NetworkingSectionLBL.Text = "Networking Settings";
+            NetworkingSectionLBL.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // UpnpSettingsCard
+            // 
+            UpnpSettingsCard.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            UpnpSettingsCard.BackColor = System.Drawing.Color.FromArgb(255, 255, 255);
+            UpnpSettingsCard.Controls.Add(CfgUPnP);
+            UpnpSettingsCard.Controls.Add(UpnpLBL);
+            UpnpSettingsCard.Depth = 0;
+            UpnpSettingsCard.ForeColor = System.Drawing.Color.FromArgb(222, 0, 0, 0);
+            UpnpSettingsCard.Location = new System.Drawing.Point(14, 455);
+            UpnpSettingsCard.Margin = new System.Windows.Forms.Padding(14);
+            UpnpSettingsCard.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            UpnpSettingsCard.Name = "UpnpSettingsCard";
+            UpnpSettingsCard.Padding = new System.Windows.Forms.Padding(14);
+            UpnpSettingsCard.Size = new System.Drawing.Size(859, 75);
+            UpnpSettingsCard.TabIndex = 16;
+            // 
+            // CfgUPnP
+            // 
+            CfgUPnP.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            CfgUPnP.AutoSize = true;
+            CfgUPnP.Depth = 0;
+            CfgUPnP.Location = new System.Drawing.Point(782, 21);
+            CfgUPnP.Margin = new System.Windows.Forms.Padding(0);
+            CfgUPnP.MouseLocation = new System.Drawing.Point(-1, -1);
+            CfgUPnP.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            CfgUPnP.Name = "CfgUPnP";
+            CfgUPnP.Ripple = true;
+            CfgUPnP.Size = new System.Drawing.Size(58, 37);
+            CfgUPnP.TabIndex = 14;
+            CfgUPnP.UseAccentColor = false;
+            CfgUPnP.UseVisualStyleBackColor = true;
+            CfgUPnP.CheckedChanged += CfgUPnP_CheckedChanged;
+            // 
+            // UpnpLBL
+            // 
+            UpnpLBL.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            UpnpLBL.Depth = 0;
+            UpnpLBL.Font = new System.Drawing.Font("Roboto", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
+            UpnpLBL.Location = new System.Drawing.Point(14, 14);
+            UpnpLBL.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            UpnpLBL.Name = "UpnpLBL";
+            UpnpLBL.Size = new System.Drawing.Size(750, 48);
+            UpnpLBL.TabIndex = 13;
+            UpnpLBL.Text = "Enable UPnP\r\n(Automatically forwards server-port, server-udp-ports, and Remote API ports when enabled)";
+            UpnpLBL.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // ExternalPortCheckerCard
+            // 
+            ExternalPortCheckerCard.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            ExternalPortCheckerCard.BackColor = System.Drawing.Color.FromArgb(255, 255, 255);
+            ExternalPortCheckerCard.Controls.Add(CustomPortCheckerHintLBL);
+            ExternalPortCheckerCard.Controls.Add(CustomPortCheckerTextBox);
+            ExternalPortCheckerCard.Controls.Add(PortCheckerProviderComboBox);
+            ExternalPortCheckerCard.Controls.Add(ExternalPortCheckerLBL);
+            ExternalPortCheckerCard.Depth = 0;
+            ExternalPortCheckerCard.ForeColor = System.Drawing.Color.FromArgb(222, 0, 0, 0);
+            ExternalPortCheckerCard.Location = new System.Drawing.Point(14, 538);
+            ExternalPortCheckerCard.Margin = new System.Windows.Forms.Padding(14);
+            ExternalPortCheckerCard.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            ExternalPortCheckerCard.Name = "ExternalPortCheckerCard";
+            ExternalPortCheckerCard.Padding = new System.Windows.Forms.Padding(14);
+            ExternalPortCheckerCard.Size = new System.Drawing.Size(859, 82);
+            ExternalPortCheckerCard.TabIndex = 17;
+            ExternalPortCheckerCard.Visible = false;
+            // 
+            // ExternalPortCheckerLBL
+            // 
+            ExternalPortCheckerLBL.Depth = 0;
+            ExternalPortCheckerLBL.Font = new System.Drawing.Font("Roboto", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
+            ExternalPortCheckerLBL.Location = new System.Drawing.Point(14, 14);
+            ExternalPortCheckerLBL.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            ExternalPortCheckerLBL.Name = "ExternalPortCheckerLBL";
+            ExternalPortCheckerLBL.Size = new System.Drawing.Size(372, 52);
+            ExternalPortCheckerLBL.TabIndex = 0;
+            ExternalPortCheckerLBL.Text = "External Port Checker API\r\n(Optional WAN TCP check; Off by default for privacy)";
+            ExternalPortCheckerLBL.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // PortCheckerProviderComboBox
+            // 
+            PortCheckerProviderComboBox.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            PortCheckerProviderComboBox.AutoResize = false;
+            PortCheckerProviderComboBox.BackColor = System.Drawing.Color.FromArgb(255, 255, 255);
+            PortCheckerProviderComboBox.Depth = 0;
+            PortCheckerProviderComboBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
+            PortCheckerProviderComboBox.DropDownHeight = 220;
+            PortCheckerProviderComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            PortCheckerProviderComboBox.DropDownWidth = 121;
+            PortCheckerProviderComboBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Pixel);
+            PortCheckerProviderComboBox.ForeColor = System.Drawing.Color.FromArgb(222, 0, 0, 0);
+            PortCheckerProviderComboBox.FormattingEnabled = true;
+            PortCheckerProviderComboBox.Hint = "External Port Checker API";
+            PortCheckerProviderComboBox.IntegralHeight = false;
+            PortCheckerProviderComboBox.ItemHeight = 43;
+            PortCheckerProviderComboBox.Location = new System.Drawing.Point(395, 16);
+            PortCheckerProviderComboBox.MaxDropDownItems = 5;
+            PortCheckerProviderComboBox.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.OUT;
+            PortCheckerProviderComboBox.Name = "PortCheckerProviderComboBox";
+            PortCheckerProviderComboBox.Size = new System.Drawing.Size(445, 49);
+            PortCheckerProviderComboBox.TabIndex = 1;
+            // 
+            // CustomPortCheckerTextBox
+            // 
+            CustomPortCheckerTextBox.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            CustomPortCheckerTextBox.AnimateReadOnly = false;
+            CustomPortCheckerTextBox.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.None;
+            CustomPortCheckerTextBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.None;
+            CustomPortCheckerTextBox.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            CustomPortCheckerTextBox.CharacterCasing = System.Windows.Forms.CharacterCasing.Normal;
+            CustomPortCheckerTextBox.Depth = 0;
+            CustomPortCheckerTextBox.Font = new System.Drawing.Font("Roboto", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
+            CustomPortCheckerTextBox.HideSelection = true;
+            CustomPortCheckerTextBox.Hint = "Custom Port Checker API URL (include {port})";
+            CustomPortCheckerTextBox.LeadingIcon = null;
+            CustomPortCheckerTextBox.LeaveOnEnterKey = true;
+            CustomPortCheckerTextBox.Location = new System.Drawing.Point(14, 78);
+            CustomPortCheckerTextBox.MaxLength = 2048;
+            CustomPortCheckerTextBox.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.OUT;
+            CustomPortCheckerTextBox.Name = "CustomPortCheckerTextBox";
+            CustomPortCheckerTextBox.PasswordChar = '\0';
+            CustomPortCheckerTextBox.PrefixSuffixText = null;
+            CustomPortCheckerTextBox.ReadOnly = false;
+            CustomPortCheckerTextBox.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            CustomPortCheckerTextBox.SelectedText = "";
+            CustomPortCheckerTextBox.SelectionLength = 0;
+            CustomPortCheckerTextBox.SelectionStart = 0;
+            CustomPortCheckerTextBox.ShortcutsEnabled = true;
+            CustomPortCheckerTextBox.Size = new System.Drawing.Size(826, 48);
+            CustomPortCheckerTextBox.TabIndex = 2;
+            CustomPortCheckerTextBox.TabStop = true;
+            CustomPortCheckerTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Left;
+            CustomPortCheckerTextBox.TrailingIcon = null;
+            CustomPortCheckerTextBox.UseSystemPasswordChar = false;
+            CustomPortCheckerTextBox.Visible = false;
+            // 
+            // CustomPortCheckerHintLBL
+            // 
+            CustomPortCheckerHintLBL.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            CustomPortCheckerHintLBL.Depth = 0;
+            CustomPortCheckerHintLBL.Font = new System.Drawing.Font("Roboto", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
+            CustomPortCheckerHintLBL.Location = new System.Drawing.Point(14, 130);
+            CustomPortCheckerHintLBL.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            CustomPortCheckerHintLBL.Name = "CustomPortCheckerHintLBL";
+            CustomPortCheckerHintLBL.Size = new System.Drawing.Size(826, 36);
+            CustomPortCheckerHintLBL.TabIndex = 3;
+            CustomPortCheckerHintLBL.Text = "Put {port} where the port goes (optional: {ip}, {protocol}). Example: https://ifconfig.co/port/{port}";
+            CustomPortCheckerHintLBL.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            CustomPortCheckerHintLBL.Visible = false;
+            // 
+            // ConsolidateUdpCard
+            //  
+            ConsolidateUdpCard.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            ConsolidateUdpCard.BackColor = System.Drawing.Color.FromArgb(255, 255, 255);
+            ConsolidateUdpCard.Controls.Add(CfgConsolidateUdp);
+            ConsolidateUdpCard.Controls.Add(ConsolidateUdpLBL);
+            ConsolidateUdpCard.Depth = 0;
+            ConsolidateUdpCard.ForeColor = System.Drawing.Color.FromArgb(222, 0, 0, 0);
+            ConsolidateUdpCard.Location = new System.Drawing.Point(14, 538);
+            ConsolidateUdpCard.Margin = new System.Windows.Forms.Padding(14);
+            ConsolidateUdpCard.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            ConsolidateUdpCard.Name = "ConsolidateUdpCard";
+            ConsolidateUdpCard.Padding = new System.Windows.Forms.Padding(14);
+            ConsolidateUdpCard.Size = new System.Drawing.Size(859, 75);
+            ConsolidateUdpCard.TabIndex = 18;
+            // 
+            // CfgConsolidateUdp
+            // 
+            CfgConsolidateUdp.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            CfgConsolidateUdp.AutoSize = true;
+            CfgConsolidateUdp.Depth = 0;
+            CfgConsolidateUdp.Location = new System.Drawing.Point(782, 21);
+            CfgConsolidateUdp.Margin = new System.Windows.Forms.Padding(0);
+            CfgConsolidateUdp.MouseLocation = new System.Drawing.Point(-1, -1);
+            CfgConsolidateUdp.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            CfgConsolidateUdp.Name = "CfgConsolidateUdp";
+            CfgConsolidateUdp.Ripple = true;
+            CfgConsolidateUdp.Size = new System.Drawing.Size(58, 37);
+            CfgConsolidateUdp.TabIndex = 14;
+            CfgConsolidateUdp.UseAccentColor = false;
+            CfgConsolidateUdp.UseVisualStyleBackColor = true;
+            CfgConsolidateUdp.CheckedChanged += CfgConsolidateUdp_CheckedChanged;
+            // 
+            // ConsolidateUdpLBL
+            // 
+            ConsolidateUdpLBL.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            ConsolidateUdpLBL.Depth = 0;
+            ConsolidateUdpLBL.Font = new System.Drawing.Font("Roboto", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
+            ConsolidateUdpLBL.Location = new System.Drawing.Point(14, 14);
+            ConsolidateUdpLBL.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            ConsolidateUdpLBL.Name = "ConsolidateUdpLBL";
+            ConsolidateUdpLBL.Size = new System.Drawing.Size(750, 48);
+            ConsolidateUdpLBL.TabIndex = 13;
+            ConsolidateUdpLBL.Text = "[BETA] Consolidate UDP Ports\r\n(Ignore max player count and assign only a single extra UDP port above server-port for server-udp-ports)";
+            ConsolidateUdpLBL.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // materialCard5
+            // 
+            materialCard5.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            materialCard5.BackColor = System.Drawing.Color.FromArgb(255, 255, 255);
+            materialCard5.Controls.Add(RotateApiKeyBTN);
+            materialCard5.Controls.Add(CopyApiKeyBTN);
+            materialCard5.Controls.Add(RemoteApiStatusLBL);
+            materialCard5.Controls.Add(CfgRemoteApi);
+            materialCard5.Controls.Add(RemoteApiLBL);
+            materialCard5.Depth = 0;
+            materialCard5.ForeColor = System.Drawing.Color.FromArgb(222, 0, 0, 0);
+            materialCard5.Location = new System.Drawing.Point(14, 621);
+            materialCard5.Margin = new System.Windows.Forms.Padding(14);
+            materialCard5.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            materialCard5.Name = "materialCard5";
+            materialCard5.Padding = new System.Windows.Forms.Padding(14);
+            materialCard5.Size = new System.Drawing.Size(859, 126);
+            materialCard5.TabIndex = 19;
+            // 
+            // CfgRemoteApi
+            // 
+            CfgRemoteApi.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            CfgRemoteApi.AutoSize = true;
+            CfgRemoteApi.Depth = 0;
+            CfgRemoteApi.Location = new System.Drawing.Point(782, 18);
+            CfgRemoteApi.Margin = new System.Windows.Forms.Padding(0);
+            CfgRemoteApi.MouseLocation = new System.Drawing.Point(-1, -1);
+            CfgRemoteApi.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            CfgRemoteApi.Name = "CfgRemoteApi";
+            CfgRemoteApi.Ripple = true;
+            CfgRemoteApi.Size = new System.Drawing.Size(58, 37);
+            CfgRemoteApi.TabIndex = 15;
+            CfgRemoteApi.UseAccentColor = false;
+            CfgRemoteApi.UseVisualStyleBackColor = true;
+            CfgRemoteApi.CheckedChanged += CfgRemoteApi_CheckedChanged;
+            // 
+            // RemoteApiLBL
+            // 
+            RemoteApiLBL.Depth = 0;
+            RemoteApiLBL.Font = new System.Drawing.Font("Roboto", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
+            RemoteApiLBL.Location = new System.Drawing.Point(14, 14);
+            RemoteApiLBL.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            RemoteApiLBL.Name = "RemoteApiLBL";
+            RemoteApiLBL.Size = new System.Drawing.Size(750, 44);
+            RemoteApiLBL.TabIndex = 13;
+            RemoteApiLBL.Text = "Enable Remote Management API\r\n(Exposes authenticated HTTP/JSON control API below lowest server port; uses UPnP when enabled)";
+            RemoteApiLBL.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // RemoteApiStatusLBL
+            // 
+            RemoteApiStatusLBL.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            RemoteApiStatusLBL.Depth = 0;
+            RemoteApiStatusLBL.Font = new System.Drawing.Font("Roboto", 13F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
+            RemoteApiStatusLBL.Location = new System.Drawing.Point(14, 68);
+            RemoteApiStatusLBL.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            RemoteApiStatusLBL.Name = "RemoteApiStatusLBL";
+            RemoteApiStatusLBL.Size = new System.Drawing.Size(540, 44);
+            RemoteApiStatusLBL.TabIndex = 16;
+            RemoteApiStatusLBL.Text = "Status: Disabled (Listener stopped; no UPnP port requisitioned)";
+            RemoteApiStatusLBL.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // CopyApiKeyBTN
+            // 
+            CopyApiKeyBTN.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            CopyApiKeyBTN.Depth = 0;
+            CopyApiKeyBTN.Location = new System.Drawing.Point(568, 72);
+            CopyApiKeyBTN.Name = "CopyApiKeyBTN";
+            CopyApiKeyBTN.Size = new System.Drawing.Size(130, 36);
+            CopyApiKeyBTN.TabIndex = 17;
+            CopyApiKeyBTN.Text = "Copy Key";
+            CopyApiKeyBTN.Type = ReaLTaiizor.Controls.MaterialButton.MaterialButtonType.Outlined;
+            CopyApiKeyBTN.UseAccentColor = false;
+            CopyApiKeyBTN.UseVisualStyleBackColor = true;
+            CopyApiKeyBTN.Click += CopyApiKeyBTN_Click;
+            // 
+            // RotateApiKeyBTN
+            // 
+            RotateApiKeyBTN.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            RotateApiKeyBTN.Depth = 0;
+            RotateApiKeyBTN.Location = new System.Drawing.Point(708, 72);
+            RotateApiKeyBTN.Name = "RotateApiKeyBTN";
+            RotateApiKeyBTN.Size = new System.Drawing.Size(132, 36);
+            RotateApiKeyBTN.TabIndex = 18;
+            RotateApiKeyBTN.Text = "Rotate Key";
+            RotateApiKeyBTN.Type = ReaLTaiizor.Controls.MaterialButton.MaterialButtonType.Outlined;
+            RotateApiKeyBTN.UseAccentColor = false;
+            RotateApiKeyBTN.UseVisualStyleBackColor = true;
+            RotateApiKeyBTN.Click += RotateApiKeyBTN_Click;
+            // 
             // SettingsProvider
             // 
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             AutoScroll = true;
+            AutoScrollMinSize = new System.Drawing.Size(0, 761);
             BackColor = System.Drawing.Color.FromArgb(50, 50, 50);
+            Controls.Add(materialCard5);
+            Controls.Add(ConsolidateUdpCard);
+            Controls.Add(ExternalPortCheckerCard);
+            Controls.Add(UpnpSettingsCard);
+            Controls.Add(NetworkingSectionCard);
             Controls.Add(materialCard2);
             Controls.Add(materialCard4);
             Controls.Add(materialCard3);
             Controls.Add(materialCard1);
             Name = "SettingsProvider";
-            Size = new System.Drawing.Size(888, 430);
+            Size = new System.Drawing.Size(888, 765);
             materialCard1.ResumeLayout(false);
             materialCard4.ResumeLayout(false);
             materialCard4.PerformLayout();
             materialCard3.ResumeLayout(false);
             materialCard2.ResumeLayout(false);
             materialCard2.PerformLayout();
+            materialCard5.ResumeLayout(false);
+            materialCard5.PerformLayout();
+            NetworkingSectionCard.ResumeLayout(false);
+            UpnpSettingsCard.ResumeLayout(false);
+            UpnpSettingsCard.PerformLayout();
+            ConsolidateUdpCard.ResumeLayout(false);
+            ConsolidateUdpCard.PerformLayout();
+            ExternalPortCheckerCard.ResumeLayout(false);
+            ExternalPortCheckerCard.PerformLayout();
             ResumeLayout(false);
-
         }
 
         #endregion
@@ -394,5 +746,24 @@
         private ReaLTaiizor.Controls.MaterialCard materialCard2;
         private ReaLTaiizor.Controls.MaterialSwitch CfgHTel;
         private ReaLTaiizor.Controls.MaterialLabel TelHideLBL;
+        private ReaLTaiizor.Controls.MaterialCard materialCard5;
+        private ReaLTaiizor.Controls.MaterialSwitch CfgRemoteApi;
+        private ReaLTaiizor.Controls.MaterialLabel RemoteApiLBL;
+        private ReaLTaiizor.Controls.MaterialLabel RemoteApiStatusLBL;
+        private ReaLTaiizor.Controls.MaterialButton CopyApiKeyBTN;
+        private ReaLTaiizor.Controls.MaterialButton RotateApiKeyBTN;
+        private ReaLTaiizor.Controls.MaterialCard NetworkingSectionCard;
+        private ReaLTaiizor.Controls.MaterialLabel NetworkingSectionLBL;
+        private ReaLTaiizor.Controls.MaterialCard UpnpSettingsCard;
+        private ReaLTaiizor.Controls.MaterialSwitch CfgUPnP;
+        private ReaLTaiizor.Controls.MaterialLabel UpnpLBL;
+        private ReaLTaiizor.Controls.MaterialCard ConsolidateUdpCard;
+        private ReaLTaiizor.Controls.MaterialSwitch CfgConsolidateUdp;
+        private ReaLTaiizor.Controls.MaterialLabel ConsolidateUdpLBL;
+        private ReaLTaiizor.Controls.MaterialCard ExternalPortCheckerCard;
+        private ReaLTaiizor.Controls.MaterialLabel ExternalPortCheckerLBL;
+        private ReaLTaiizor.Controls.MaterialComboBox PortCheckerProviderComboBox;
+        private ReaLTaiizor.Controls.MaterialTextBoxEdit CustomPortCheckerTextBox;
+        private ReaLTaiizor.Controls.MaterialLabel CustomPortCheckerHintLBL;
     }
 }

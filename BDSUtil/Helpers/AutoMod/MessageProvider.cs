@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Text.Json;
 
 namespace BDSUtil.Helpers.AutoMod
 {
@@ -71,9 +71,10 @@ namespace BDSUtil.Helpers.AutoMod
         /// </summary>
         private static string FormatTellraw(string target, string text)
         {
-            // Escape quotes inside the text to prevent JSON syntax crashes in the Bedrock console
-            string safeText = text.Replace("\"", "\\\"");
-            return $"tellraw \"{target}\" {{\"rawtext\":[{{\"text\":\"{safeText}\"}}]}}";
+            string payloadJson = JsonSerializer.Serialize(
+                new { rawtext = new[] { new { text } } },
+                JsonHelper.CompactOptions);
+            return $"tellraw \"{target}\" {payloadJson}";
         }
     }
 }

@@ -20,11 +20,12 @@ namespace BDSUtil.Modals.Content_Controls.Packs
 
         private void AddonManager_Load(object sender, EventArgs e)
         {
-            CF_OpCommandsSwitch.Checked = AppSettings.Instance.GetSetting("utilpack_op_commands", false);
-            CF_PvpAwardsSwitch.Checked = AppSettings.Instance.GetSetting("utilpack_pvp_awards", false);
-            CF_AntiGriefSwitch.Checked = AppSettings.Instance.GetSetting("utilpack_anti_grief", false);
-            CF_Placeholder1Switch.Checked = AppSettings.Instance.GetSetting("utilpack_economy", false);
-            CF_Placeholder2Switch.Checked = AppSettings.Instance.GetSetting("utilpack_optimization", false);
+            var utilPack = AppSettings.Instance.UtilPack;
+            CF_OpCommandsSwitch.Checked = utilPack.OpCommands;
+            CF_PvpAwardsSwitch.Checked = utilPack.PvpAwards;
+            CF_AntiGriefSwitch.Checked = utilPack.AntiGrief;
+            CF_Placeholder1Switch.Checked = utilPack.Economy;
+            CF_Placeholder2Switch.Checked = utilPack.Optimization;
 
             CF_OpCommandsSwitch.CheckedChanged += CustomFeatureSwitch_CheckedChanged;
             CF_PvpAwardsSwitch.CheckedChanged += CustomFeatureSwitch_CheckedChanged;
@@ -46,7 +47,7 @@ namespace BDSUtil.Modals.Content_Controls.Packs
             RP_ListView.Items.Clear();
             BP_ListView.Items.Clear();
 
-            string serverRoot = AppSettings.Instance.ServerExecutablePath;
+            string serverRoot = AppSettings.Instance.General.ServerExecutablePath;
 
             List<PackManifestInfo> resourcePacks = PackManager.GetAvailablePacks(serverRoot, _activeWorldName, false);
             foreach (var pack in resourcePacks)
@@ -71,18 +72,14 @@ namespace BDSUtil.Modals.Content_Controls.Packs
         {
             if (sender is MaterialSwitch toggle)
             {
-                string key = string.Empty;
-                if (toggle == CF_OpCommandsSwitch) key = "utilpack_op_commands";
-                else if (toggle == CF_PvpAwardsSwitch) key = "utilpack_pvp_awards";
-                else if (toggle == CF_AntiGriefSwitch) key = "utilpack_anti_grief";
-                else if (toggle == CF_Placeholder1Switch) key = "utilpack_economy";
-                else if (toggle == CF_Placeholder2Switch) key = "utilpack_optimization";
-
-                if (!string.IsNullOrEmpty(key))
+                AppSettings.Instance.Update(cfg =>
                 {
-                    AppSettings.Instance.SetSetting(key, toggle.Checked);
-                    AppSettings.Instance.SaveSettings();
-                }
+                    if (toggle == CF_OpCommandsSwitch) cfg.UtilPack.OpCommands = toggle.Checked;
+                    else if (toggle == CF_PvpAwardsSwitch) cfg.UtilPack.PvpAwards = toggle.Checked;
+                    else if (toggle == CF_AntiGriefSwitch) cfg.UtilPack.AntiGrief = toggle.Checked;
+                    else if (toggle == CF_Placeholder1Switch) cfg.UtilPack.Economy = toggle.Checked;
+                    else if (toggle == CF_Placeholder2Switch) cfg.UtilPack.Optimization = toggle.Checked;
+                });
             }
         }
 
@@ -151,7 +148,7 @@ namespace BDSUtil.Modals.Content_Controls.Packs
 
                 if (confirm == DialogResult.Yes)
                 {
-                    string serverRoot = AppSettings.Instance.ServerExecutablePath;
+                    string serverRoot = AppSettings.Instance.General.ServerExecutablePath;
                     bool success = PackManager.DeletePack(serverRoot, _activeWorldName, packInfo.FolderName, packInfo.Uuid, isBehavior);
 
                     if (success)
@@ -168,7 +165,7 @@ namespace BDSUtil.Modals.Content_Controls.Packs
 
         private void ProcessPackImport(string filePath)
         {
-            string serverRoot = AppSettings.Instance.ServerExecutablePath;
+            string serverRoot = AppSettings.Instance.General.ServerExecutablePath;
             bool success = PackManager.InstallPack(serverRoot, filePath);
 
             if (success)
@@ -193,7 +190,7 @@ namespace BDSUtil.Modals.Content_Controls.Packs
                     return;
                 }
 
-                string serverRoot = AppSettings.Instance.ServerExecutablePath;
+                string serverRoot = AppSettings.Instance.General.ServerExecutablePath;
                 bool success = PackManager.EnablePackInWorld(serverRoot, _activeWorldName, packInfo.Uuid, packInfo.Version, false);
                 if (success) PopulatePackLists();
             }
@@ -211,7 +208,7 @@ namespace BDSUtil.Modals.Content_Controls.Packs
                     return;
                 }
 
-                string serverRoot = AppSettings.Instance.ServerExecutablePath;
+                string serverRoot = AppSettings.Instance.General.ServerExecutablePath;
                 bool success = PackManager.DisablePackInWorld(serverRoot, _activeWorldName, packInfo.Uuid, false);
                 if (success) PopulatePackLists();
             }
@@ -229,7 +226,7 @@ namespace BDSUtil.Modals.Content_Controls.Packs
                     return;
                 }
 
-                string serverRoot = AppSettings.Instance.ServerExecutablePath;
+                string serverRoot = AppSettings.Instance.General.ServerExecutablePath;
                 bool success = PackManager.EnablePackInWorld(serverRoot, _activeWorldName, packInfo.Uuid, packInfo.Version, true);
                 if (success) PopulatePackLists();
             }
@@ -247,7 +244,7 @@ namespace BDSUtil.Modals.Content_Controls.Packs
                     return;
                 }
 
-                string serverRoot = AppSettings.Instance.ServerExecutablePath;
+                string serverRoot = AppSettings.Instance.General.ServerExecutablePath;
                 bool success = PackManager.DisablePackInWorld(serverRoot, _activeWorldName, packInfo.Uuid, true);
                 if (success) PopulatePackLists();
             }

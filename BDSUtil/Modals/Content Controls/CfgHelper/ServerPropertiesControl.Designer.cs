@@ -45,9 +45,7 @@
             materialCard3 = new ReaLTaiizor.Controls.MaterialCard();
             PropCastLAN = new ReaLTaiizor.Controls.MaterialSwitch();
             LanLBL = new ReaLTaiizor.Controls.MaterialLabel();
-            PropPortV6 = new ReaLTaiizor.Controls.MaterialTextBoxEdit();
             PropPortV4 = new ReaLTaiizor.Controls.MaterialTextBoxEdit();
-            PortV6LBL = new ReaLTaiizor.Controls.MaterialLabel();
             PortV4LBL = new ReaLTaiizor.Controls.MaterialLabel();
             materialDivider2 = new ReaLTaiizor.Controls.MaterialDivider();
             materialCard4 = new ReaLTaiizor.Controls.MaterialCard();
@@ -140,7 +138,7 @@
             materialDivider5.Depth = 0;
             materialDivider5.Dock = System.Windows.Forms.DockStyle.Top;
             materialDivider5.Enabled = false;
-            materialDivider5.Location = new System.Drawing.Point(16, 1107);
+            materialDivider5.Location = new System.Drawing.Point(16, 1052);
             materialDivider5.Margin = new System.Windows.Forms.Padding(12);
             materialDivider5.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
             materialDivider5.Name = "materialDivider5";
@@ -162,7 +160,7 @@
             materialCard5.Depth = 0;
             materialCard5.Dock = System.Windows.Forms.DockStyle.Top;
             materialCard5.ForeColor = System.Drawing.Color.FromArgb(222, 0, 0, 0);
-            materialCard5.Location = new System.Drawing.Point(16, 873);
+            materialCard5.Location = new System.Drawing.Point(16, 818);
             materialCard5.Margin = new System.Windows.Forms.Padding(16);
             materialCard5.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
             materialCard5.Name = "materialCard5";
@@ -323,7 +321,7 @@
             materialDivider4.Depth = 0;
             materialDivider4.Dock = System.Windows.Forms.DockStyle.Top;
             materialDivider4.Enabled = false;
-            materialDivider4.Location = new System.Drawing.Point(16, 861);
+            materialDivider4.Location = new System.Drawing.Point(16, 806);
             materialDivider4.Margin = new System.Windows.Forms.Padding(12);
             materialDivider4.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
             materialDivider4.Name = "materialDivider4";
@@ -336,9 +334,7 @@
             materialCard3.BackColor = System.Drawing.Color.FromArgb(255, 255, 255);
             materialCard3.Controls.Add(PropCastLAN);
             materialCard3.Controls.Add(LanLBL);
-            materialCard3.Controls.Add(PropPortV6);
             materialCard3.Controls.Add(PropPortV4);
-            materialCard3.Controls.Add(PortV6LBL);
             materialCard3.Controls.Add(PortV4LBL);
             materialCard3.Depth = 0;
             materialCard3.Dock = System.Windows.Forms.DockStyle.Top;
@@ -348,14 +344,14 @@
             materialCard3.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
             materialCard3.Name = "materialCard3";
             materialCard3.Padding = new System.Windows.Forms.Padding(6);
-            materialCard3.Size = new System.Drawing.Size(746, 178);
+            materialCard3.Size = new System.Drawing.Size(746, 123);
             materialCard3.TabIndex = 5;
             // 
             // PropCastLAN
             // 
             PropCastLAN.AutoSize = true;
             PropCastLAN.Depth = 0;
-            PropCastLAN.Location = new System.Drawing.Point(660, 126);
+            PropCastLAN.Location = new System.Drawing.Point(660, 71);
             PropCastLAN.Margin = new System.Windows.Forms.Padding(0);
             PropCastLAN.MouseLocation = new System.Drawing.Point(-1, -1);
             PropCastLAN.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
@@ -371,7 +367,7 @@
             LanLBL.Depth = 0;
             LanLBL.Dock = System.Windows.Forms.DockStyle.Top;
             LanLBL.Font = new System.Drawing.Font("Roboto", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
-            LanLBL.Location = new System.Drawing.Point(6, 116);
+            LanLBL.Location = new System.Drawing.Point(6, 61);
             LanLBL.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             LanLBL.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
             LanLBL.Name = "LanLBL";
@@ -379,39 +375,6 @@
             LanLBL.TabIndex = 24;
             LanLBL.Text = "Broadcast to LAN";
             LanLBL.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // PropPortV6
-            // 
-            PropPortV6.Anchor = System.Windows.Forms.AnchorStyles.Right;
-            PropPortV6.AnimateReadOnly = false;
-            PropPortV6.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.None;
-            PropPortV6.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.None;
-            PropPortV6.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            PropPortV6.CharacterCasing = System.Windows.Forms.CharacterCasing.Normal;
-            PropPortV6.Depth = 0;
-            PropPortV6.Font = new System.Drawing.Font("Roboto", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
-            PropPortV6.HideSelection = true;
-            PropPortV6.Hint = "IPv6 Port";
-            PropPortV6.LeadingIcon = null;
-            PropPortV6.Location = new System.Drawing.Point(398, 60);
-            PropPortV6.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            PropPortV6.MaxLength = 32767;
-            PropPortV6.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.OUT;
-            PropPortV6.Name = "PropPortV6";
-            PropPortV6.PasswordChar = '\0';
-            PropPortV6.PrefixSuffixText = null;
-            PropPortV6.ReadOnly = false;
-            PropPortV6.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            PropPortV6.SelectedText = "";
-            PropPortV6.SelectionLength = 0;
-            PropPortV6.SelectionStart = 0;
-            PropPortV6.ShortcutsEnabled = true;
-            PropPortV6.Size = new System.Drawing.Size(332, 48);
-            PropPortV6.TabIndex = 23;
-            PropPortV6.TabStop = false;
-            PropPortV6.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            PropPortV6.TrailingIcon = null;
-            PropPortV6.UseSystemPasswordChar = false;
             // 
             // PropPortV4
             // 
@@ -424,7 +387,7 @@
             PropPortV4.Depth = 0;
             PropPortV4.Font = new System.Drawing.Font("Roboto", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
             PropPortV4.HideSelection = true;
-            PropPortV4.Hint = "IPv4 Port";
+            PropPortV4.Hint = "Server Port";
             PropPortV4.LeadingIcon = null;
             PropPortV4.Location = new System.Drawing.Point(398, 5);
             PropPortV4.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
@@ -446,20 +409,6 @@
             PropPortV4.TrailingIcon = null;
             PropPortV4.UseSystemPasswordChar = false;
             // 
-            // PortV6LBL
-            // 
-            PortV6LBL.Depth = 0;
-            PortV6LBL.Dock = System.Windows.Forms.DockStyle.Top;
-            PortV6LBL.Font = new System.Drawing.Font("Roboto", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
-            PortV6LBL.Location = new System.Drawing.Point(6, 61);
-            PortV6LBL.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            PortV6LBL.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
-            PortV6LBL.Name = "PortV6LBL";
-            PortV6LBL.Size = new System.Drawing.Size(734, 55);
-            PortV6LBL.TabIndex = 19;
-            PortV6LBL.Text = "Server Port(IPv6)";
-            PortV6LBL.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
             // PortV4LBL
             // 
             PortV4LBL.Depth = 0;
@@ -471,7 +420,7 @@
             PortV4LBL.Name = "PortV4LBL";
             PortV4LBL.Size = new System.Drawing.Size(734, 55);
             PortV4LBL.TabIndex = 18;
-            PortV4LBL.Text = "Server Port(IPv4)";
+            PortV4LBL.Text = "Server Port";
             PortV4LBL.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // materialDivider2
@@ -1027,9 +976,7 @@
         private ReaLTaiizor.Controls.MaterialDivider materialDivider2;
         private ReaLTaiizor.Controls.MaterialLabel PropLBL;
         private ReaLTaiizor.Controls.MaterialCard materialCard3;
-        private ReaLTaiizor.Controls.MaterialTextBoxEdit PropPortV6;
         private ReaLTaiizor.Controls.MaterialTextBoxEdit PropPortV4;
-        private ReaLTaiizor.Controls.MaterialLabel PortV6LBL;
         private ReaLTaiizor.Controls.MaterialLabel PortV4LBL;
         private ReaLTaiizor.Controls.MaterialSwitch PropCastLAN;
         private ReaLTaiizor.Controls.MaterialLabel LanLBL;

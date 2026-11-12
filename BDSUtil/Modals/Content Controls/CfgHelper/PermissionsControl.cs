@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Windows.Forms;
-using System.Collections.Generic;
+using BDSUtil.Helpers;
 
 namespace BDSUtil.Modals.Content_Controls.CfgHelper
 {
@@ -10,6 +13,7 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
     {
         private string _configPath;
         private readonly List<OperatorEntry> _cachedOps = new List<OperatorEntry>();
+        private readonly List<OperatorEntry> _preservedEntries = new List<OperatorEntry>();
         private readonly Label _focusTrapLabel;
 
         public PermissionsControl()
@@ -48,52 +52,36 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
         private void LoadConfig()
         {
             _cachedOps.Clear();
+            _preservedEntries.Clear();
             materialCheckListBox1.Items.Clear();
 
-            if (File.Exists(_configPath))
+            if (JsonHelper.TryDeserializeFile(_configPath, out List<OperatorEntry> entries, JsonHelper.IndentedOptions) &&
+                entries != null)
             {
-                try
+                foreach (var entry in entries)
                 {
-                    string rawJson = File.ReadAllText(_configPath, System.Text.Encoding.UTF8).Trim();
-                    if (!string.IsNullOrEmpty(rawJson) && rawJson != "[]")
+                    if (entry == null || string.IsNullOrWhiteSpace(entry.Xuid))
+                        continue;
+
+                    entry.Xuid = entry.Xuid.Trim();
+                    entry.Permission = string.IsNullOrWhiteSpace(entry.Permission)
+                        ? "operator"
+                        : entry.Permission.Trim();
+
+                    if (entry.Permission.Equals("operator", StringComparison.OrdinalIgnoreCase))
                     {
-                        List<string> quotedTokens = new List<string>();
-                        int idx = 0;
-                        while ((idx = rawJson.IndexOf('"', idx)) != -1)
+                        if (!_cachedOps.Any(o => string.Equals(o.Xuid, entry.Xuid, StringComparison.OrdinalIgnoreCase)))
                         {
-                            int endIdx = rawJson.IndexOf('"', idx + 1);
-                            if (endIdx == -1) break;
-                            quotedTokens.Add(rawJson.Substring(idx + 1, endIdx - idx - 1));
-                            idx = endIdx + 1;
-                        }
-
-                        for (int i = 0; i < quotedTokens.Count - 1; i++)
-                        {
-                            if (quotedTokens[i].Equals("permission", StringComparison.OrdinalIgnoreCase) &&
-                                quotedTokens[i + 1].Equals("operator", StringComparison.OrdinalIgnoreCase))
-                            {
-                                int searchStart = Math.Max(0, i - 4);
-                                int searchEnd = Math.Min(quotedTokens.Count - 1, i + 4);
-
-                                for (int j = searchStart; j < searchEnd; j++)
-                                {
-                                    if (quotedTokens[j].Equals("xuid", StringComparison.OrdinalIgnoreCase) && j + 1 < quotedTokens.Count)
-                                    {
-                                        string foundXuid = quotedTokens[j + 1];
-                                        if (!string.IsNullOrEmpty(foundXuid) && !_cachedOps.Any(o => o.Xuid == foundXuid))
-                                        {
-                                            _cachedOps.Add(new OperatorEntry { Xuid = foundXuid, Permission = "operator" });
-                                        }
-                                        break;
-                                    }
-                                }
-                            }
+                            _cachedOps.Add(entry);
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Permissions load exception: {ex.Message}");
+                    else
+                    {
+                        if (!_preservedEntries.Any(o => string.Equals(o.Xuid, entry.Xuid, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            _preservedEntries.Add(entry);
+                        }
+                    }
                 }
             }
 
@@ -101,34 +89,40 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
 
             foreach (var op in _cachedOps)
             {
-                string displayLabel = string.Empty;
-                lock (PlayerIdentityStore.LockObject)
-                {
-                    if (PlayerIdentityStore.DiscoveredCache.ContainsKey(op.Xuid))
-                    {
-                        displayLabel = $"{PlayerIdentityStore.DiscoveredCache[op.Xuid]} [Operator]";
-                    }
-                    else
-                    {
-                        displayLabel = $"{op.Xuid} [Operator/Name Not Cached]";
-                    }
-                }
+                string displayLabel = PlayerIdentityStore.TryGetGamertag(op.Xuid, out string cachedName)
+                    ? $"{cachedName} [Operator]"
+                    : $"{op.Xuid} [Operator/Name Not Cached]";
                 materialCheckListBox1.Items.Add(displayLabel, false);
                 renderedXuids.Add(op.Xuid);
             }
 
-            lock (PlayerIdentityStore.LockObject)
+            foreach (KeyValuePair<string, string> player in PlayerIdentityStore.GetKnownPlayersSnapshot())
             {
-                var sortedPlayers = PlayerIdentityStore.DiscoveredCache.OrderBy(p => p.Value).ToList();
-                foreach (KeyValuePair<string, string> player in sortedPlayers)
-                {
-                    if (renderedXuids.Contains(player.Key)) continue;
-                    materialCheckListBox1.Items.Add(player.Value, false);
-                }
+                if (renderedXuids.Contains(player.Key)) continue;
+                materialCheckListBox1.Items.Add(player.Value, false);
             }
 
             ClearSelectionFocus();
         }
+
+        private static bool TryResolveCheckboxTarget(string labelText, out string resolvedXuid, out string bareDisplayName)
+        {
+            resolvedXuid = string.Empty;
+            bareDisplayName = string.Empty;
+            if (string.IsNullOrWhiteSpace(labelText)) return false;
+
+            const string uncachedSuffix = "[Operator/Name Not Cached]";
+            if (labelText.EndsWith(uncachedSuffix, StringComparison.OrdinalIgnoreCase))
+            {
+                resolvedXuid = labelText.Substring(0, labelText.Length - uncachedSuffix.Length).Trim();
+                bareDisplayName = resolvedXuid;
+                return !string.IsNullOrEmpty(resolvedXuid);
+            }
+
+            bareDisplayName = labelText.Replace(" [Operator]", "").Trim();
+            return PlayerIdentityStore.TryResolveXuid(bareDisplayName, out resolvedXuid);
+        }
+
         private void OpPlayerBTN_Click(object sender, EventArgs e)
         {
             bool changesMade = false;
@@ -136,18 +130,10 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             {
                 if (item is ReaLTaiizor.Controls.MaterialCheckBox checkbox && checkbox.Checked)
                 {
-                    string bareName = checkbox.Text.Replace(" [Operator]", "").Trim();
-                    string resolvedXuid = string.Empty;
+                    if (!TryResolveCheckboxTarget(checkbox.Text, out string resolvedXuid, out string bareName)) continue;
+                    if (_cachedOps.Any(o => string.Equals(o.Xuid, resolvedXuid, StringComparison.OrdinalIgnoreCase))) continue;
 
-                    lock (PlayerIdentityStore.LockObject)
-                    {
-                        resolvedXuid = PlayerIdentityStore.DiscoveredCache.FirstOrDefault(
-                            x => x.Value.Equals(bareName, StringComparison.OrdinalIgnoreCase)).Key;
-                    }
-
-                    if (string.IsNullOrEmpty(resolvedXuid)) continue;
-                    if (_cachedOps.Any(o => o.Xuid == resolvedXuid)) continue;
-
+                    _preservedEntries.RemoveAll(o => string.Equals(o.Xuid, resolvedXuid, StringComparison.OrdinalIgnoreCase));
                     _cachedOps.Add(new OperatorEntry { Xuid = resolvedXuid, Permission = "operator" });
                     checkbox.Text = $"{bareName} [Operator]";
                     checkbox.Checked = false;
@@ -167,22 +153,15 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             {
                 if (item is ReaLTaiizor.Controls.MaterialCheckBox checkbox && checkbox.Checked)
                 {
-                    string bareName = checkbox.Text.Replace(" [Operator]", "").Trim();
-                    string resolvedXuid = string.Empty;
+                    if (!TryResolveCheckboxTarget(checkbox.Text, out string resolvedXuid, out string bareName)) continue;
 
-                    lock (PlayerIdentityStore.LockObject)
-                    {
-                        resolvedXuid = PlayerIdentityStore.DiscoveredCache.FirstOrDefault(
-                            x => x.Value.Equals(bareName, StringComparison.OrdinalIgnoreCase)).Key;
-                    }
-
-                    if (string.IsNullOrEmpty(resolvedXuid)) continue;
-
-                    var opRecord = _cachedOps.FirstOrDefault(o => o.Xuid == resolvedXuid);
+                    var opRecord = _cachedOps.FirstOrDefault(o => string.Equals(o.Xuid, resolvedXuid, StringComparison.OrdinalIgnoreCase));
                     if (opRecord != null)
                     {
                         _cachedOps.Remove(opRecord);
-                        checkbox.Text = bareName;
+                        checkbox.Text = PlayerIdentityStore.TryGetGamertag(resolvedXuid, out string knownName)
+                            ? knownName
+                            : bareName;
                         checkbox.Checked = false;
                         changesMade = true;
                     }
@@ -199,17 +178,16 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             if (string.IsNullOrEmpty(_configPath)) return;
             try
             {
-                List<string> jsonLines = new List<string> { "[" };
-                for (int i = 0; i < _cachedOps.Count; i++)
+                var allEntries = new List<OperatorEntry>(_cachedOps);
+                foreach (var entry in _preservedEntries)
                 {
-                    var op = _cachedOps[i];
-                    jsonLines.Add("   {");
-                    jsonLines.Add($"      \"permission\" : \"{op.Permission}\",");
-                    jsonLines.Add($"      \"xuid\" : \"{op.Xuid}\"");
-                    jsonLines.Add(i == _cachedOps.Count - 1 ? "   }" : "   },");
+                    if (!allEntries.Any(o => string.Equals(o.Xuid, entry.Xuid, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        allEntries.Add(entry);
+                    }
                 }
-                jsonLines.Add("]");
-                File.WriteAllLines(_configPath, jsonLines, System.Text.Encoding.UTF8);
+
+                JsonHelper.WriteJsonFileAtomically(_configPath, allEntries, JsonHelper.IndentedOptions);
             }
             catch (Exception ex)
             {
@@ -219,65 +197,13 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
     }
     public class OperatorEntry
     {
+        [JsonPropertyName("permission")]
         public string Permission { get; set; } = "operator";
+
+        [JsonPropertyName("xuid")]
         public string Xuid { get; set; } = string.Empty;
-    }
 
-    public static class PlayerIdentityStore
-    {
-        public static readonly object LockObject = new object();
-        public static readonly Dictionary<string, string> DiscoveredCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        private static readonly string StoragePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bds_players.dat");
-
-        static PlayerIdentityStore()
-        {
-            LoadFromDisk();
-        }
-
-        private static void LoadFromDisk()
-        {
-            if (!File.Exists(StoragePath)) return;
-            try
-            {
-                string[] lines = File.ReadAllLines(StoragePath, System.Text.Encoding.UTF8);
-                lock (LockObject)
-                {
-                    foreach (string line in lines)
-                    {
-                        if (string.IsNullOrWhiteSpace(line)) continue;
-                        string[] segments = line.Split(new string[] { "||" }, StringSplitOptions.None);
-                        if (segments.Length == 2)
-                        {
-                            string targetXuid = segments[0].Trim();
-                            string targetName = segments[1].Trim();
-                            if (!string.IsNullOrEmpty(targetXuid) && !string.IsNullOrEmpty(targetName))
-                            {
-                                DiscoveredCache[targetXuid] = targetName;
-                            }
-                        }
-                    }
-                }
-            }
-            catch { }
-        }
-
-        public static void SavePlayerNode(string xuid, string gamertag)
-        {
-            if (string.IsNullOrEmpty(xuid) || string.IsNullOrEmpty(gamertag)) return;
-            try
-            {
-                List<string> outputLines = new List<string>();
-                lock (LockObject)
-                {
-                    DiscoveredCache[xuid] = gamertag;
-                    foreach (KeyValuePair<string, string> kvp in DiscoveredCache)
-                    {
-                        outputLines.Add($"{kvp.Key}||{kvp.Value}");
-                    }
-                }
-                File.WriteAllLines(StoragePath, outputLines, System.Text.Encoding.UTF8);
-            }
-            catch { }
-        }
+        [JsonExtensionData]
+        public Dictionary<string, JsonElement> ExtensionData { get; set; }
     }
 }

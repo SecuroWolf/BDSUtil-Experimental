@@ -21,7 +21,7 @@ namespace BDSUtil
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            AppSettings.LoadSettingsAsync().GetAwaiter().GetResult();
+            AppSettings.LoadSettings();
             Application.Run(new MainWindow());
         }
 
@@ -29,21 +29,6 @@ namespace BDSUtil
         private static Assembly ResolveEmbeddedDependencies(object sender, ResolveEventArgs args)
         {
             string assemblyName = new AssemblyName(args.Name).Name;
-
-            if (assemblyName.Equals("Open.Nat", StringComparison.OrdinalIgnoreCase))
-            {
-                // NOTE: Replace "BDSUtil" with your exact root namespace if it differs
-                string resourcePath = "BDSUtil.Resources.Dependencies.Open.Nat.dll";
-
-                using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourcePath))
-                {
-                    if (stream == null) return null;
-
-                    byte[] assemblyData = new byte[stream.Length];
-                    stream.Read(assemblyData, 0, assemblyData.Length);
-                    return Assembly.Load(assemblyData);
-                }
-            }
 
             if (assemblyName.Equals("ReaLTaiizor", StringComparison.OrdinalIgnoreCase))
             {

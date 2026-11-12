@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Text.Json;
 
 namespace BDSUtil.Helpers
 {
@@ -57,34 +58,51 @@ namespace BDSUtil.Helpers
 
         private static string GetManifestJsonContent()
         {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("{");
-            sb.AppendLine("  \"format_version\": 2,");
-            sb.AppendLine("  \"header\": {");
-            sb.AppendLine("    \"description\": \"BDSUtil Live Chat Bridge Log Monitor Middleware Pipeline\",");
-            sb.AppendLine($"    \"name\": \"{MONITOR_PACK_FOLDER}\","); // Updated to match prefix
-            sb.AppendLine($"    \"uuid\": \"{MONITOR_PACK_UUID}\",");
-            sb.AppendLine($"    \"version\": [{MONITOR_PACK_VERSION}],");
-            sb.AppendLine("    \"min_engine_version\": [1, 26, 50]");
-            sb.AppendLine("  },");
-            sb.AppendLine("  \"modules\": [");
-            sb.AppendLine("    {");
-            sb.AppendLine("      \"description\": \"Script API Entrypoint\",");
-            sb.AppendLine("      \"type\": \"script\",");
-            sb.AppendLine("      \"language\": \"javascript\",");
-            sb.AppendLine("      \"uuid\": \"1b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e\",");
-            sb.AppendLine($"      \"version\": [{MONITOR_MAIN_SCRIPT_VERSION}],");
-            sb.AppendLine("      \"entry\": \"scripts/main.js\"");
-            sb.AppendLine("    }");
-            sb.AppendLine("  ],");
-            sb.AppendLine("  \"dependencies\": [");
-            sb.AppendLine("    {");
-            sb.AppendLine("      \"module_name\": \"@minecraft/server\",");
-            sb.AppendLine("      \"version\": \"2.12.0-beta\"");
-            sb.AppendLine("    }");
-            sb.AppendLine("  ]");
-            sb.AppendLine("}");
-            return sb.ToString();
+            var manifest = new
+            {
+                format_version = 2,
+                header = new
+                {
+                    description = "BDSUtil Live Chat Bridge Log Monitor Middleware Pipeline",
+                    name = MONITOR_PACK_FOLDER,
+                    uuid = MONITOR_PACK_UUID,
+                    version = ParseVersionTuple(MONITOR_PACK_VERSION),
+                    min_engine_version = new[] { 1, 26, 50 }
+                },
+                modules = new[]
+                {
+                    new
+                    {
+                        description = "Script API Entrypoint",
+                        type = "script",
+                        language = "javascript",
+                        uuid = "1b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e",
+                        version = ParseVersionTuple(MONITOR_MAIN_SCRIPT_VERSION),
+                        entry = "scripts/main.js"
+                    }
+                },
+                dependencies = new[]
+                {
+                    new
+                    {
+                        module_name = "@minecraft/server",
+                        version = "2.12.0-beta"
+                    }
+                }
+            };
+
+            return JsonSerializer.Serialize(manifest, JsonHelper.IndentedOptions);
+        }
+
+        private static int[] ParseVersionTuple(string version)
+        {
+            string[] parts = version.Split(new[] { ',', '.' }, StringSplitOptions.RemoveEmptyEntries);
+            int[] result = new int[parts.Length];
+            for (int i = 0; i < parts.Length; i++)
+            {
+                result[i] = int.TryParse(parts[i].Trim(), out int num) ? num : 0;
+            }
+            return result.Length > 0 ? result : new[] { 1, 0, 0 };
         }
 
         private static string GetMainScriptContent()

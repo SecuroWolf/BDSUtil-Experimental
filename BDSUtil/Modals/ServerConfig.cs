@@ -36,7 +36,7 @@ namespace BDSUtil.Modals
 
         private void ServerConfig_Load(object sender, EventArgs e)
         {
-            string storedPath = AppSettings.Instance.ServerExecutablePath;
+            string storedPath = AppSettings.Instance.General.ServerExecutablePath;
             if (string.IsNullOrWhiteSpace(storedPath)) return;
 
             _serverRootPath = storedPath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
@@ -76,7 +76,7 @@ namespace BDSUtil.Modals
             }
             else if (CfgTabControl.SelectedTab == NetTab || CfgTabControl.SelectedTab.Name == "NetTab")
             {
-                if (!AppSettings.Instance.HasAcceptedNetworkRisks)
+                if (!AppSettings.Instance.Networking.HasAcceptedNetworkRisks)
                 {
                     using (var alertDialogue = new NetworkSecurityDialogue())
                     {
@@ -86,8 +86,7 @@ namespace BDSUtil.Modals
                             {
                                 if (instructionsDialogue.ShowDialog(this) == DialogResult.OK && instructionsDialogue.InstructionsAccepted)
                                 {
-                                    AppSettings.Instance.HasAcceptedNetworkRisks = true;
-                                    AppSettings.Instance.SaveSettingsAsync().GetAwaiter().GetResult();
+                                    AppSettings.Instance.Update(cfg => cfg.Networking.HasAcceptedNetworkRisks = true);
 
                                     _prevConfigTabIndex = CfgTabControl.SelectedIndex;
                                     InitializeNetworkControl();

@@ -13,14 +13,18 @@ namespace BDSUtil.Modals
         private readonly string _serverRoot;
         private readonly string _targetVersion;
         private readonly string _downloadUrl;
+        private readonly bool _isFreshInstall;
 
-        public ServerUpdateForm(string serverRoot, string targetVersion, string downloadUrl)
+        public ServerUpdateForm(string serverRoot, string targetVersion, string downloadUrl, bool isFreshInstall = false)
         {
             InitializeComponent();
 
             _serverRoot = serverRoot;
             _targetVersion = targetVersion;
             _downloadUrl = downloadUrl;
+            _isFreshInstall = isFreshInstall;
+
+            this.Text = isFreshInstall ? "Bedrock Server Installer" : "Bedrock Server Updater";
 
             // Optional: Force the form canvas to match your dark slate theme natively
             this.BackColor = System.Drawing.Color.FromArgb(50, 50, 50);
@@ -37,45 +41,65 @@ namespace BDSUtil.Modals
 
         private async Task RunUpdatePipelineAsync()
         {
+            string tempZipPath = _isFreshInstall
+                ? Path.Combine(Path.GetTempPath(), $"bds_setup_{_targetVersion}_{Guid.NewGuid():N}.zip")
+                : Path.Combine(_serverRoot, $"bds_update_{_targetVersion}.zip");
+
             try
             {
-                // STEP 1: Backup
-                StatusLabel.Text = "Status: Generating pre-update backup archive...";
-                UpdateProgressBar.Value = 0;
-                UpdateProgressBar.Style = ProgressBarStyle.Marquee; // Indeterminate loading for zip creation
+                if (!_isFreshInstall)
+                {
+                    // STEP 1: Backup existing server before updating
+                    StatusLabel.Text = "Status: Generating pre-update backup archive...";
+                    UpdateProgressBar.Value = 0;
+                    UpdateProgressBar.Style = ProgressBarStyle.Marquee;
 
-                await ServerUpdates.DoBackupsAsync(_serverRoot, _targetVersion);
+                    await ServerUpdates.DoBackupsAsync(_serverRoot, _targetVersion);
+                }
 
                 // STEP 2: Download
                 StatusLabel.Text = $"Status: Downloading Bedrock Server v{_targetVersion}...";
                 UpdateProgressBar.Style = ProgressBarStyle.Continuous;
                 UpdateProgressBar.Value = 0;
 
-                string tempZipPath = Path.Combine(_serverRoot, $"bds_update_{_targetVersion}.zip");
-
-                // Progress reporter to feed the UI thread
                 var progress = new Progress<int>(percent =>
                 {
-                    UpdateProgressBar.Value = percent;
+                    UpdateProgressBar.Value = Math.Clamp(percent, 0, 100);
                 });
 
                 await ServerUpdates.DownloadUpdateAsync(_downloadUrl, tempZipPath, progress);
 
                 // STEP 3: Install/Extract
-                StatusLabel.Text = "Status: Extracting binaries and preserving custom data...";
+                StatusLabel.Text = _isFreshInstall
+                    ? $"Status: Extracting Bedrock Server v{_targetVersion}..."
+                    : "Status: Extracting binaries and preserving custom data...";
                 UpdateProgressBar.Style = ProgressBarStyle.Marquee;
 
-                await ServerUpdates.InstallUpdateAsync(_serverRoot, tempZipPath);
+                if (_isFreshInstall)
+                {
+                    await ServerUpdates.InstallFreshServerAsync(_serverRoot, tempZipPath);
+                }
+                else
+                {
+                    await ServerUpdates.InstallUpdateAsync(_serverRoot, tempZipPath);
+                }
 
                 // STEP 4: Complete
-                StatusLabel.Text = "Status: Update successfully completed!";
+                StatusLabel.Text = _isFreshInstall
+                    ? "Status: Server setup completed successfully!"
+                    : "Status: Update successfully completed!";
                 UpdateProgressBar.Style = ProgressBarStyle.Continuous;
                 UpdateProgressBar.Value = 100;
 
+                string completionMessage = _isFreshInstall
+                    ? $"Minecraft Bedrock Dedicated Server v{_targetVersion} has been installed to:\n\n{_serverRoot}"
+                    : $"The server has been successfully updated to v{_targetVersion}.\nYour worlds and custom packs were preserved.";
+                string completionTitle = _isFreshInstall ? "Server Setup Complete" : "Update Complete";
+
                 MaterialMessageBox.Show(
                     this,
-                    $"The server has been successfully updated to v{_targetVersion}.\nYour worlds and custom packs were preserved.",
-                    "Update Complete",
+                    completionMessage,
+                    completionTitle,
                     MessageBoxButtons.OK,
                     false,
                     MaterialFlexibleForm.ButtonsPosition.Center
@@ -86,14 +110,16 @@ namespace BDSUtil.Modals
             }
             catch (Exception ex)
             {
-                StatusLabel.Text = "Status: Update failed.";
+                try { if (File.Exists(tempZipPath)) File.Delete(tempZipPath); } catch { }
+
+                StatusLabel.Text = _isFreshInstall ? "Status: Server setup failed." : "Status: Update failed.";
                 UpdateProgressBar.Style = ProgressBarStyle.Continuous;
                 UpdateProgressBar.Value = 0;
 
                 MaterialMessageBox.Show(
                     this,
-                    $"A critical error occurred during the update pipeline:\n\n{ex.Message}",
-                    "Update Failure",
+                    $"A critical error occurred during the download/install pipeline:\n\n{ex.Message}",
+                    _isFreshInstall ? "Server Setup Failure" : "Update Failure",
                     MessageBoxButtons.OK,
                     false,
                     MaterialFlexibleForm.ButtonsPosition.Center

@@ -1,7 +1,14 @@
-﻿using ReaLTaiizor.Controls;
+﻿using BDSUtil.Configuration;
+using BDSUtil.Helpers;
+using BDSUtil.Helpers.AutoMod;
+using BDSUtil.Helpers.RemoteApi;
+using BDSUtil.Helpers.Updates;
+using BDSUtil.Modals;
+using ReaLTaiizor.Controls;
 using ReaLTaiizor.Forms;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace BDSUtil.Modals.Content_Controls.Settings
@@ -31,8 +38,21 @@ namespace BDSUtil.Modals.Content_Controls.Settings
             if (CompressionTypeComboBox != null)
                 CompressionTypeComboBox.SelectedIndexChanged += CompressionTypeComboBox_SelectedIndexChanged;
 
+            PopulatePortCheckerProviders();
+            if (PortCheckerProviderComboBox != null)
+                PortCheckerProviderComboBox.SelectedIndexChanged += PortCheckerProviderComboBox_SelectedIndexChanged;
+
+            if (CustomPortCheckerTextBox != null)
+            {
+                CustomPortCheckerTextBox.TextChanged += CustomPortCheckerTextBox_TextChanged;
+                CustomPortCheckerTextBox.Leave += CustomPortCheckerTextBox_Leave;
+            }
+
             if (CfgWorldMod != null)
                 CfgWorldMod.CheckedChanged += CfgWorldMod_CheckedChanged;
+
+            RemoteApiManager.Instance.StateChanged += OnRemoteApiStateChanged;
+            this.Disposed += (s, e) => RemoteApiManager.Instance.StateChanged -= OnRemoteApiStateChanged;
 
             this.Load += (s, e) => { InitializeControl(); };
         }
@@ -55,33 +75,335 @@ namespace BDSUtil.Modals.Content_Controls.Settings
         {
             _isInitializing = true;
 
+            var general = AppSettings.Instance.General;
+            var networking = AppSettings.Instance.Networking;
+            var remoteApi = AppSettings.Instance.RemoteApi;
+
             // 1. Sync the bedrock executable root directory location string
             if (ServerPathTextBox != null)
             {
-                ServerPathTextBox.Text = AppSettings.Instance.ServerExecutablePath;
+                ServerPathTextBox.Text = general.ServerExecutablePath;
             }
 
             // 2. Sync active archive sorting format selection dropdown indices securely
             if (CompressionTypeComboBox != null)
             {
-                int savedMode = AppSettings.Instance.CompressionMode;
+                int savedMode = general.CompressionMode;
                 if (savedMode >= 0 && savedMode < CompressionTypeComboBox.Items.Count)
                 {
                     CompressionTypeComboBox.SelectedIndex = savedMode;
                 }
             }
 
-            // 3. Sync master file system consent authorization status switches
+            // 3. Sync master file system and networking switches
             if (CfgWorldMod != null)
             {
-                CfgWorldMod.Checked = AppSettings.Instance.WorldEditorEnabled;
+                CfgWorldMod.Checked = general.WorldEditorEnabled;
             }
 
-            if (CfgHTel != null) CfgHTel.Checked = AppSettings.Instance.HideTelemetryWarnings;
+            if (CfgHTel != null) CfgHTel.Checked = general.HideTelemetryWarnings;
+
+            if (CfgUPnP != null) CfgUPnP.Checked = networking.EnableUPnP;
+            if (PortCheckerProviderComboBox != null && PortCheckerProviderComboBox.Items.Count > 0)
+            {
+                int providerIdx = ExternalPortChecker.GetProviderIndex(networking.ExternalPortCheckProvider);
+                PortCheckerProviderComboBox.SelectedIndex = Math.Clamp(providerIdx, 0, PortCheckerProviderComboBox.Items.Count - 1);
+            }
+            if (CustomPortCheckerTextBox != null)
+            {
+                CustomPortCheckerTextBox.Text = networking.ExternalPortCheckUrl ?? string.Empty;
+            }
+            UpdateCustomPortCheckerHint();
+
+            if (CfgConsolidateUdp != null) CfgConsolidateUdp.Checked = networking.ConsolidateUdpPorts;
+
+            if (CfgRemoteApi != null) CfgRemoteApi.Checked = remoteApi.Enabled;
+            RefreshRemoteApiUi();
+            UpdateNetworkingCardsLayout();
 
             _isInitializing = false;
 
             // ✅ START WITH NOTHING SELECTED
+            ClearSelectionFocus();
+        }
+
+        private void PopulatePortCheckerProviders()
+        {
+            if (PortCheckerProviderComboBox == null) return;
+
+            PortCheckerProviderComboBox.Items.Clear();
+            foreach (var option in ExternalPortChecker.Providers)
+            {
+                PortCheckerProviderComboBox.Items.Add(option.DisplayName);
+            }
+        }
+
+        private string GetSelectedPortCheckerProviderKey()
+        {
+            int idx = PortCheckerProviderComboBox?.SelectedIndex ?? 0;
+            if (idx >= 0 && idx < ExternalPortChecker.Providers.Count)
+            {
+                return ExternalPortChecker.Providers[idx].Key;
+            }
+            return ExternalPortChecker.ProviderOff;
+        }
+
+        private void UpdateCustomPortCheckerHint()
+        {
+            if (CustomPortCheckerHintLBL == null) return;
+            CustomPortCheckerHintLBL.Text = ExternalPortChecker.GetCustomTemplateHint(CustomPortCheckerTextBox?.Text);
+        }
+
+        private void UpdateNetworkingCardsLayout()
+        {
+            if (UpnpSettingsCard == null || ConsolidateUdpCard == null || materialCard5 == null)
+                return;
+
+            bool upnpOn = CfgUPnP?.Checked == true;
+            bool isCustomProvider = upnpOn && GetSelectedPortCheckerProviderKey() == ExternalPortChecker.ProviderCustom;
+
+            this.SuspendLayout();
+            try
+            {
+                int nextTop = UpnpSettingsCard.Bottom + 8;
+
+                if (ExternalPortCheckerCard != null)
+                {
+                    ExternalPortCheckerCard.Visible = upnpOn;
+                    if (upnpOn)
+                    {
+                        ExternalPortCheckerCard.Left = UpnpSettingsCard.Left;
+                        ExternalPortCheckerCard.Width = UpnpSettingsCard.Width;
+                        ExternalPortCheckerCard.Top = nextTop;
+
+                        if (PortCheckerProviderComboBox != null)
+                        {
+                            PortCheckerProviderComboBox.Width = Math.Max(180, ExternalPortCheckerCard.Width - PortCheckerProviderComboBox.Left - 19);
+                        }
+
+                        if (CustomPortCheckerTextBox != null)
+                        {
+                            CustomPortCheckerTextBox.Visible = isCustomProvider;
+                            CustomPortCheckerTextBox.Width = Math.Max(220, ExternalPortCheckerCard.Width - 28);
+                        }
+
+                        if (CustomPortCheckerHintLBL != null)
+                        {
+                            CustomPortCheckerHintLBL.Visible = isCustomProvider;
+                            CustomPortCheckerHintLBL.Width = Math.Max(220, ExternalPortCheckerCard.Width - 28);
+                        }
+
+                        ExternalPortCheckerCard.Height = isCustomProvider ? 178 : 82;
+                        nextTop = ExternalPortCheckerCard.Bottom + 8;
+                    }
+                }
+
+                ConsolidateUdpCard.Top = nextTop;
+                nextTop = ConsolidateUdpCard.Bottom + 8;
+
+                materialCard5.Top = nextTop;
+                nextTop = materialCard5.Bottom + 14;
+
+                int logicalBottom = nextTop - this.AutoScrollPosition.Y;
+                this.AutoScrollMinSize = new System.Drawing.Size(0, Math.Max(765, logicalBottom));
+            }
+            finally
+            {
+                this.ResumeLayout(performLayout: true);
+            }
+        }
+
+        private void OnRemoteApiStateChanged()
+        {
+            if (this.IsDisposed || !this.IsHandleCreated) return;
+            try
+            {
+                if (this.InvokeRequired)
+                {
+                    this.BeginInvoke(new Action(RefreshRemoteApiUi));
+                }
+                else
+                {
+                    RefreshRemoteApiUi();
+                }
+            }
+            catch { }
+        }
+
+        private void RefreshRemoteApiUi()
+        {
+            var remoteSettings = AppSettings.Instance?.RemoteApi;
+            bool enabled = remoteSettings != null && remoteSettings.Enabled;
+            string apiKey = remoteSettings?.ApiKey ?? string.Empty;
+            var mgr = RemoteApiManager.Instance;
+
+            if (CopyApiKeyBTN != null) CopyApiKeyBTN.Enabled = !string.IsNullOrEmpty(apiKey);
+            if (RotateApiKeyBTN != null) RotateApiKeyBTN.Enabled = enabled || !string.IsNullOrEmpty(apiKey);
+
+            if (RemoteApiStatusLBL == null) return;
+
+            if (!enabled)
+            {
+                RemoteApiStatusLBL.Text = "Status: Disabled — API listener stopped; no UPnP port requisitioned.";
+                return;
+            }
+
+            string maskedKey = MaskApiKey(apiKey);
+            if (mgr.IsRunning && mgr.BoundPort > 0)
+            {
+                string upnpTag = mgr.IsUpnpForwarded
+                    ? $"UPnP TCP {mgr.BoundPort} forwarded"
+                    : (AppSettings.Instance?.Networking?.EnableUPnP == true ? "LAN only (UPnP unavailable/pending)" : "LAN / manual forward");
+                RemoteApiStatusLBL.Text = $"Status: Listening on TCP {mgr.BoundPort} ({upnpTag})\r\nAPI Key: {maskedKey}";
+            }
+            else
+            {
+                RemoteApiStatusLBL.Text = $"Status: {mgr.StatusMessage}\r\nAPI Key: {maskedKey}";
+            }
+        }
+
+        private static string MaskApiKey(string key)
+        {
+            if (string.IsNullOrEmpty(key)) return "(not generated yet)";
+            if (key.Length <= 8) return "********";
+            return $"{key.Substring(0, 4)}...{key.Substring(key.Length - 4)}";
+        }
+
+        private async void CfgRemoteApi_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_isInitializing || CfgRemoteApi == null) return;
+
+            bool isEnabled = CfgRemoteApi.Checked;
+
+            if (isEnabled && !AppSettings.Instance.RemoteApi.HasAcceptedApiRisks)
+            {
+                if (this.FindForm() is MaterialForm parentMaterialForm)
+                {
+                    DialogResult consent = MaterialMessageBox.Show(
+                        parentMaterialForm,
+                        "REMOTE MANAGEMENT API SECURITY NOTICE:\n\n" +
+                        "Enabling the Remote Management API binds an HTTP/JSON listener below your lowest Bedrock server port and accepts commands from Android or desktop companion apps.\n\n" +
+                        "When UPnP is enabled, this port is also requisitioned on your router for external WAN access.\n\n" +
+                        "Always keep your generated API key private. Enable Remote Management API now?\n",
+                        "Enable Remote Management API",
+                        MessageBoxButtons.YesNo,
+                        false,
+                        MaterialFlexibleForm.ButtonsPosition.Center);
+
+                    if (consent == DialogResult.No)
+                    {
+                        _isInitializing = true;
+                        CfgRemoteApi.Checked = false;
+                        _isInitializing = false;
+                        RefreshRemoteApiUi();
+                        ClearSelectionFocus();
+                        return;
+                    }
+                }
+            }
+
+            AppSettings.Instance.Update(cfg =>
+            {
+                cfg.RemoteApi.Enabled = isEnabled;
+                if (isEnabled)
+                {
+                    cfg.RemoteApi.HasAcceptedApiRisks = true;
+                    if (string.IsNullOrWhiteSpace(cfg.RemoteApi.ApiKey))
+                    {
+                        cfg.RemoteApi.ApiKey = RemoteApiSettings.GenerateApiKey();
+                    }
+                }
+            });
+
+            if (RemoteApiStatusLBL != null)
+            {
+                RemoteApiStatusLBL.Text = isEnabled
+                    ? "Status: Starting API listener and checking port allocation..."
+                    : "Status: Stopping API listener and releasing UPnP port...";
+            }
+
+            try
+            {
+                await RemoteApiManager.Instance.SynchronizeFromSettingsAsync(allowUpnpDiscovery: true);
+            }
+            catch (Exception ex)
+            {
+                if (RemoteApiStatusLBL != null)
+                {
+                    RemoteApiStatusLBL.Text = $"Status: Error — {ex.Message}";
+                }
+            }
+            finally
+            {
+                RefreshRemoteApiUi();
+                ClearSelectionFocus();
+            }
+        }
+
+        private void CopyApiKeyBTN_Click(object sender, EventArgs e)
+        {
+            string key = AppSettings.Instance?.RemoteApi?.ApiKey;
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                key = RemoteApiSettings.GenerateApiKey();
+                AppSettings.Instance.Update(cfg => cfg.RemoteApi.ApiKey = key);
+                RefreshRemoteApiUi();
+            }
+
+            try
+            {
+                Clipboard.SetText(key);
+            }
+            catch { }
+
+            var mgr = RemoteApiManager.Instance;
+            int port = mgr.BoundPort > 0 ? mgr.BoundPort : (ServerPortDiscovery.ReadServerPortSnapshot(AppSettings.Instance?.General?.ServerExecutablePath).LowestServerPort - 1);
+            string localIp = string.IsNullOrWhiteSpace(mgr.LocalIp) ? BDSUtil.Helpers.UPnPEngine.GetLocalIPAddress() : mgr.LocalIp;
+            string externalUrl = (!string.IsNullOrWhiteSpace(mgr.ExternalIp) && port > 0)
+                ? $"http://{mgr.ExternalIp}:{port}/api/v1"
+                : "(Enable UPnP or check external IP)";
+
+            if (this.FindForm() is MaterialForm parentForm)
+            {
+                MaterialMessageBox.Show(
+                    parentForm,
+                    $"API Key copied to clipboard!\n\n" +
+                    $"• Header: Authorization: Bearer <key> (or X-API-Key: <key>)\n" +
+                    $"• LAN URL: http://{localIp}:{port}/api/v1\n" +
+                    $"• External URL: {externalUrl}\n" +
+                    $"• Health Ping: GET /api/v1/ping\n" +
+                    $"• Status: GET /api/v1/status",
+                    "Remote API Connection Info",
+                    MessageBoxButtons.OK,
+                    false,
+                    MaterialFlexibleForm.ButtonsPosition.Center);
+            }
+
+            ClearSelectionFocus();
+        }
+
+        private void RotateApiKeyBTN_Click(object sender, EventArgs e)
+        {
+            if (this.FindForm() is MaterialForm parentForm)
+            {
+                DialogResult confirm = MaterialMessageBox.Show(
+                    parentForm,
+                    "Generate a new Remote Management API key?\n\nExisting companion apps using the old key will immediately lose access until updated.",
+                    "Rotate API Key",
+                    MessageBoxButtons.YesNo,
+                    false,
+                    MaterialFlexibleForm.ButtonsPosition.Center);
+
+                if (confirm != DialogResult.Yes)
+                {
+                    ClearSelectionFocus();
+                    return;
+                }
+            }
+
+            string freshKey = RemoteApiSettings.GenerateApiKey();
+            AppSettings.Instance.Update(cfg => cfg.RemoteApi.ApiKey = freshKey);
+            RefreshRemoteApiUi();
             ClearSelectionFocus();
         }
 
@@ -92,8 +414,8 @@ namespace BDSUtil.Modals.Content_Controls.Settings
         {
             if (_isInitializing || CfgHTel == null) return;
 
-            AppSettings.Instance.HideTelemetryWarnings = CfgHTel.Checked;
-            AppSettings.Instance.SaveSettings();
+            AppSettings.Instance.General.HideTelemetryWarnings = CfgHTel.Checked;
+            AppSettings.Instance.Save();
         }
 
         /// <summary>
@@ -135,8 +457,7 @@ namespace BDSUtil.Modals.Content_Controls.Settings
             }
 
             // On-demand configuration commitment save
-            AppSettings.Instance.WorldEditorEnabled = isEnabled;
-            AppSettings.Instance.SaveSettings();
+            AppSettings.Instance.Update(cfg => cfg.General.WorldEditorEnabled = isEnabled);
 
             // ✅ GO BACK TO NOTHING SELECTED (On Modification Complete)
             ClearSelectionFocus();
@@ -149,51 +470,430 @@ namespace BDSUtil.Modals.Content_Controls.Settings
         {
             if (_isInitializing || CompressionTypeComboBox == null) return;
 
-            AppSettings.Instance.CompressionMode = CompressionTypeComboBox.SelectedIndex;
-            AppSettings.Instance.SaveSettings();
+            AppSettings.Instance.Update(cfg => cfg.General.CompressionMode = CompressionTypeComboBox.SelectedIndex);
 
             // ✅ GO BACK TO NOTHING SELECTED (After Dropdown Closes)
             ClearSelectionFocus();
         }
 
-        private void BrowseBTN_Click(object sender, EventArgs e)
+        private async void CfgUPnP_CheckedChanged(object sender, EventArgs e)
         {
-            // Capture the original working directory before the dialog mutates it
+            if (_isInitializing || CfgUPnP == null) return;
+
+            bool newState = CfgUPnP.Checked;
+            if (newState && !AppSettings.Instance.Networking.HasAcceptedNetworkRisks)
+            {
+                if (!ConfirmNetworkingSecurityConsent())
+                {
+                    _isInitializing = true;
+                    CfgUPnP.Checked = false;
+                    _isInitializing = false;
+                    ClearSelectionFocus();
+                    return;
+                }
+            }
+
+            AppSettings.Instance.Update(cfg => cfg.Networking.EnableUPnP = newState);
+            UpdateNetworkingCardsLayout();
+            RefreshRemoteApiUi();
+
+            if (AppSettings.Instance.RemoteApi.Enabled)
+            {
+                await RemoteApiManager.Instance.SynchronizeFromSettingsAsync(allowUpnpDiscovery: newState);
+                RefreshRemoteApiUi();
+            }
+
+            PromptRestartForUpnpRealignment();
+            ClearSelectionFocus();
+        }
+
+        private void PortCheckerProviderComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_isInitializing || PortCheckerProviderComboBox == null) return;
+
+            string selectedKey = GetSelectedPortCheckerProviderKey();
+            AppSettings.Instance.Update(cfg => cfg.Networking.ExternalPortCheckProvider = selectedKey);
+
+            UpdateCustomPortCheckerHint();
+            UpdateNetworkingCardsLayout();
+
+            if (selectedKey == ExternalPortChecker.ProviderCustom &&
+                CustomPortCheckerTextBox != null &&
+                CustomPortCheckerTextBox.Visible &&
+                CustomPortCheckerTextBox.CanFocus)
+            {
+                CustomPortCheckerTextBox.Focus();
+            }
+            else
+            {
+                ClearSelectionFocus();
+            }
+        }
+
+        private void CustomPortCheckerTextBox_TextChanged(object sender, EventArgs e)
+        {
+            if (_isInitializing || CustomPortCheckerTextBox == null) return;
+
+            UpdateCustomPortCheckerHint();
+
+            string candidateUrl = CustomPortCheckerTextBox.Text.Trim();
+            if (!string.Equals(AppSettings.Instance.Networking.ExternalPortCheckUrl, candidateUrl, StringComparison.Ordinal))
+            {
+                AppSettings.Instance.Update(cfg => cfg.Networking.ExternalPortCheckUrl = candidateUrl);
+            }
+        }
+
+        private void CustomPortCheckerTextBox_Leave(object sender, EventArgs e)
+        {
+            if (_isInitializing || CustomPortCheckerTextBox == null) return;
+
+            string trimmed = CustomPortCheckerTextBox.Text.Trim();
+            if (!string.Equals(CustomPortCheckerTextBox.Text, trimmed, StringComparison.Ordinal))
+            {
+                _isInitializing = true;
+                CustomPortCheckerTextBox.Text = trimmed;
+                _isInitializing = false;
+            }
+
+            if (!string.Equals(AppSettings.Instance.Networking.ExternalPortCheckUrl, trimmed, StringComparison.Ordinal))
+            {
+                AppSettings.Instance.Update(cfg => cfg.Networking.ExternalPortCheckUrl = trimmed);
+            }
+
+            UpdateCustomPortCheckerHint();
+        }
+
+        private void CfgConsolidateUdp_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_isInitializing || CfgConsolidateUdp == null) return;
+
+            bool isConsolidated = CfgConsolidateUdp.Checked;
+            AppSettings.Instance.Update(cfg => cfg.Networking.ConsolidateUdpPorts = isConsolidated);
+
+            if (AppSettings.Instance.Networking.EnableUPnP)
+            {
+                PromptRestartForUpnpRealignment(
+                    "You updated [BETA] Consolidate UDP Ports while UPnP is active.\n\n" +
+                    "To rebuild router port mappings and rewrite server-udp-ports cleanly, BDSUtil needs to restart.\n\n" +
+                    "Would you like to restart the manager app right now?");
+            }
+
+            ClearSelectionFocus();
+        }
+
+        private bool ConfirmNetworkingSecurityConsent()
+        {
+            IWin32Window owner = (IWin32Window)this.FindForm() ?? this;
+            using (var alertDialogue = new NetworkSecurityDialogue())
+            {
+                if (alertDialogue.ShowDialog(owner) == DialogResult.OK && alertDialogue.Confirmed)
+                {
+                    using (var instructionsDialogue = new AdvancedNetworkingDialogue())
+                    {
+                        if (instructionsDialogue.ShowDialog(owner) == DialogResult.OK && instructionsDialogue.InstructionsAccepted)
+                        {
+                            AppSettings.Instance.Update(cfg => cfg.Networking.HasAcceptedNetworkRisks = true);
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private bool PromptRestartForUpnpRealignment(string customMessage = null)
+        {
+            IWin32Window owner = (IWin32Window)this.FindForm() ?? this;
+            string prompt = customMessage ??
+                "[UPnP CAPABILITY INVERSION DETECTED]\n\n" +
+                "You have modified the core network translation engine configuration state.\n\n" +
+                "To map network interface ports securely and align background execution threads, " +
+                "BDSUtil requires a clean application restart.\n\n" +
+                "Would you like to restart the manager app right now, or continue working manually?";
+
+            if (MaterialMessageBox.Show(
+                    owner,
+                    prompt,
+                    "Infrastructure Realignment Required",
+                    true) == DialogResult.OK)
+            {
+                string serverDirectory = AppSettings.Instance?.General.ServerExecutablePath;
+                using (var progressModal = new UPnPCloseProgressForm(serverDirectory))
+                {
+                    progressModal.ShowDialog(owner);
+                }
+
+                Application.Restart();
+                Environment.Exit(0);
+                return true;
+            }
+
+            return false;
+        }
+
+        private static DialogResult ShowPrompt(
+            IWin32Window owner,
+            MaterialForm materialOwner,
+            string text,
+            string caption,
+            MessageBoxButtons buttons,
+            MessageBoxIcon fallbackIcon = MessageBoxIcon.Information)
+        {
+            return materialOwner != null
+                ? MaterialMessageBox.Show(materialOwner, text, caption, buttons, false, MaterialFlexibleForm.ButtonsPosition.Center)
+                : MessageBox.Show(owner, text, caption, buttons, fallbackIcon);
+        }
+
+        private async void BrowseBTN_Click(object sender, EventArgs e)
+        {
+            IWin32Window owner = (IWin32Window)this.FindForm() ?? this;
+            MaterialForm materialOwner = this.FindForm() as MaterialForm;
             string originalWorkingDir = Directory.GetCurrentDirectory();
 
+            try
+            {
+                DialogResult hasServerResult = ShowPrompt(
+                    owner,
+                    materialOwner,
+                    "Do you already have Minecraft Bedrock Dedicated Server (bedrock_server.exe) downloaded/installed?\n\n" +
+                    "• Yes — Choose your existing server folder\n" +
+                    "• No — Set up a new Bedrock Server automatically\n",
+                    "Select or Set Up Server Directory",
+                    MessageBoxButtons.YesNoCancel,
+                    MessageBoxIcon.Question);
+
+                if (hasServerResult == DialogResult.Yes)
+                {
+                    SelectExistingServerDirectory(owner, materialOwner, originalWorkingDir);
+                }
+                else if (hasServerResult == DialogResult.No)
+                {
+                    DialogResult autoSetupConsent = ShowPrompt(
+                        owner,
+                        materialOwner,
+                        "Would you like BDSUtil to automatically detect the latest official Minecraft Bedrock Dedicated Server version, download it, and install it wherever you'd like?\n",
+                        "Automatic Server Setup",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Question);
+
+                    if (autoSetupConsent == DialogResult.Yes)
+                    {
+                        await RunAutomaticServerSetupAsync(owner, materialOwner, originalWorkingDir);
+                    }
+                }
+            }
+            finally
+            {
+                try { Directory.SetCurrentDirectory(originalWorkingDir); } catch { }
+                ClearSelectionFocus();
+            }
+        }
+
+        private void SelectExistingServerDirectory(IWin32Window owner, MaterialForm materialOwner, string originalWorkingDir)
+        {
             using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
             {
                 folderDialog.Description = "Select the base installation directory hosting your Bedrock Dedicated Server files (bedrock_server.exe).";
                 folderDialog.ShowNewFolderButton = false;
 
-                // Pre-seed search coordinates to current configuration if valid
-                if (!string.IsNullOrWhiteSpace(AppSettings.Instance.ServerExecutablePath) && Directory.Exists(AppSettings.Instance.ServerExecutablePath))
+                if (!string.IsNullOrWhiteSpace(AppSettings.Instance.General.ServerExecutablePath) &&
+                    Directory.Exists(AppSettings.Instance.General.ServerExecutablePath))
                 {
-                    folderDialog.SelectedPath = AppSettings.Instance.ServerExecutablePath;
+                    folderDialog.SelectedPath = AppSettings.Instance.General.ServerExecutablePath;
                 }
 
-                if (folderDialog.ShowDialog(this) == DialogResult.OK)
+                if (folderDialog.ShowDialog(owner) == DialogResult.OK)
                 {
                     string selectedDirectory = folderDialog.SelectedPath;
-
-                    // Immediately restore the working directory back to base before saving settings
                     try { Directory.SetCurrentDirectory(originalWorkingDir); } catch { }
 
-                    if (ServerPathTextBox != null)
+                    if (!ServerUpdates.IsValidServerDirectory(selectedDirectory))
                     {
-                        ServerPathTextBox.Text = selectedDirectory;
+                        DialogResult linkAnyway = ShowPrompt(
+                            owner,
+                            materialOwner,
+                            $"bedrock_server.exe was not found in:\n{selectedDirectory}\n\nLink this directory anyway?",
+                            "Executable Not Found",
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Warning);
+
+                        if (linkAnyway != DialogResult.Yes) return;
                     }
 
-                    AppSettings.Instance.ServerExecutablePath = selectedDirectory;
-                    AppSettings.Instance.SaveSettings();
-                    AutoModValidator.ValidateStateOnDirectoryChange(selectedDirectory, this.FindForm());
+                    ApplySelectedServerDirectory(selectedDirectory);
+                }
+            }
+        }
+
+        private async Task RunAutomaticServerSetupAsync(IWin32Window owner, MaterialForm materialOwner, string originalWorkingDir)
+        {
+            string chosenRoot;
+            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
+            {
+                folderDialog.Description = "Select or create the folder where BDSUtil should download and install Minecraft Bedrock Dedicated Server.";
+                folderDialog.ShowNewFolderButton = true;
+
+                if (!string.IsNullOrWhiteSpace(AppSettings.Instance.General.ServerExecutablePath) &&
+                    Directory.Exists(AppSettings.Instance.General.ServerExecutablePath))
+                {
+                    folderDialog.SelectedPath = AppSettings.Instance.General.ServerExecutablePath;
+                }
+
+                if (folderDialog.ShowDialog(owner) != DialogResult.OK)
+                {
+                    return;
+                }
+
+                chosenRoot = folderDialog.SelectedPath;
+                try { Directory.SetCurrentDirectory(originalWorkingDir); } catch { }
+            }
+
+            if (string.IsNullOrWhiteSpace(chosenRoot)) return;
+
+            if (ServerUpdates.IsValidServerDirectory(chosenRoot))
+            {
+                DialogResult linkExisting = ShowPrompt(
+                    owner,
+                    materialOwner,
+                    $"A Bedrock Dedicated Server installation already exists in:\n{chosenRoot}\n\nLink this existing server directory instead of overwriting it?",
+                    "Existing Server Detected",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Information);
+
+                if (linkExisting == DialogResult.Yes)
+                {
+                    ApplySelectedServerDirectory(chosenRoot);
+                }
+                return;
+            }
+
+            string installDirectory = chosenRoot;
+            if (!ServerUpdates.IsDirectoryEmpty(chosenRoot))
+            {
+                DialogResult createSubfolder = ShowPrompt(
+                    owner,
+                    materialOwner,
+                    $"The selected folder is not empty:\n{chosenRoot}\n\nWould you like to create a dedicated 'Bedrock Dedicated Server' subfolder inside it?\n" +
+                    "• Yes — Install into 'Bedrock Dedicated Server' subfolder (Recommended)\n" +
+                    "• No — Extract directly into the selected folder\n" +
+                    "• Cancel — Abort setup",
+                    "Folder Is Not Empty",
+                    MessageBoxButtons.YesNoCancel,
+                    MessageBoxIcon.Question);
+
+                if (createSubfolder == DialogResult.Cancel) return;
+                if (createSubfolder == DialogResult.Yes)
+                {
+                    installDirectory = Path.Combine(chosenRoot, "Bedrock Dedicated Server");
                 }
             }
 
-            // Ensure working directory is restored in all exit paths
-            try { Directory.SetCurrentDirectory(originalWorkingDir); } catch { }
+            if (BrowseBTN != null) BrowseBTN.Enabled = false;
+            this.UseWaitCursor = true;
 
-            ClearSelectionFocus();
+            (string Version, string DownloadUrl) latest;
+            try
+            {
+                latest = await ServerUpdates.GetLatestReleaseInfoAsync();
+            }
+            catch (Exception ex)
+            {
+                this.UseWaitCursor = false;
+                if (BrowseBTN != null) BrowseBTN.Enabled = true;
+
+                ShowPrompt(
+                    owner,
+                    materialOwner,
+                    $"Could not detect the latest Bedrock Dedicated Server download:\n\n{ex.Message}",
+                    "Download Lookup Failed",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+            finally
+            {
+                this.UseWaitCursor = false;
+                if (BrowseBTN != null) BrowseBTN.Enabled = true;
+            }
+
+            using (var setupForm = new ServerUpdateForm(installDirectory, latest.Version, latest.DownloadUrl, isFreshInstall: true))
+            {
+                if (setupForm.ShowDialog(owner) == DialogResult.OK && ServerUpdates.IsValidServerDirectory(installDirectory))
+                {
+                    ApplySelectedServerDirectory(installDirectory);
+                }
+            }
+        }
+
+        private void ApplySelectedServerDirectory(string selectedDirectory)
+        {
+            if (string.IsNullOrWhiteSpace(selectedDirectory)) return;
+
+            string previousDirectory = AppSettings.Instance?.General?.ServerExecutablePath;
+            bool directoryChanged = !string.Equals(
+                NormalizeDirectoryPath(previousDirectory),
+                NormalizeDirectoryPath(selectedDirectory),
+                StringComparison.OrdinalIgnoreCase);
+
+            if (ServerPathTextBox != null)
+            {
+                ServerPathTextBox.Text = selectedDirectory;
+            }
+
+            AppSettings.Instance.Update(cfg => cfg.General.ServerExecutablePath = selectedDirectory);
+            ServerPropertiesDocument.CommentOutServerPortV6(selectedDirectory);
+
+            bool restartedForUpnp = false;
+            if (AppSettings.Instance.Networking.EnableUPnP &&
+                (directoryChanged || !UPnPEngine.TryGetActiveGameServerMapping(out _, out _)))
+            {
+                if (directoryChanged && !string.IsNullOrWhiteSpace(previousDirectory))
+                {
+                    string previousProps = Path.Combine(previousDirectory, "server.properties");
+                    ServerPropertiesDocument.CommentOutProperty(previousProps, "server-udp-ports");
+                }
+
+                bool consolidateUdp = AppSettings.Instance.Networking.ConsolidateUdpPorts;
+                if (UPnPEngine.TryApplyRequisitionedPortsToDirectory(selectedDirectory, consolidateUdp, out _, out string applyDetail))
+                {
+                    IWin32Window owner = (IWin32Window)this.FindForm() ?? this;
+                    ShowPrompt(
+                        owner,
+                        this.FindForm() as MaterialForm,
+                        $"{applyDetail}\n\nYour server directory is ready without requiring a restart.",
+                        "UPnP Port Mappings Applied",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                }
+                else
+                {
+                    restartedForUpnp = PromptRestartForUpnpRealignment(
+                        $"The server directory configuration changed while UPnP is active.\n\n{applyDetail}\n\n" +
+                        "To requisition the required router ports and update server-udp-ports in the new server.properties file, BDSUtil needs to restart.\n\n" +
+                        "Would you like to restart the manager app right now?");
+                }
+            }
+
+            AutoModValidator.ValidateStateOnDirectoryChange(selectedDirectory, this.FindForm());
+
+            if (!restartedForUpnp && AppSettings.Instance.RemoteApi.Enabled)
+            {
+                _ = Task.Run(() => RemoteApiManager.Instance.SynchronizeFromSettingsAsync(allowUpnpDiscovery: true));
+            }
+        }
+
+        private static string NormalizeDirectoryPath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path)) return string.Empty;
+            try
+            {
+                return Path.GetFullPath(path.Trim()).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            }
+            catch
+            {
+                return path.Trim().TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            }
         }
     }
 }

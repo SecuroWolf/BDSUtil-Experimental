@@ -29,35 +29,37 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
         {
             _isInitializing = true;
 
-            string currentRoot = AppSettings.Instance.ServerExecutablePath;
+            var settings = AppSettings.Instance;
+            var am = settings.AutoMod;
+            string currentRoot = settings.General.ServerExecutablePath;
             bool hasValidServer = !string.IsNullOrWhiteSpace(currentRoot) && Directory.Exists(currentRoot);
 
             if (CfgEAM != null)
             {
                 CfgEAM.Enabled = hasValidServer;
-                CfgEAM.Checked = hasValidServer && AppSettings.Instance.AutoModEnabled;
+                CfgEAM.Checked = hasValidServer && am.Enabled;
             }
 
             if (AMCCard != null)
-                AMCCard.Visible = AppSettings.Instance.AutoModEnabled;
+                AMCCard.Visible = am.Enabled;
 
             // --- Load AutoMod Configurations ---
-            if (AM_Enforce != null) AM_Enforce.Checked = AMConfHelper.Instance.EnableChatEnforcement;
-            if (AM_PEnType != null) AM_PEnType.Text = AMConfHelper.Instance.PrimaryEnforcementType;
-            if (AM_PEnThresh != null) AM_PEnThresh.Text = AMConfHelper.Instance.PrimaryEnforcementThreshold;
+            if (AM_Enforce != null) AM_Enforce.Checked = am.EnableChatEnforcement;
+            if (AM_PEnType != null) AM_PEnType.Text = am.PrimaryEnforcementType;
+            if (AM_PEnThresh != null) AM_PEnThresh.Text = am.PrimaryEnforcementThreshold?.ToString() ?? string.Empty;
 
-            if (AM_SEnType != null) AM_SEnType.Text = AMConfHelper.Instance.SecondaryEnforcementType;
-            if (AM_SEnThresh != null) AM_SEnThresh.Text = AMConfHelper.Instance.SecondaryEnforcementThreshold;
+            if (AM_SEnType != null) AM_SEnType.Text = am.SecondaryEnforcementType;
+            if (AM_SEnThresh != null) AM_SEnThresh.Text = am.SecondaryEnforcementThreshold?.ToString() ?? string.Empty;
 
-            if (AM_AntiSpam != null) AM_AntiSpam.Checked = AMConfHelper.Instance.AntiSpamEnabled;
-            if (AM_ASThreshMessages != null) AM_ASThreshMessages.Text = AMConfHelper.Instance.AntiSpamMessages;
-            if (AM_ASThreshTime != null) AM_ASThreshTime.Text = AMConfHelper.Instance.AntiSpamTime;
-            if (AM_ASEnType != null) AM_ASEnType.Text = AMConfHelper.Instance.AntiSpamEnforcementType;
+            if (AM_AntiSpam != null) AM_AntiSpam.Checked = am.AntiSpamEnabled;
+            if (AM_ASThreshMessages != null) AM_ASThreshMessages.Text = am.AntiSpamMessages.ToString();
+            if (AM_ASThreshTime != null) AM_ASThreshTime.Text = am.AntiSpamTime.ToString();
+            if (AM_ASEnType != null) AM_ASEnType.Text = am.AntiSpamEnforcementType;
 
-            if (AM_CESR != null) AM_CESR.Text = AMConfHelper.Instance.ChatStrikeReset;
-            if (AM_ASSR != null) AM_ASSR.Text = AMConfHelper.Instance.AntiSpamStrikeReset;
+            if (AM_CESR != null) AM_CESR.Text = am.ChatStrikeReset;
+            if (AM_ASSR != null) AM_ASSR.Text = am.AntiSpamStrikeReset;
 
-            // Hook up the save events dynamically
+            // Hook up the save events dynamically (idempotent across repeated InitializeControl calls)
             WireUpSaveEvents();
 
             _isInitializing = false;
@@ -65,41 +67,60 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
 
         private void WireUpSaveEvents()
         {
-            if (AM_Enforce != null) AM_Enforce.CheckedChanged += SaveAutoModSettings;
-            if (AM_AntiSpam != null) AM_AntiSpam.CheckedChanged += SaveAutoModSettings;
+            if (AM_Enforce != null) { AM_Enforce.CheckedChanged -= SaveAutoModSettings; AM_Enforce.CheckedChanged += SaveAutoModSettings; }
+            if (AM_AntiSpam != null) { AM_AntiSpam.CheckedChanged -= SaveAutoModSettings; AM_AntiSpam.CheckedChanged += SaveAutoModSettings; }
 
-            if (AM_PEnType != null) AM_PEnType.SelectedIndexChanged += SaveAutoModSettings;
-            if (AM_SEnType != null) AM_SEnType.SelectedIndexChanged += SaveAutoModSettings;
-            if (AM_ASThreshTime != null) AM_ASThreshTime.SelectedIndexChanged += SaveAutoModSettings;
-            if (AM_ASEnType != null) AM_ASEnType.SelectedIndexChanged += SaveAutoModSettings;
-            if (AM_CESR != null) AM_CESR.SelectedIndexChanged += SaveAutoModSettings;
-            if (AM_ASSR != null) AM_ASSR.SelectedIndexChanged += SaveAutoModSettings;
+            if (AM_PEnType != null) { AM_PEnType.SelectedIndexChanged -= SaveAutoModSettings; AM_PEnType.SelectedIndexChanged += SaveAutoModSettings; }
+            if (AM_SEnType != null) { AM_SEnType.SelectedIndexChanged -= SaveAutoModSettings; AM_SEnType.SelectedIndexChanged += SaveAutoModSettings; }
+            if (AM_ASThreshTime != null) { AM_ASThreshTime.SelectedIndexChanged -= SaveAutoModSettings; AM_ASThreshTime.SelectedIndexChanged += SaveAutoModSettings; }
+            if (AM_ASEnType != null) { AM_ASEnType.SelectedIndexChanged -= SaveAutoModSettings; AM_ASEnType.SelectedIndexChanged += SaveAutoModSettings; }
+            if (AM_CESR != null) { AM_CESR.SelectedIndexChanged -= SaveAutoModSettings; AM_CESR.SelectedIndexChanged += SaveAutoModSettings; }
+            if (AM_ASSR != null) { AM_ASSR.SelectedIndexChanged -= SaveAutoModSettings; AM_ASSR.SelectedIndexChanged += SaveAutoModSettings; }
 
-            if (AM_PEnThresh != null) AM_PEnThresh.Leave += SaveAutoModSettings;
-            if (AM_SEnThresh != null) AM_SEnThresh.Leave += SaveAutoModSettings;
-            if (AM_ASThreshMessages != null) AM_ASThreshMessages.Leave += SaveAutoModSettings;
+            if (AM_PEnThresh != null) { AM_PEnThresh.Leave -= SaveAutoModSettings; AM_PEnThresh.Leave += SaveAutoModSettings; }
+            if (AM_SEnThresh != null) { AM_SEnThresh.Leave -= SaveAutoModSettings; AM_SEnThresh.Leave += SaveAutoModSettings; }
+            if (AM_ASThreshMessages != null) { AM_ASThreshMessages.Leave -= SaveAutoModSettings; AM_ASThreshMessages.Leave += SaveAutoModSettings; }
         }
 
         private void SaveAutoModSettings(object sender, EventArgs e)
         {
             if (_isInitializing) return;
 
-            if (AM_Enforce != null) AMConfHelper.Instance.EnableChatEnforcement = AM_Enforce.Checked;
-            if (AM_PEnType != null) AMConfHelper.Instance.PrimaryEnforcementType = AM_PEnType.Text;
-            if (AM_PEnThresh != null) AMConfHelper.Instance.PrimaryEnforcementThreshold = AM_PEnThresh.Text;
+            AppSettings.Instance.Update(config =>
+            {
+                var am = config.AutoMod;
+                if (AM_Enforce != null) am.EnableChatEnforcement = AM_Enforce.Checked;
+                if (AM_PEnType != null) am.PrimaryEnforcementType = AM_PEnType.Text;
+                if (AM_PEnThresh != null)
+                {
+                    am.PrimaryEnforcementThreshold = int.TryParse(AM_PEnThresh.Text?.Trim(), out int pThresh)
+                        ? pThresh
+                        : (int?)null;
+                }
 
-            if (AM_SEnType != null) AMConfHelper.Instance.SecondaryEnforcementType = AM_SEnType.Text;
-            if (AM_SEnThresh != null) AMConfHelper.Instance.SecondaryEnforcementThreshold = AM_SEnThresh.Text;
+                if (AM_SEnType != null) am.SecondaryEnforcementType = AM_SEnType.Text;
+                if (AM_SEnThresh != null)
+                {
+                    am.SecondaryEnforcementThreshold = int.TryParse(AM_SEnThresh.Text?.Trim(), out int sThresh)
+                        ? sThresh
+                        : (int?)null;
+                }
 
-            if (AM_AntiSpam != null) AMConfHelper.Instance.AntiSpamEnabled = AM_AntiSpam.Checked;
-            if (AM_ASThreshMessages != null) AMConfHelper.Instance.AntiSpamMessages = AM_ASThreshMessages.Text;
-            if (AM_ASThreshTime != null) AMConfHelper.Instance.AntiSpamTime = AM_ASThreshTime.Text;
-            if (AM_ASEnType != null) AMConfHelper.Instance.AntiSpamEnforcementType = AM_ASEnType.Text;
+                if (AM_AntiSpam != null) am.AntiSpamEnabled = AM_AntiSpam.Checked;
+                if (AM_ASThreshMessages != null && int.TryParse(AM_ASThreshMessages.Text?.Trim(), out int asMessages) && asMessages > 0)
+                {
+                    am.AntiSpamMessages = asMessages;
+                }
 
-            if (AM_CESR != null) AMConfHelper.Instance.ChatStrikeReset = AM_CESR.Text;
-            if (AM_ASSR != null) AMConfHelper.Instance.AntiSpamStrikeReset = AM_ASSR.Text;
+                if (AM_ASThreshTime != null && int.TryParse(AM_ASThreshTime.Text?.Trim(), out int asTime) && asTime > 0)
+                {
+                    am.AntiSpamTime = asTime;
+                }
 
-            AMConfHelper.Instance.SaveSettings();
+                if (AM_ASEnType != null) am.AntiSpamEnforcementType = AM_ASEnType.Text;
+                if (AM_CESR != null) am.ChatStrikeReset = AM_CESR.Text;
+                if (AM_ASSR != null) am.AntiSpamStrikeReset = AM_ASSR.Text;
+            });
         }
 
         private void CfgEAM_CheckedChanged(object sender, EventArgs e)
@@ -109,13 +130,12 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
             if (!CfgEAM.Checked)
             {
                 AMCCard.Visible = false;
-                AppSettings.Instance.AutoModEnabled = false;
-                AppSettings.Instance.SaveSettings();
+                AppSettings.Instance.Update(cfg => cfg.AutoMod.Enabled = false);
                 return;
             }
 
             // --- STEP 1: Verify World Editor Master Safety Authorization Flag ---
-            if (!AppSettings.Instance.WorldEditorEnabled)
+            if (!AppSettings.Instance.General.WorldEditorEnabled)
             {
                 _isInitializing = true;
                 CfgEAM.Checked = false;
@@ -143,7 +163,7 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
             }
 
             // Resolve active server execution environment path configurations
-            string serverRoot = AppSettings.Instance.ServerExecutablePath;
+            string serverRoot = AppSettings.Instance.General.ServerExecutablePath;
             string targetWorldName = "Dedicated Server";
             string serverPropsPath = Path.Combine(serverRoot, "server.properties");
 
@@ -194,8 +214,7 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
                             return;
                         }
 
-                        AppSettings.Instance.ExperimentsWarned = true;
-                        AppSettings.Instance.SaveSettings();
+                        AppSettings.Instance.Update(cfg => cfg.General.ExperimentsWarned = true);
                     }
                     else
                     {
@@ -213,8 +232,7 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
             {
                 ConfigureServerPropertiesForAutoMod(serverRoot);
                 AMCCard.Visible = true;
-                AppSettings.Instance.AutoModEnabled = true;
-                AppSettings.Instance.SaveSettings();
+                AppSettings.Instance.Update(cfg => cfg.AutoMod.Enabled = true);
             }
             else
             {
@@ -254,8 +272,7 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
 
                         ConfigureServerPropertiesForAutoMod(serverRoot);
                         AMCCard.Visible = true;
-                        AppSettings.Instance.AutoModEnabled = true;
-                        AppSettings.Instance.SaveSettings();
+                        AppSettings.Instance.Update(cfg => cfg.AutoMod.Enabled = true);
 
                         MaterialMessageBox.Show(parentForm, "The monitor plugin addon has been successfully built and registered.\n\nA Bedrock Dedicated Server reboot is required to activate the chat bridge pipeline.", "Setup Complete", MessageBoxButtons.OK, false, MaterialFlexibleForm.ButtonsPosition.Center);
                     }
@@ -272,27 +289,12 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
             string propsPath = Path.Combine(serverRoot, "server.properties");
             if (!File.Exists(propsPath)) return;
 
-            string content = File.ReadAllText(propsPath);
-            bool modified = false;
-
-            // Enforce console output routing so our standard output stream intercepts the telemetry
-            if (content.Contains("content-log-console-output-enabled=false"))
+            var updates = new System.Collections.Generic.Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                content = content.Replace("content-log-console-output-enabled=false", "content-log-console-output-enabled=true");
-                modified = true;
-            }
-
-            // Disable file writing to save disk I/O cycles since the Bedrock engine buffers it incorrectly anyway
-            if (content.Contains("content-log-file-enabled=true"))
-            {
-                content = content.Replace("content-log-file-enabled=true", "content-log-file-enabled=false");
-                modified = true;
-            }
-
-            if (modified)
-            {
-                File.WriteAllText(propsPath, content);
-            }
+                ["content-log-console-output-enabled"] = "true",
+                ["content-log-file-enabled"] = "false"
+            };
+            BDSUtil.Helpers.ServerPropertiesDocument.ApplyUpdates(propsPath, updates);
         }
 
         private void ResetToggleToOff()
@@ -302,8 +304,7 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
             if (AMCCard != null) AMCCard.Visible = false;
             _isInitializing = false;
 
-            AppSettings.Instance.AutoModEnabled = false;
-            AppSettings.Instance.SaveSettings();
+            AppSettings.Instance.Update(cfg => cfg.AutoMod.Enabled = false);
         }
     }
 }

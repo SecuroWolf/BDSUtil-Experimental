@@ -56,27 +56,7 @@ namespace BDSUtil.Modals
                     if (!string.IsNullOrWhiteSpace(_serverDirectory))
                     {
                         string propertiesFilePath = System.IO.Path.Combine(_serverDirectory, "server.properties");
-
-                        if (System.IO.File.Exists(propertiesFilePath))
-                        {
-                            string[] currentLines = System.IO.File.ReadAllLines(propertiesFilePath);
-                            List<string> cleanOutputBuffer = new List<string>();
-                            string strictKeyAssignmentPattern = @"^\s*#?\s*server-udp-ports\s*=";
-
-                            foreach (string line in currentLines)
-                            {
-                                if (System.Text.RegularExpressions.Regex.IsMatch(line, strictKeyAssignmentPattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
-                                {
-                                    cleanOutputBuffer.Add("# server-udp-ports=");
-                                }
-                                else
-                                {
-                                    cleanOutputBuffer.Add(line);
-                                }
-                            }
-
-                            System.IO.File.WriteAllLines(propertiesFilePath, cleanOutputBuffer, System.Text.Encoding.UTF8);
-                        }
+                        BDSUtil.Helpers.ServerPropertiesDocument.CommentOutProperty(propertiesFilePath, "server-udp-ports");
                     }
 
                     // PHASE 2: Terminate active dynamic router leases completely

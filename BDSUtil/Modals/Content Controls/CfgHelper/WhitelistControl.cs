@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Windows.Forms;
-using System.Collections.Generic;
+using BDSUtil.Helpers;
 
 namespace BDSUtil.Modals.Content_Controls.CfgHelper
 {
@@ -57,33 +60,22 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
 
             if (!File.Exists(_configPath))
             {
-                try { File.WriteAllText(_configPath, "[]", System.Text.Encoding.UTF8); } catch { }
+                try { JsonHelper.WriteJsonFileAtomically(_configPath, _cachedPlayers, JsonHelper.IndentedOptions); } catch { }
                 ClearSelectionFocus();
                 return;
             }
 
             try
             {
-                string rawJson = File.ReadAllText(_configPath, System.Text.Encoding.UTF8).Trim();
-
-                if (!string.IsNullOrEmpty(rawJson) && rawJson != "[]")
+                if (JsonHelper.TryDeserializeFile(_configPath, out List<WhitelistPlayerEntry> loaded, JsonHelper.IndentedOptions) &&
+                    loaded != null)
                 {
-                    string[] blocks = rawJson.Split(new string[] { "}," }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (string block in blocks)
+                    foreach (var player in loaded)
                     {
-                        string name = ParseJsonValue(block, "name");
-                        if (!string.IsNullOrEmpty(name))
+                        if (player != null && !string.IsNullOrWhiteSpace(player.Name))
                         {
-                            string xuid = ParseJsonValue(block, "xuid");
-                            string ignoreLimitStr = ParseJsonValue(block, "ignoresPlayerLimit");
-                            bool ignoresLimit = ignoreLimitStr.Equals("true", StringComparison.OrdinalIgnoreCase);
-
-                            _cachedPlayers.Add(new WhitelistPlayerEntry
-                            {
-                                Name = name,
-                                Xuid = string.IsNullOrEmpty(xuid) ? null : xuid,
-                                IgnoresPlayerLimit = ignoresLimit
-                            });
+                            player.Xuid = string.IsNullOrWhiteSpace(player.Xuid) ? null : player.Xuid.Trim();
+                            _cachedPlayers.Add(player);
                         }
                     }
                 }
@@ -102,24 +94,6 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             }
 
             ClearSelectionFocus();
-        }
-
-        private string ParseJsonValue(string jsonBlock, string key)
-        {
-            string quoteKey = $"\"{key}\"";
-            int keyIndex = jsonBlock.IndexOf(quoteKey, StringComparison.OrdinalIgnoreCase);
-            if (keyIndex == -1) return string.Empty;
-
-            int valueStartIndex = jsonBlock.IndexOf(':', keyIndex);
-            if (valueStartIndex == -1) return string.Empty;
-            valueStartIndex++;
-
-            int commaIndex = jsonBlock.IndexOf(',', valueStartIndex);
-            if (commaIndex == -1) commaIndex = jsonBlock.IndexOf('}', valueStartIndex);
-            if (commaIndex == -1) commaIndex = jsonBlock.Length;
-
-            string rawValue = jsonBlock.Substring(valueStartIndex, commaIndex - valueStartIndex).Trim();
-            return rawValue.Replace("\"", "").Replace("}", "").Replace("]", "").Trim();
         }
         private void AddPlayerBTN_Click(object sender, EventArgs e)
         {
@@ -199,26 +173,7 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
 
             try
             {
-                List<string> jsonLines = new List<string> { "[" };
-
-                for (int i = 0; i < _cachedPlayers.Count; i++)
-                {
-                    var player = _cachedPlayers[i];
-                    jsonLines.Add("  {");
-                    jsonLines.Add($"    \"ignoresPlayerLimit\": {(player.IgnoresPlayerLimit ? "true" : "false")},");
-                    jsonLines.Add($"    \"name\": \"{player.Name}\"{(player.Xuid != null ? "," : "")}");
-
-                    if (player.Xuid != null) jsonLines.Add($"    \"xuid\": \"{player.Xuid}\"");
-
-                    jsonLines.Add(i == _cachedPlayers.Count - 1 ? "  }" : "  },");
-                }
-
-                jsonLines.Add("]");
-
-                string targetDir = Path.GetDirectoryName(_configPath);
-                if (!Directory.Exists(targetDir)) Directory.CreateDirectory(targetDir);
-
-                File.WriteAllLines(_configPath, jsonLines, System.Text.Encoding.UTF8);
+                JsonHelper.WriteJsonFileAtomically(_configPath, _cachedPlayers, JsonHelper.IndentedOptions);
             }
             catch (Exception ex)
             {
@@ -234,8 +189,17 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
 
     public class WhitelistPlayerEntry
     {
-        public string Name { get; set; } = string.Empty;
-        public string Xuid { get; set; } = null;
+        [JsonPropertyName("ignoresPlayerLimit")]
         public bool IgnoresPlayerLimit { get; set; } = false;
+
+        [JsonPropertyName("name")]
+        public string Name { get; set; } = string.Empty;
+
+        [JsonPropertyName("xuid")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string Xuid { get; set; } = null;
+
+        [JsonExtensionData]
+        public Dictionary<string, JsonElement> ExtensionData { get; set; }
     }
 }

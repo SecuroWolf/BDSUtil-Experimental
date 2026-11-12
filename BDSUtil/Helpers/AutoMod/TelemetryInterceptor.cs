@@ -25,25 +25,26 @@ namespace BDSUtil.Helpers.AutoMod
         {
             Task.Run(() =>
             {
-                if (!AMConfHelper.Instance.EnableChatEnforcement && !AMConfHelper.Instance.AntiSpamEnabled) return;
+                var autoMod = AppSettings.Instance.AutoMod;
+                if (!autoMod.EnableChatEnforcement && !autoMod.AntiSpamEnabled) return;
 
                 bool isViolation = false;
                 string violationReason = string.Empty;
                 string enforcementAction = string.Empty;
 
                 // --- 1. Evaluate Anti-Spam Rules ---
-                if (AMConfHelper.Instance.AntiSpamEnabled)
+                if (autoMod.AntiSpamEnabled)
                 {
                     if (IsSpamming(player))
                     {
                         isViolation = true;
                         violationReason = "Automated Chat Spam Detection";
-                        enforcementAction = AMConfHelper.Instance.AntiSpamEnforcementType;
+                        enforcementAction = autoMod.AntiSpamEnforcementType;
                     }
                 }
 
                 // --- 2. Evaluate Chat Enforcement (Banned Words) ---
-                if (!isViolation && AMConfHelper.Instance.EnableChatEnforcement)
+                if (!isViolation && autoMod.EnableChatEnforcement)
                 {
                     EnsureProfanityFilterLoaded();
 
@@ -89,7 +90,7 @@ namespace BDSUtil.Helpers.AutoMod
 
                 try
                 {
-                    string serverDir = AppSettings.Instance.ServerExecutablePath;
+                    string serverDir = AppSettings.Instance.General.ServerExecutablePath;
                     if (string.IsNullOrEmpty(serverDir)) return;
 
                     string wlistPath = Path.Combine(serverDir, "profanity_filter.wlist");
@@ -134,8 +135,9 @@ namespace BDSUtil.Helpers.AutoMod
 
         private static bool IsSpamming(string player)
         {
-            if (!int.TryParse(AMConfHelper.Instance.AntiSpamMessages, out int maxMessages)) maxMessages = 5;
-            if (!int.TryParse(AMConfHelper.Instance.AntiSpamTime, out int timeWindowSeconds)) timeWindowSeconds = 3;
+            var autoMod = AppSettings.Instance.AutoMod;
+            int maxMessages = autoMod.AntiSpamMessages > 0 ? autoMod.AntiSpamMessages : 5;
+            int timeWindowSeconds = autoMod.AntiSpamTime > 0 ? autoMod.AntiSpamTime : 3;
 
             DateTime now = DateTime.Now;
             var userStamps = _spamTracker.GetOrAdd(player, new List<DateTime>());
@@ -161,16 +163,15 @@ namespace BDSUtil.Helpers.AutoMod
 
             int recentStrikes = profile.History.Count;
 
-            // Safely parse strictly from the dynamic config. If the config is empty or invalid, 
-            // it defaults to int.MaxValue so it doesn't accidentally trigger a false ban.
-            int primaryThresh = int.TryParse(AMConfHelper.Instance.PrimaryEnforcementThreshold, out int pVal) ? pVal : int.MaxValue;
-            int secondaryThresh = int.TryParse(AMConfHelper.Instance.SecondaryEnforcementThreshold, out int sVal) ? sVal : int.MaxValue;
+            var autoMod = AppSettings.Instance.AutoMod;
+            int primaryThresh = autoMod.PrimaryEnforcementThreshold ?? int.MaxValue;
+            int secondaryThresh = autoMod.SecondaryEnforcementThreshold ?? int.MaxValue;
 
             if (recentStrikes >= secondaryThresh)
-                return AMConfHelper.Instance.SecondaryEnforcementType;
+                return autoMod.SecondaryEnforcementType;
 
             if (recentStrikes >= primaryThresh)
-                return AMConfHelper.Instance.PrimaryEnforcementType;
+                return autoMod.PrimaryEnforcementType;
 
             return "Warning";
         }
@@ -182,11 +183,6 @@ namespace BDSUtil.Helpers.AutoMod
             string commandToInject = string.Empty;
 
             // Ensure the gamertag populates cleanly on new file generation
-            if (string.IsNullOrEmpty(profile.Gamertag))
-            {
-                profile.Gamertag = player;
-            }
-
             if (string.IsNullOrEmpty(profile.Gamertag))
             {
                 profile.Gamertag = player;
@@ -243,30 +239,7 @@ namespace BDSUtil.Helpers.AutoMod
 
         private static string ResolveXuid(string gamertag)
         {
-            string datPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bds_players.dat");
-            if (!File.Exists(datPath)) return gamertag;
-
-            try
-            {
-                foreach (string line in File.ReadLines(datPath))
-                {
-                    // Match the exact XUID||Gamertag format
-                    if (line.EndsWith($"||{gamertag}", StringComparison.OrdinalIgnoreCase))
-                    {
-                        string[] parts = line.Split(new[] { "||" }, StringSplitOptions.None);
-                        if (parts.Length == 2)
-                        {
-                            return parts[0].Trim(); // Returns the 16-digit XUID
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[XUID Resolver Error]: {ex.Message}");
-            }
-
-            return gamertag;
+            return BDSUtil.Modals.Content_Controls.CfgHelper.PlayerIdentityStore.ResolveXuidOrFallback(gamertag);
         }
 
         // Tracks recent join evaluations to prevent double-firing while the client disconnects

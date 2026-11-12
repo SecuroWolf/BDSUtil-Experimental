@@ -11,9 +11,39 @@ using System.Threading.Tasks;
 
 namespace BDSUtil.Helpers.Updates
 {
-    internal class ServerUpdates
+    public static class ServerUpdates
     {
         private const string API_URL = "https://net-secondary.web.minecraft-services.net/api/v1.0/download/links";
+
+        /// <summary>
+        /// Queries the official Bedrock Dedicated Server download endpoint for the latest Windows release version and URL.
+        /// </summary>
+        public static async Task<(string Version, string DownloadUrl)> GetLatestReleaseInfoAsync()
+        {
+            string downloadUrl = await GetServerUpdateUrlAsync().ConfigureAwait(false);
+            string latestVersion = ExtractVersionFromUrl(downloadUrl);
+            return (latestVersion, downloadUrl);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="directoryPath"/> exists and contains <c>bedrock_server.exe</c>.
+        /// </summary>
+        public static bool IsValidServerDirectory(string directoryPath)
+        {
+            return !string.IsNullOrWhiteSpace(directoryPath) &&
+                   Directory.Exists(directoryPath) &&
+                   File.Exists(Path.Combine(directoryPath, "bedrock_server.exe"));
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="directoryPath"/> does not exist or contains no files or subdirectories.
+        /// </summary>
+        public static bool IsDirectoryEmpty(string directoryPath)
+        {
+            return string.IsNullOrWhiteSpace(directoryPath) ||
+                   !Directory.Exists(directoryPath) ||
+                   !Directory.EnumerateFileSystemEntries(directoryPath).Any();
+        }
 
         public static async Task<string> GetServerUpdateUrlAsync()
         {
@@ -233,11 +263,42 @@ namespace BDSUtil.Helpers.Updates
 
                 // 7. Restore kept files over the vanilla defaults
                 MoveDirectory(keptFilesDir, serverRoot, overwrite: true);
+                ServerPropertiesDocument.CommentOutServerPortV6(serverRoot);
 
                 // 8. Clean up
                 Directory.Delete(tempRoot, true);
                 File.Delete(downloadedZipPath);
             });
+        }
+
+        /// <summary>
+        /// Extracts a downloaded Bedrock Dedicated Server archive into a fresh installation directory without wiping unrelated files.
+        /// </summary>
+        public static async Task InstallFreshServerAsync(string serverRoot, string downloadedZipPath)
+        {
+            if (string.IsNullOrWhiteSpace(serverRoot))
+            {
+                throw new ArgumentException("Server installation directory is required.", nameof(serverRoot));
+            }
+
+            if (string.IsNullOrWhiteSpace(downloadedZipPath) || !File.Exists(downloadedZipPath))
+            {
+                throw new FileNotFoundException("Downloaded Bedrock Dedicated Server archive was not found.", downloadedZipPath);
+            }
+
+            await Task.Run(() =>
+            {
+                Directory.CreateDirectory(serverRoot);
+                try
+                {
+                    ZipFile.ExtractToDirectory(downloadedZipPath, serverRoot, overwriteFiles: true);
+                    ServerPropertiesDocument.CommentOutServerPortV6(serverRoot);
+                }
+                finally
+                {
+                    try { if (File.Exists(downloadedZipPath)) File.Delete(downloadedZipPath); } catch { }
+                }
+            }).ConfigureAwait(false);
         }
 
         // Helper for deep directory moving

@@ -1,8 +1,11 @@
 ﻿using System;
-using System.IO;
-using System.Text;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Compression;
+using System.Linq;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace BDSUtil.Helpers
 {
@@ -25,7 +28,7 @@ namespace BDSUtil.Helpers
 
         public static bool IsPackEnabledInWorld(string serverRootPath, string activeWorldName, string uuid, bool isBehaviorPack)
         {
-            if (string.IsNullOrWhiteSpace(serverRootPath) || string.IsNullOrWhiteSpace(activeWorldName))
+            if (string.IsNullOrWhiteSpace(serverRootPath) || string.IsNullOrWhiteSpace(activeWorldName) || string.IsNullOrWhiteSpace(uuid))
                 return false;
 
             string fileName = isBehaviorPack ? "world_behavior_packs.json" : "world_resource_packs.json";
@@ -36,8 +39,25 @@ namespace BDSUtil.Helpers
 
             try
             {
-                string rawJsonContent = File.ReadAllText(worldPackJsonPath);
-                return rawJsonContent.Contains(uuid);
+                string rawJsonContent = File.ReadAllText(worldPackJsonPath, Encoding.UTF8);
+                if (string.IsNullOrWhiteSpace(rawJsonContent))
+                    return false;
+
+                using JsonDocument doc = JsonDocument.Parse(rawJsonContent, JsonHelper.DocumentOptions);
+                if (doc.RootElement.ValueKind != JsonValueKind.Array)
+                    return false;
+
+                foreach (JsonElement entry in doc.RootElement.EnumerateArray())
+                {
+                    if (JsonHelper.TryGetPropertyIgnoreCase(entry, "pack_id", out JsonElement packIdProp) &&
+                        packIdProp.ValueKind == JsonValueKind.String &&
+                        string.Equals(packIdProp.GetString(), uuid, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
             }
             catch (Exception ex)
             {
@@ -48,7 +68,7 @@ namespace BDSUtil.Helpers
 
         public static bool EnablePackInWorld(string serverRootPath, string activeWorldName, string uuid, string versionString, bool isBehaviorPack)
         {
-            if (string.IsNullOrWhiteSpace(serverRootPath) || string.IsNullOrWhiteSpace(activeWorldName))
+            if (string.IsNullOrWhiteSpace(serverRootPath) || string.IsNullOrWhiteSpace(activeWorldName) || string.IsNullOrWhiteSpace(uuid))
                 return false;
 
             try
@@ -62,78 +82,31 @@ namespace BDSUtil.Helpers
                 string fileName = isBehaviorPack ? "world_behavior_packs.json" : "world_resource_packs.json";
                 string worldPacksFile = Path.Combine(worldFolder, fileName);
 
-                // Parse version string into an integer array list (e.g., "3.1.1" -> [3, 1, 1])
-                List<int> versionNumbers = new List<int>();
-                if (!string.IsNullOrEmpty(versionString))
-                {
-                    string cleanVersion = versionString.Replace("[", "").Replace("]", "").Trim();
-                    string[] parts = cleanVersion.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (string part in parts)
-                    {
-                        if (int.TryParse(part.Trim(), out int num))
-                        {
-                            versionNumbers.Add(num);
-                        }
-                    }
-                }
-                if (versionNumbers.Count == 0) versionNumbers.AddRange(new int[] { 1, 0, 0 });
+                List<int> versionNumbers = ParseWorldPackVersion(versionString);
+                JsonArray entries = LoadWorldPackArray(worldPacksFile);
 
-                // Read existing entries or start a new list block
-                List<string> existingEntries = new List<string>();
-                if (File.Exists(worldPacksFile))
+                foreach (JsonNode node in entries)
                 {
-                    string rawJson = File.ReadAllText(worldPacksFile, Encoding.UTF8);
-                    if (rawJson.Contains(uuid))
+                    if (TryGetWorldPackId(node, out string existingId) &&
+                        string.Equals(existingId, uuid, StringComparison.OrdinalIgnoreCase))
                     {
                         return true; // Already enabled
                     }
-
-                    // Simple block extractor to preserve any custom entries already in the file
-                    int idx = 0;
-                    while ((idx = rawJson.IndexOf("\"pack_id\"", idx, StringComparison.OrdinalIgnoreCase)) >= 0)
-                    {
-                        int startObj = rawJson.LastIndexOf('{', idx);
-                        int endObj = rawJson.IndexOf('}', idx);
-                        if (startObj >= 0 && endObj > startObj)
-                        {
-                            existingEntries.Add(rawJson.Substring(startObj, (endObj - startObj) + 1));
-                            idx = endObj;
-                        }
-                        else
-                        {
-                            idx++;
-                        }
-                    }
                 }
 
-                // Add the new pack object block
-                string formattedVersionArray = string.Join(", ", versionNumbers);
-                string newEntry =
-                    "    {\n" +
-                    $"        \"pack_id\" : \"{uuid}\",\n" +
-                    $"        \"version\": [{formattedVersionArray}]\n" +
-                    "    }";
-
-                existingEntries.Add(newEntry);
-
-                // Rebuild clean, perfectly formatted JSON array content
-                StringBuilder sb = new StringBuilder();
-                sb.AppendLine("[");
-                for (int i = 0; i < existingEntries.Count; i++)
+                var versionArray = new JsonArray();
+                foreach (int num in versionNumbers)
                 {
-                    sb.Append(existingEntries[i]);
-                    if (i < existingEntries.Count - 1)
-                    {
-                        sb.AppendLine(",");
-                    }
-                    else
-                    {
-                        sb.AppendLine();
-                    }
+                    versionArray.Add(num);
                 }
-                sb.Append("]");
 
-                File.WriteAllText(worldPacksFile, sb.ToString(), Encoding.UTF8);
+                entries.Add(new JsonObject
+                {
+                    ["pack_id"] = uuid,
+                    ["version"] = versionArray
+                });
+
+                JsonHelper.WriteTextAtomically(worldPacksFile, entries.ToJsonString(JsonHelper.IndentedOptions));
                 return true;
             }
             catch (Exception ex)
@@ -173,29 +146,23 @@ namespace BDSUtil.Helpers
 
                 try
                 {
-                    string jsonContent = File.ReadAllText(manifestPath);
+                    string jsonContent = File.ReadAllText(manifestPath, Encoding.UTF8);
+                    ManifestMetadata metadata = ParseManifest(jsonContent);
 
-                    string rawName = GetStrictManifestValue(jsonContent, "\"name\"");
-                    string rawDesc = GetStrictManifestValue(jsonContent, "\"description\"");
-                    string parsedUuid = GetStrictManifestValue(jsonContent, "\"uuid\"");
+                    string finalName = GetLocalizedPackText(packFolder, metadata.Name, folderName);
+                    string finalDesc = GetLocalizedPackText(packFolder, metadata.Description, string.Empty);
 
-                    // Universal version extractor: checks for string version first, then array version
-                    string parsedVersion = GetExactVersionValue(jsonContent);
-
-                    string finalName = GetLocalizedPackText(packFolder, rawName, folderName);
-                    string finalDesc = GetLocalizedPackText(packFolder, rawDesc, string.Empty);
-
-                    if (!string.IsNullOrEmpty(parsedUuid) && !parsedUuid.StartsWith("{"))
+                    if (!string.IsNullOrEmpty(metadata.Uuid))
                     {
-                        bool isEnabledInWorld = IsPackEnabledInWorld(serverRootPath, activeWorldName, parsedUuid, getBehaviorPacks);
+                        bool isEnabledInWorld = IsPackEnabledInWorld(serverRootPath, activeWorldName, metadata.Uuid, getBehaviorPacks);
 
                         parsedPacks.Add(new PackManifestInfo
                         {
                             FolderName = folderName,
                             Name = finalName,
                             Description = finalDesc,
-                            Uuid = parsedUuid,
-                            Version = string.IsNullOrEmpty(parsedVersion) ? "1, 0, 0" : parsedVersion,
+                            Uuid = metadata.Uuid,
+                            Version = string.IsNullOrEmpty(metadata.Version) ? "1, 0, 0" : metadata.Version,
                             IsBehaviorPack = getBehaviorPacks,
                             IsEnabled = isEnabledInWorld
                         });
@@ -210,115 +177,153 @@ namespace BDSUtil.Helpers
             return parsedPacks;
         }
 
-        private static string GetExactVersionValue(string json)
+        private sealed class ManifestMetadata
         {
-            // Search specifically for "version" as an exact key (ignoring "min_engine_version")
-            string targetKey = "\"version\"";
-            int searchIdx = 0;
-
-            while (true)
-            {
-                int keyIdx = json.IndexOf(targetKey, searchIdx, StringComparison.OrdinalIgnoreCase);
-                if (keyIdx < 0) break;
-
-                // Ensure it's not preceded by letters (like min_engine_version)
-                if (keyIdx > 0 && char.IsLetter(json[keyIdx - 1]))
-                {
-                    searchIdx = keyIdx + targetKey.Length;
-                    continue;
-                }
-
-                int colonIdx = json.IndexOf(':', keyIdx);
-                if (colonIdx < 0) break;
-
-                // Look ahead to see if it's a string version ("3.1.1") or an array version ([1, 0, 0])
-                int nextQuote = json.IndexOf('"', colonIdx);
-                int nextBracket = json.IndexOf('[', colonIdx);
-
-                // If bracket comes first (or no quote found), it's an array version
-                if (nextBracket > 0 && (nextQuote < 0 || nextBracket < nextQuote))
-                {
-                    int endBracket = json.IndexOf(']', nextBracket);
-                    if (endBracket > nextBracket)
-                    {
-                        return json.Substring(nextBracket + 1, endBracket - nextBracket - 1).Trim();
-                    }
-                }
-                // Otherwise if quote comes first, it's a string version
-                else if (nextQuote > 0)
-                {
-                    string val = ExtractStringAt(json, keyIdx);
-                    if (!string.IsNullOrEmpty(val)) return val;
-                }
-
-                searchIdx = keyIdx + targetKey.Length;
-            }
-
-            // Fallback to standard array extractor if exact key scan fails
-            return ExtractJsonArrayValue(json, "\"version\"");
+            public string Name { get; set; } = string.Empty;
+            public string Description { get; set; } = string.Empty;
+            public string Uuid { get; set; } = string.Empty;
+            public string Version { get; set; } = string.Empty;
+            public bool IsBehaviorPack { get; set; }
         }
 
-        private static string GetStrictManifestValue(string json, string targetKey)
+        private static ManifestMetadata ParseManifest(string json)
         {
-            int searchIdx = 0;
-            while (true)
+            var metadata = new ManifestMetadata();
+            if (string.IsNullOrWhiteSpace(json))
+                return metadata;
+
+            using JsonDocument doc = JsonDocument.Parse(json, JsonHelper.DocumentOptions);
+            JsonElement root = doc.RootElement;
+            if (root.ValueKind != JsonValueKind.Object)
+                return metadata;
+
+            JsonElement header = JsonHelper.TryGetPropertyIgnoreCase(root, "header", out JsonElement headerEl) &&
+                                 headerEl.ValueKind == JsonValueKind.Object
+                ? headerEl
+                : root;
+
+            metadata.Name = JsonHelper.GetPropertyString(header, "name");
+            metadata.Description = JsonHelper.GetPropertyString(header, "description");
+            metadata.Uuid = JsonHelper.GetPropertyString(header, "uuid");
+            metadata.Version = FormatVersionElement(header);
+
+            if (JsonHelper.TryGetPropertyIgnoreCase(root, "modules", out JsonElement modulesEl) &&
+                modulesEl.ValueKind == JsonValueKind.Array)
             {
-                int keyIdx = json.IndexOf(targetKey, searchIdx, StringComparison.OrdinalIgnoreCase);
-                if (keyIdx < 0) break;
-
-                // Prevent partial matches like min_engine_version matching "version"
-                if (targetKey.Equals("\"version\"", StringComparison.OrdinalIgnoreCase) && keyIdx > 0 && char.IsLetter(json[keyIdx - 1]))
+                foreach (JsonElement module in modulesEl.EnumerateArray())
                 {
-                    searchIdx = keyIdx + targetKey.Length;
-                    continue;
-                }
-
-                string val = ExtractStringAt(json, keyIdx);
-
-                if (!string.IsNullOrEmpty(val) && !val.StartsWith("{") && !val.Contains("\"type\"") && !val.Contains("\"uuid\""))
-                {
-                    if (targetKey.Equals("\"uuid\"", StringComparison.OrdinalIgnoreCase))
+                    string moduleType = JsonHelper.GetPropertyString(module, "type");
+                    if (moduleType.Equals("data", StringComparison.OrdinalIgnoreCase) ||
+                        moduleType.Equals("script", StringComparison.OrdinalIgnoreCase) ||
+                        moduleType.Equals("javascript", StringComparison.OrdinalIgnoreCase))
                     {
-                        int modulesIdx = json.IndexOf("\"modules\"", StringComparison.OrdinalIgnoreCase);
-                        if (modulesIdx > 0 && keyIdx > modulesIdx)
-                        {
-                            searchIdx = keyIdx + targetKey.Length;
-                            continue;
-                        }
+                        metadata.IsBehaviorPack = true;
+                        break;
                     }
-                    return val;
+                }
+            }
+
+            return metadata;
+        }
+
+        private static string FormatVersionElement(JsonElement header)
+        {
+            if (!JsonHelper.TryGetPropertyIgnoreCase(header, "version", out JsonElement versionEl))
+                return string.Empty;
+
+            if (versionEl.ValueKind == JsonValueKind.String)
+                return versionEl.GetString()?.Trim() ?? string.Empty;
+
+            if (versionEl.ValueKind == JsonValueKind.Array)
+            {
+                var parts = new List<string>();
+                foreach (JsonElement item in versionEl.EnumerateArray())
+                {
+                    if (item.ValueKind == JsonValueKind.Number)
+                    {
+                        parts.Add(item.GetRawText());
+                    }
+                    else if (item.ValueKind == JsonValueKind.String)
+                    {
+                        string val = item.GetString()?.Trim();
+                        if (!string.IsNullOrEmpty(val))
+                            parts.Add(val);
+                    }
                 }
 
-                searchIdx = keyIdx + targetKey.Length;
+                return string.Join(", ", parts);
             }
 
             return string.Empty;
         }
 
-        private static string ExtractStringAt(string json, int keyIndex)
+        private static List<int> ParseWorldPackVersion(string versionString)
         {
-            int colonIdx = json.IndexOf(':', keyIndex);
-            if (colonIdx < 0) return string.Empty;
-
-            int startQuoteIdx = json.IndexOf('"', colonIdx);
-            if (startQuoteIdx < 0) return string.Empty;
-
-            int endQuoteIdx = startQuoteIdx + 1;
-            while (endQuoteIdx < json.Length)
+            var versionNumbers = new List<int>();
+            if (!string.IsNullOrWhiteSpace(versionString))
             {
-                if (json[endQuoteIdx] == '"' && json[endQuoteIdx - 1] != '\\')
+                string cleanVersion = versionString.Replace("[", string.Empty).Replace("]", string.Empty).Trim();
+                int preReleaseIdx = cleanVersion.IndexOf('-');
+                if (preReleaseIdx >= 0)
                 {
-                    break;
+                    cleanVersion = cleanVersion.Substring(0, preReleaseIdx);
                 }
-                endQuoteIdx++;
+
+                string[] parts = cleanVersion.Split(new[] { ',', '.' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (string part in parts)
+                {
+                    if (int.TryParse(part.Trim(), out int num))
+                    {
+                        versionNumbers.Add(num);
+                    }
+                }
             }
 
-            if (endQuoteIdx < json.Length && endQuoteIdx > startQuoteIdx)
+            if (versionNumbers.Count == 0)
             {
-                return json.Substring(startQuoteIdx + 1, endQuoteIdx - startQuoteIdx - 1).Trim();
+                versionNumbers.AddRange(new[] { 1, 0, 0 });
             }
 
-            return string.Empty;
+            return versionNumbers;
+        }
+
+        private static JsonArray LoadWorldPackArray(string worldPacksFile)
+        {
+            if (!File.Exists(worldPacksFile))
+                return new JsonArray();
+
+            string rawJson = File.ReadAllText(worldPacksFile, Encoding.UTF8);
+            if (string.IsNullOrWhiteSpace(rawJson))
+                return new JsonArray();
+
+            try
+            {
+                return JsonNode.Parse(rawJson, documentOptions: JsonHelper.DocumentOptions) as JsonArray ?? new JsonArray();
+            }
+            catch (JsonException)
+            {
+                return new JsonArray();
+            }
+        }
+
+        private static bool TryGetWorldPackId(JsonNode node, out string packId)
+        {
+            packId = null;
+            if (node is not JsonObject obj)
+                return false;
+
+            foreach (var kvp in obj)
+            {
+                if (kvp.Key.Equals("pack_id", StringComparison.OrdinalIgnoreCase) &&
+                    kvp.Value is JsonValue val &&
+                    val.TryGetValue(out string str))
+                {
+                    packId = str;
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static string GetLocalizedPackText(string packFolderPath, string rawText, string fallback)
@@ -369,22 +374,6 @@ namespace BDSUtil.Helpers
             return string.IsNullOrEmpty(fallback) ? rawText : fallback;
         }
 
-        private static string ExtractJsonArrayValue(string json, string key)
-        {
-            int keyIdx = json.IndexOf(key, StringComparison.OrdinalIgnoreCase);
-            if (keyIdx < 0) return string.Empty;
-
-            int colonIdx = json.IndexOf(':', keyIdx);
-            int startBracket = json.IndexOf('[', colonIdx);
-            int endBracket = json.IndexOf(']', startBracket);
-
-            if (startBracket > 0 && endBracket > startBracket)
-            {
-                return json.Substring(startBracket + 1, endBracket - startBracket - 1).Trim();
-            }
-            return string.Empty;
-        }
-
         public static bool InstallPack(string serverRootPath, string archivePath)
         {
             if (string.IsNullOrWhiteSpace(serverRootPath) || !File.Exists(archivePath))
@@ -402,12 +391,11 @@ namespace BDSUtil.Helpers
                 foreach (string manifestPath in manifests)
                 {
                     string packDir = Path.GetDirectoryName(manifestPath);
-                    string jsonContent = File.ReadAllText(manifestPath);
+                    string jsonContent = File.ReadAllText(manifestPath, Encoding.UTF8);
+                    ManifestMetadata metadata = ParseManifest(jsonContent);
 
-                    string strippedJson = jsonContent.Replace(" ", "").Replace("\t", "").ToLower();
-                    bool isBehavior = strippedJson.Contains("\"type\":\"data\"");
-
-                    string rawName = GetStrictManifestValue(jsonContent, "\"name\"");
+                    bool isBehavior = metadata.IsBehaviorPack;
+                    string rawName = metadata.Name;
                     string parsedName = GetLocalizedPackText(packDir, rawName, new DirectoryInfo(packDir).Name);
                     if (string.IsNullOrWhiteSpace(parsedName))
                     {
@@ -449,7 +437,7 @@ namespace BDSUtil.Helpers
 
         public static bool DisablePackInWorld(string serverRootPath, string activeWorldName, string uuid, bool isBehaviorPack)
         {
-            if (string.IsNullOrWhiteSpace(serverRootPath) || string.IsNullOrWhiteSpace(activeWorldName))
+            if (string.IsNullOrWhiteSpace(serverRootPath) || string.IsNullOrWhiteSpace(activeWorldName) || string.IsNullOrWhiteSpace(uuid))
                 return false;
 
             try
@@ -460,30 +448,24 @@ namespace BDSUtil.Helpers
                 if (!File.Exists(worldPacksFile))
                     return true;
 
-                string rawJson = File.ReadAllText(worldPacksFile, Encoding.UTF8);
+                JsonArray entries = LoadWorldPackArray(worldPacksFile);
+                bool removed = false;
 
-                int uuidIndex = rawJson.IndexOf(uuid, StringComparison.OrdinalIgnoreCase);
-                if (uuidIndex < 0)
-                    return true;
-
-                int startBracket = rawJson.LastIndexOf('{', uuidIndex);
-                int endBracket = rawJson.IndexOf('}', uuidIndex);
-
-                if (startBracket >= 0 && endBracket > startBracket)
+                for (int i = entries.Count - 1; i >= 0; i--)
                 {
-                    string beforeChunk = rawJson.Substring(0, startBracket);
-                    string afterChunk = rawJson.Substring(endBracket + 1);
-                    string cleanedJson = beforeChunk + afterChunk;
-
-                    cleanedJson = System.Text.RegularExpressions.Regex.Replace(cleanedJson, @",\s*,", ",");
-                    cleanedJson = System.Text.RegularExpressions.Regex.Replace(cleanedJson, @"\[\s*,", "[");
-                    cleanedJson = System.Text.RegularExpressions.Regex.Replace(cleanedJson, @",\s*\]", "]");
-
-                    File.WriteAllText(worldPacksFile, cleanedJson, Encoding.UTF8);
-                    return true;
+                    if (TryGetWorldPackId(entries[i], out string existingId) &&
+                        string.Equals(existingId, uuid, StringComparison.OrdinalIgnoreCase))
+                    {
+                        entries.RemoveAt(i);
+                        removed = true;
+                    }
                 }
 
-                return false;
+                if (!removed)
+                    return true;
+
+                JsonHelper.WriteTextAtomically(worldPacksFile, entries.ToJsonString(JsonHelper.IndentedOptions));
+                return true;
             }
             catch (Exception ex)
             {

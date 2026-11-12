@@ -11,7 +11,6 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
         private readonly Label _focusTrapLabel;
         private string _configPath;
         private readonly System.Collections.Generic.Dictionary<string, string> _propertiesCache;
-        private readonly System.Collections.Generic.List<string> _fileLineLayout;
 
         public ServerPropertiesControl()
         {
@@ -20,7 +19,6 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             this.AutoSize = false;
 
             _propertiesCache = new System.Collections.Generic.Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            _fileLineLayout = new System.Collections.Generic.List<string>();
 
             _focusTrapLabel = new Label { Size = new System.Drawing.Size(0, 0), Location = new System.Drawing.Point(0, 0), TabStop = true };
             this.Controls.Add(_focusTrapLabel);
@@ -45,7 +43,6 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             PropSvName.KeyPress += PropSvName_KeyPress;
             PropMP.KeyPress += NumericTextBox_KeyPress;
             PropPortV4.KeyPress += NumericTextBox_KeyPress;
-            PropPortV6.KeyPress += NumericTextBox_KeyPress;
         }
 
         private void WireRealTimeSavingEvents()
@@ -54,7 +51,6 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             PropSvSeed.TextChanged += AutoSave_Event;
             PropMP.TextChanged += AutoSave_Event;
             PropPortV4.TextChanged += AutoSave_Event;
-            PropPortV6.TextChanged += AutoSave_Event;
 
             PropGM.SelectedIndexChanged += AutoSave_Event;
             PropDiff.SelectedIndexChanged += AutoSave_Event;
@@ -94,22 +90,13 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             if (!File.Exists(_configPath)) return;
             _isInitializing = true;
 
+            BDSUtil.Helpers.ServerPropertiesDocument.CommentOutServerPortV6(_configPath);
+
             _propertiesCache.Clear();
-            _fileLineLayout.Clear();
-            string[] rawLines = File.ReadAllLines(_configPath, Encoding.UTF8);
-
-            foreach (string currentLine in rawLines)
+            var doc = BDSUtil.Helpers.ServerPropertiesDocument.Load(_configPath, ignoredKeys: new[] { "server-portv6" });
+            foreach (System.Collections.Generic.KeyValuePair<string, string> kvp in doc.Properties)
             {
-                _fileLineLayout.Add(currentLine);
-                string trimmed = currentLine.Trim();
-                if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith("#")) continue;
-
-                int delimiterIndex = trimmed.IndexOf('=');
-                if (delimiterIndex <= 0) continue;
-
-                string key = trimmed.Substring(0, delimiterIndex).Trim().ToLower();
-                string value = trimmed.Substring(delimiterIndex + 1).Trim();
-                if (!string.IsNullOrEmpty(key)) _propertiesCache[key] = value;
+                _propertiesCache[kvp.Key.ToLowerInvariant()] = kvp.Value;
             }
 
             PopulateWorldsDropdown();
@@ -123,32 +110,23 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             if (string.IsNullOrEmpty(_configPath)) return;
             HarvestInterfaceElements();
 
-            System.Collections.Generic.List<string> finalizedOutputLines = new System.Collections.Generic.List<string>();
-            System.Collections.Generic.HashSet<string> writtenKeys = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (string originalLine in _fileLineLayout)
-            {
-                string trimmed = originalLine.Trim();
-                if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith("#")) { finalizedOutputLines.Add(originalLine); continue; }
-
-                int delimiterIndex = trimmed.IndexOf('=');
-                if (delimiterIndex <= 0) { finalizedOutputLines.Add(originalLine); continue; }
-
-                string key = trimmed.Substring(0, delimiterIndex).Trim();
-                if (!string.IsNullOrEmpty(key) && _propertiesCache.ContainsKey(key))
-                {
-                    finalizedOutputLines.Add($"{key}={_propertiesCache[key]}");
-                    writtenKeys.Add(key);
-                }
-                else finalizedOutputLines.Add(originalLine);
-            }
-
+            var updates = new System.Collections.Generic.Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (System.Collections.Generic.KeyValuePair<string, string> propertyPair in _propertiesCache)
             {
-                if (!writtenKeys.Contains(propertyPair.Key)) finalizedOutputLines.Add($"{propertyPair.Key}={propertyPair.Value}");
+                // NetworkingControl and the UPnP engine own server-udp-ports; server-portv6 is ignored under NetherNet.
+                if (propertyPair.Key.Equals("server-udp-ports", StringComparison.OrdinalIgnoreCase) ||
+                    propertyPair.Key.Equals("server-portv6", StringComparison.OrdinalIgnoreCase)) continue;
+                updates[propertyPair.Key] = propertyPair.Value;
             }
 
-            try { File.WriteAllLines(_configPath, finalizedOutputLines, Encoding.UTF8); }
+            try
+            {
+                BDSUtil.Helpers.ServerPropertiesDocument.ApplyUpdates(
+                    _configPath,
+                    updates,
+                    removeKeys: new[] { "bdsutil-enable-upnp" });
+                BDSUtil.Helpers.ServerPropertiesDocument.CommentOutServerPortV6(_configPath);
+            }
             catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Auto-save failed: {ex.Message}"); }
         }
         private void PopulateWorldsDropdown()
@@ -190,7 +168,6 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             PropSvSeed.Text = GetCachedProperty("level-seed", "");
             PropMP.Text = GetCachedProperty("max-players", "10");
             PropPortV4.Text = GetCachedProperty("server-port", "19132");
-            PropPortV6.Text = GetCachedProperty("server-portv6", "19133");
 
             PropGM.Text = CapitalizeFirstLetter(GetCachedProperty("gamemode", "survival"));
             PropDiff.Text = CapitalizeFirstLetter(GetCachedProperty("difficulty", "easy"));
@@ -215,7 +192,6 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             _propertiesCache["level-seed"] = PropSvSeed.Text.Trim();
             _propertiesCache["max-players"] = PropMP.Text.Trim();
             _propertiesCache["server-port"] = PropPortV4.Text.Trim();
-            _propertiesCache["server-portv6"] = PropPortV6.Text.Trim();
 
             _propertiesCache["gamemode"] = PropGM.Text.Trim().ToLower();
             _propertiesCache["difficulty"] = PropDiff.Text.Trim().ToLower();

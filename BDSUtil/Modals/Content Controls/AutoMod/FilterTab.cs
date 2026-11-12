@@ -6,7 +6,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Windows.Forms;
+using BDSUtil.Helpers;
 
 namespace BDSUtil.Modals.Content_Controls.AutoMod
 {
@@ -255,8 +257,9 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
                 string base64Payload = Convert.ToBase64String(bytesToEncode);
                 File.WriteAllText(wlistPath, base64Payload, Encoding.UTF8);
 
-                // 2. Output the server data mapping rules array configuration file
-                File.WriteAllText(autoModConfigFilePath, plainTextData, Encoding.UTF8);
+                // 2. Output the server data mapping rules array configuration file as valid JSON
+                string autoModJson = JsonSerializer.Serialize(_bannedExpressionsCache, JsonHelper.IndentedOptions);
+                File.WriteAllText(autoModConfigFilePath, autoModJson, Encoding.UTF8);
 
                 // 3. Keep the decrypted cache tracking file synchronized up-to-date
                 File.WriteAllText(cacheFilePath, plainTextData, Encoding.UTF8);

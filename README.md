@@ -6,7 +6,7 @@ When this feature is implemented, it will be entirely optional. Further along th
 
 ![BDSUtil Main Dashboard](docs/home_screenshot.png)
 
-BDSUtil is a C# desktop wrapper I'm putting together to make managing Minecraft Bedrock Dedicated Servers (BDS) a lot less of a headache. It wraps the server console in a clean UI, handles backups, automatically forwards ports via UPnP, and includes a native AutoMod bridge.
+BDSUtil is a C# desktop wrapper I'm putting together to make managing Minecraft Bedrock Dedicated Servers (BDS) a lot less of a headache. It wraps the server console in a clean UI, handles backups and updates, automatically forwards and verifies ports via native UPnP, includes a native AutoMod bridge, and ships an optional Remote Management API.
 
 **Disclaimer:** BDSUtil is a personal project and is not affiliated with, endorsed by, or associated with Mojang Studios or Microsoft Corporation. Minecraft, Bedrock Edition, and BDS are trademarks or registered trademarks of their respective owners.
 
@@ -20,8 +20,9 @@ WITHOUT LIMITING THE FOREGOING, I ACCEPT ABSOLUTELY NO LIABILITY IF THIS SOFTWAR
 
 1. **Link Your Server:** Just launch BDSUtil. If you drop it in the same folder as your server, it will automatically find `bedrock_server.exe`. Otherwise, pop into the Settings tab and point it to your server's root folder.
 2. **Fire it Up:** Head to the Server Console tab and hit the green power button. You'll get a clean terminal feed without the usual Bedrock telemetry spam.
-3. **UPnP (Optional):** Tired of manual port forwarding? Turn on UPnP in the settings. On the next server boot, it will automatically lease the required TCP/UDP routes for you and your players.
-4. **AutoMod:** Head to the Chat AutoMod tab to enable the custom `bdsutil_monitor` behavior pack. *Note: Enabling this automatically patches your world's level.dat for Beta APIs, which permanently turns off Xbox achievements for that specific world.*
+3. **UPnP (Optional):** Tired of manual port forwarding? Turn on UPnP in the settings. On server startup (or when changing server directories), it automatically leases the required IPv4 TCP/UDP ports, configures `server.properties`, and verifies reachability.
+4. **AutoMod (Optional):** Head to the Chat AutoMod tab to enable the custom `bdsutil_monitor` behavior pack. *Note: Enabling this automatically patches your world's `level.dat` for Beta APIs, which permanently turns off Xbox achievements for that specific world.*
+5. **Remote Management API (Optional):** Off by default. Enable it in Settings (after reviewing the security prompt) to generate an API key and expose local/remote HTTP control endpoints for companion clients.
 
 ---
 
@@ -29,51 +30,62 @@ WITHOUT LIMITING THE FOREGOING, I ACCEPT ABSOLUTELY NO LIABILITY IF THIS SOFTWAR
 
 ### 🖥️ Interactive Console
 ![Console Wrapper](docs/console_screenshot.png)
-- **Clean Feed:** Streams the server log directly into the app, actively filtering out the noisy engine telemetry spam.
+- **Clean Feed:** Streams the server log directly into the app, actively filtering out noisy engine telemetry (including an optional setting to suppress `"Telemetry not enabled"` startup notices).
 - **Live Commands:** Send commands straight to the server via the built-in terminal.
-- **Quick Toggles:** Start and stop the server instantly with floating action buttons.
+- **Quick Toggles & `server.properties` Hygiene:** Start and stop the server instantly with floating action buttons, while automatically commenting out obsolete `server-portv6` entries ignored under NetherNet.
 
 ### 🛡️ AutoMod & Telemetry Bridge
-- **Behavior Pack Injection:** Automatically installs a custom `bdsutil_monitor` Script API behavior pack into your world to extract live game events.
-- **Live Parsing:** Translates raw JSON telemetry into clean, emoji-tagged terminal alerts for Chat, PVP Kills, and Environmental Deaths.
-- **Automated Enforcement:** Evaluates live chat against configurable filters to instantly auto-kick or mute griefers. (With deeper additions and future plugin support planned down the road).
+- **Behavior Pack Injection:** Automatically installs and registers the custom `bdsutil_monitor` Script API behavior pack into your active world to stream live game events.
+- **Live Parsing:** Translates raw JSON telemetry into clean, emoji-tagged terminal alerts for Chat, PvP Kills, and Environmental Deaths.
+- **Chat Filter & Strike Escalation:** Custom banned-word filter (`Chat Filter`) paired with configurable Primary & Secondary enforcement actions (e.g., `Kick`, `Temp-Ban(24h)`), strike thresholds, and timed strike-reset windows.
+- **Anti-Spam Engine:** Detects message-rate floods over a configurable time window and applies automated sanctions (e.g., `Mute(5m)`) with its own strike reset window.
+- **Enforcement Profiles & Player Identity Store:** Inspect individual player XUID/gamertag sanction logs, view the triggering message, clear active sanctions or reset records ("Clean Slate"), and maintain XUID-to-gamertag lookups in `bds_players.json` (with automatic migration from legacy `bds_players.dat`).
 
 ### 🌐 UPnP & Network Management
 ![UPnP Startup](docs/upnp1_screenshot.png)
 ![UPnP Settings](docs/upnp2_screenshot.png)
-- **Secure by Default:** UPnP is strictly disabled out of the box. You have to explicitly turn it on.
-- **Auto-Routing:** Negotiates router firewall tables on app launch so you don't have to manually port-forward.
-- **Dynamic Pools:** Proactively leases sequential UDP ports (starting at `19134`) to smoothly balance multiple player connections up to your max-players limit.
-- **Self-Cleaning:** Cleans up after itself by scrubbing the temporary hardware rules from your router when the app closes, returning `server.properties` to a pristine state.
-- **Known Limitation:** The UPnP implementation cannot verify if a requested port is already manually forwarded. Due to a common router limitation, UPnP may report a successful lease even if a manual forward already exists (the manual forward will take priority). Using a third-party port checking API could resolve this, but was explicitly ruled out to maintain strict security and privacy standards.
+- **Secure by Default:** UPnP is strictly disabled out of the box—you must explicitly enable it.
+- **Native .NET 8 UPnP Engine:** Uses a built-in SSDP/SOAP Internet Gateway Device client (no external UPnP library dependencies) to lease IPv4 `server-port` TCP/UDP, sequential `server-udp-ports` pools, and the Remote Management API port when enabled, syncing across server directory changes and scrubbing router leases cleanly on exit.
+- **`[BETA]` Consolidate UDP Ports:** Optional toggle to ignore the max-players pool and consolidate UDP mapping onto the primary server port.
+- **Reachability Verification & Optional External Checker:** During startup batch setup (`[UPnP] Verifying...`), checks TCP reachability via loopback and an optional **External Port Checker API** (`Off` by default for privacy, or choose `ifconfig.co`, `ipconfig.io`, `portchecker.io`, or a custom `{port}` / `{ip}` / `{protocol}` endpoint), confirms UDP leases in the router's active UPnP table (retrying missing leases automatically), and reports concise success or actionable Double-NAT/CGNAT failure diagnostics.
+- **Manual Networking Control:** Built-in `server-udp-ports` manager with an interactive **Verify Ports** button (guarded behind network safety acknowledgments when UPnP is off).
+
+### 📡 Remote Management API *(Off by Default)*
+- **Zero-Elevation HTTP/JSON Server:** Lightweight built-in `TcpListener` API server that runs without administrator privileges or `http.sys` URL ACL registration.
+- **Security Controls:** Strictly disabled by default behind an explicit risk acknowledgment modal, authenticated via cryptographically generated Bearer / `X-API-Key` tokens (with one-click copy and key rotation in Settings), and protected by per-IP failed-auth rate limiting.
+- **Automatic Port & UPnP Integration:** Selects an available port (or uses an optional preferred port) and coordinates its UPnP mapping automatically when UPnP is active.
+- **REST Endpoints (`/api/v1/...`):** Health check (`/ping`), host & server telemetry (`/status`), console buffer retrieval (`/console`), server start/stop/restart/commands (`/server/start`, `/stop`, `/restart`, `/command`), live player list & moderation actions (`/players`, `/players/action`), allowlist & operator inspection/updates (`/whitelist`, `/operators`), `server.properties` read/write (`/server/properties`), backup listing & triggers (`/backups`), AutoMod/app configuration (`/config`, `/automod`), and UPnP status/verification (`/network/upnp`, `/network/upnp/verify`). *(Formal API docs and companion mobile apps are still in progress; see source for request/response schemas.)*
 
 ### 💾 Backups & Recovery
 ![Backup Engine](docs/backup_screenshot.png)
-- **Granular Backups:** Back up your whole server, or just isolate specific Worlds and Packs.
-- **Compression:** Uses standard Windows `.zip` compression, or automatically hooks into WinRAR if you have it installed.
-- **One-Click Restore:** A dedicated restoration hub to quickly wipe and roll back worlds to older archive states when things go wrong.
+- **Granular Backups:** Back up your whole server, or isolate specific Worlds and Packs (`Full Server Backup`, `Backup Packs`, `Backup World(s)`).
+- **Compression:** Uses standard Windows `.zip` compression, or automatically hooks into WinRAR if installed.
+- **One-Click Restore:** A dedicated snapshot recovery hub (`Restore Selected Snapshot`) to wipe and roll back worlds to saved archive states.
 
-### 📝 Configuration Editor
-- **GUI Management:** View, toggle, and update your `server.properties` and whitelist profiles right from a clean UI dashboard—no more digging through text files.
+### 📝 Configuration & Level Editor
+- **Real-Time Server Config GUI:** View, toggle, and update `server.properties`, `allowlist.json` whitelist profiles, `permissions.json` operators, and networking rules right from a clean Material UI.
+- **`level.dat` Experiment Editor:** Optional safety-gated world editor in Settings to inspect and toggle Bedrock experiments (`Upcoming Creator Features`, `Beta APIs`, `Deferred Technical Preview`) directly inside `level.dat`.
+- **Unified App Configuration:** Consolidates settings into `config.json` with automatic migration from legacy config files.
 
 ### 📦 Addon & Pack Management
 - **Automated Directory Discovery:** Automatically detects and indexes your server's `behavior_packs` and `resource_packs` directories without manual navigation.
-- **One-Click Import:** Drag and drop `.mcpack` and `.mcaddon` files directly into the UI to unpack and register them to your active world profiles instantly.
-- **Conflict Resolution:** Safely parses manifest dependencies and alerts you to version conflicts or missing Script API requirements before packs break your world load.
+- **One-Click Import:** Drag and drop (or browse for) `.mcpack` and `.mcaddon` files directly into the UI to unpack and register them to your active world profile.
+- **Conflict Resolution:** Safely parses manifest dependencies and alerts you to version conflicts or missing Script API requirements before packs break world load.
 
 ### 🔄 BDS Core Updates
-- **Automated Update Pipeline:** Natively scrapes, fetches, and installs the latest Bedrock Dedicated Server binaries directly from the official endpoints.
+- **Automated Update Pipeline:** Checks official Bedrock Dedicated Server endpoints on launch and fetches the latest server binaries automatically.
 - **Safe File Swapping:** Intelligently migrates and preserves your configurations, active worlds, and custom packs during the upgrade process so no data is lost.
 
 ---
 
 ## 📚 Libraries & Credits
-This project leverages a couple of incredible open-source libraries:
-- **[ReaLTaiizor](https://github.com/Taiizor/ReaLTaiizor):** A massive .NET WinForms component library that powers BDSUtil's modern Material Design layout.
-- **[Open.NAT](https://github.com/lontivero/Open.NAT):** A lightweight library used to seamlessly manage the UPnP port mapping allocations.
+This project leverages the following components:
+- **[ReaLTaiizor](https://github.com/Taiizor/ReaLTaiizor):** A massive .NET WinForms component library that powers BDSUtil's Material Design layout.
+- **Native .NET 8 Networking:** Built-in SSDP/SOAP UPnP IGD engine and self-hosted `TcpListener` HTTP/JSON API server (replacing the earlier `Open.NAT` dependency).
 
 ---
 
 ## 🗺️ Roadmap
 
-- 📱 **Remote Management API & Companion Apps:** An optional, lightweight remote management API allowing you to monitor and control your server on the go via upcoming Android and Web companion apps.
+- 📱 **Companion Apps & API Docs:** Dedicated Android and Web companion clients (plus full endpoint documentation) built on top of the Remote Management API introduced in `v1.1.0`.
+- 🔒 **Optional TLS Reverse Proxy & ACME Automation:** Configurable TLS tunneling and automated certificate provisioning if future Bedrock/NetherNet changes require encrypted transport.

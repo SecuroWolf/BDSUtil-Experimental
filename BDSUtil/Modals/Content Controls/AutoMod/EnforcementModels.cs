@@ -1,7 +1,10 @@
-﻿using System;
+﻿using BDSUtil.Helpers;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace BDSUtil.Models.AutoMod
 {
@@ -16,9 +19,12 @@ namespace BDSUtil.Models.AutoMod
 
         public List<EnforcementRecord> History { get; set; } = new List<EnforcementRecord>();
 
+        [JsonExtensionData]
+        public Dictionary<string, JsonElement> ExtensionData { get; set; }
+
         public string GetFormattedListEntry()
         {
-            if (ActiveSanctionType.ToLower() == "inactive")
+            if (string.Equals(ActiveSanctionType, "inactive", StringComparison.OrdinalIgnoreCase))
                 return $"{Gamertag} [inactive]";
 
             string endDate = SanctionExpiration.HasValue
@@ -32,15 +38,19 @@ namespace BDSUtil.Models.AutoMod
     public class EnforcementRecord
     {
         public DateTime Date { get; set; }
-        public string ActionTaken { get; set; }
+        public string ActionTaken { get; set; } = string.Empty;
         public string Reason { get; set; } = string.Empty;
-        public string MessageContext { get; set; } = string.Empty; // New field for the raw chat text
+        public string MessageContext { get; set; } = string.Empty;
+
+        [JsonExtensionData]
+        public Dictionary<string, JsonElement> ExtensionData { get; set; }
     }
 
-    // --- 2. The Dependency-Free File Manager ---
+    // --- 2. The System.Text.Json File Manager ---
     public static class ProfileManager
     {
-        private static readonly string ProfilesDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "enforcement_profiles");
+        private static readonly object _fileLock = new object();
+        private static readonly string ProfilesDirectory = Path.Combine(AppContext.BaseDirectory, "enforcement_profiles");
 
         private static void EnsureDirectoryExists()
         {
@@ -52,135 +62,50 @@ namespace BDSUtil.Models.AutoMod
         {
             EnsureDirectoryExists();
             string filePath = Path.Combine(ProfilesDirectory, $"{xuid}.ep");
-            PlayerEnforcementProfile profile = new PlayerEnforcementProfile { Xuid = xuid };
+            PlayerEnforcementProfile fallback = new PlayerEnforcementProfile { Xuid = xuid };
 
-            if (!File.Exists(filePath)) return profile;
+            if (!File.Exists(filePath)) return fallback;
 
             try
             {
-                string[] lines = File.ReadAllLines(filePath);
-                bool inHistoryBlock = false;
-                EnforcementRecord currentRecord = null;
-
-                foreach (string rawLine in lines)
+                string rawJson;
+                lock (_fileLock)
                 {
-                    string line = rawLine.Trim();
-
-                    // ONLY skip empty lines and array brackets globally. 
-                    // We need '{' and '}' to pass through so the History block can instantiate records!
-                    if (string.IsNullOrEmpty(line) || line == "[" || line == "]") continue;
-
-                    if (line.StartsWith("\"History\":"))
-                    {
-                        inHistoryBlock = true;
-                        continue;
-                    }
-
-                    if (inHistoryBlock)
-                    {
-                        if (line == "{")
-                        {
-                            currentRecord = new EnforcementRecord();
-                            continue;
-                        }
-
-                        if (line.StartsWith("}") || line.StartsWith("},"))
-                        {
-                            if (currentRecord != null) profile.History.Add(currentRecord);
-                            currentRecord = null;
-                            continue;
-                        }
-
-                        if (currentRecord != null) ParseRecordLine(line, currentRecord);
-                    }
-                    else
-                    {
-                        // Skip the outer wrapper brackets for the main profile block safely down here
-                        if (line == "{" || line == "}") continue;
-
-                        ParseProfileLine(line, profile);
-                    }
+                    rawJson = File.ReadAllText(filePath);
                 }
+
+                if (string.IsNullOrWhiteSpace(rawJson)) return fallback;
+
+                PlayerEnforcementProfile profile = JsonSerializer.Deserialize<PlayerEnforcementProfile>(rawJson, JsonHelper.IndentedOptions);
+                if (profile == null) return fallback;
+
+                profile.Gamertag ??= string.Empty;
+                profile.Xuid = string.IsNullOrWhiteSpace(profile.Xuid) ? xuid : profile.Xuid;
+                profile.ActiveSanctionType = string.IsNullOrWhiteSpace(profile.ActiveSanctionType) ? "inactive" : profile.ActiveSanctionType;
+                profile.History ??= new List<EnforcementRecord>();
+                return profile;
             }
-            catch { }
-
-            return profile;
-        }
-
-        private static void ParseProfileLine(string line, PlayerEnforcementProfile profile)
-        {
-            int colonIdx = line.IndexOf(':');
-            if (colonIdx > 0)
+            catch (Exception ex)
             {
-                string key = line.Substring(0, colonIdx).Trim(' ', '"', ',');
-                string val = line.Substring(colonIdx + 1).Trim(' ', '"', ',');
-
-                switch (key)
-                {
-                    case "Gamertag": profile.Gamertag = val; break;
-                    case "Xuid": profile.Xuid = val; break;
-                    case "ActiveSanctionType": profile.ActiveSanctionType = val; break;
-                    case "SanctionExpiration":
-                        if (DateTime.TryParse(val, out DateTime dt)) profile.SanctionExpiration = dt;
-                        break;
-                }
-            }
-        }
-
-        private static void ParseRecordLine(string line, EnforcementRecord record)
-        {
-            int colonIdx = line.IndexOf(':');
-            if (colonIdx > 0)
-            {
-                string key = line.Substring(0, colonIdx).Trim(' ', '"', ',');
-                string val = line.Substring(colonIdx + 1).Trim(' ', '"', ',');
-
-                switch (key)
-                {
-                    case "Date":
-                        if (DateTime.TryParse(val, out DateTime dt)) record.Date = dt;
-                        break;
-                    case "ActionTaken": record.ActionTaken = val.Replace("\\\\", "\\"); break;
-                    case "Reason": record.Reason = val.Replace("\\\\", "\\"); break;
-                    case "MessageContext": record.MessageContext = val.Replace("\\\\", "\\"); break;
-                }
+                Debug.WriteLine($"[ProfileManager Load Error ({xuid})]: {ex.Message}");
+                return fallback;
             }
         }
 
         public static void SaveProfile(PlayerEnforcementProfile profile)
         {
+            if (profile == null || string.IsNullOrWhiteSpace(profile.Xuid)) return;
+
             EnsureDirectoryExists();
-            if (string.IsNullOrWhiteSpace(profile.Xuid)) return;
-
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("{");
-            sb.AppendLine($"  \"Gamertag\": \"{profile.Gamertag}\",");
-            sb.AppendLine($"  \"Xuid\": \"{profile.Xuid}\",");
-            sb.AppendLine($"  \"ActiveSanctionType\": \"{profile.ActiveSanctionType}\",");
-
-            string expStr = profile.SanctionExpiration.HasValue ? profile.SanctionExpiration.Value.ToString("O") : "";
-            sb.AppendLine($"  \"SanctionExpiration\": \"{expStr}\",");
-
-            sb.AppendLine("  \"History\": [");
-            for (int i = 0; i < profile.History.Count; i++)
-            {
-                EnforcementRecord rec = profile.History[i];
-                sb.AppendLine("    {");
-                sb.AppendLine($"      \"Date\": \"{rec.Date:O}\",");
-                sb.AppendLine($"      \"ActionTaken\": \"{rec.ActionTaken.Replace("\\", "\\\\")}\",");
-                sb.AppendLine($"      \"Reason\": \"{rec.Reason.Replace("\\", "\\\\")}\",");
-                sb.AppendLine($"      \"MessageContext\": \"{rec.MessageContext.Replace("\\", "\\\\")}\"");
-
-                if (i < profile.History.Count - 1)
-                    sb.AppendLine("    },");
-                else
-                    sb.AppendLine("    }");
-            }
-            sb.AppendLine("  ]");
-            sb.AppendLine("}");
+            profile.History ??= new List<EnforcementRecord>();
 
             string filePath = Path.Combine(ProfilesDirectory, $"{profile.Xuid}.ep");
-            File.WriteAllText(filePath, sb.ToString());
+            string json = JsonSerializer.Serialize(profile, JsonHelper.IndentedOptions);
+
+            lock (_fileLock)
+            {
+                JsonHelper.WriteTextAtomically(filePath, json);
+            }
         }
 
         public static List<PlayerEnforcementProfile> GetAllProfiles()
@@ -200,9 +125,12 @@ namespace BDSUtil.Models.AutoMod
         public static void DeleteProfile(string xuid)
         {
             string filePath = Path.Combine(ProfilesDirectory, $"{xuid}.ep");
-            if (File.Exists(filePath))
+            lock (_fileLock)
             {
-                try { File.Delete(filePath); } catch { }
+                if (File.Exists(filePath))
+                {
+                    try { File.Delete(filePath); } catch { }
+                }
             }
         }
     }

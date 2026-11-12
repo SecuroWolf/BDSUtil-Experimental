@@ -57,7 +57,7 @@ namespace BDSUtil.Modals
             // FIXED: Swapped out private network values for a clean, generic architectural syntax placeholder
             infoBox.SelectionFont = new Font("Consolas", 9.5f, FontStyle.Bold);
             infoBox.SelectionColor = Color.FromArgb(255, 235, 59); // Yellow highlights
-            infoBox.AppendText("server-udp-ports=[YourPublicIP]:19134:19134,[YourPublicIP]:19135:19135...\n\n");
+            infoBox.AppendText("server-udp-ports=[YourPublicIP]:19133:19133,[YourPublicIP]:19134:19134...\n\n");
 
 
             // Section 3 Header
@@ -76,7 +76,7 @@ namespace BDSUtil.Modals
             infoBox.AppendText("4. CAPACITY AND PLAYER CONSTRAINTS\n");
             infoBox.SelectionFont = new Font("Roboto", 9.5f, FontStyle.Regular);
             infoBox.SelectionColor = Color.FromArgb(178, 255, 255, 255);
-            infoBox.AppendText("By default, BDSUtil maps an initial 10-port block sequence starting from 19134 through 19143. This allocation strictly supports up to 10 active external concurrent player profiles. You must scale the available port allocation array to precisely match your intended Max Player cap. If the concurrent user traffic exceeds the number of individual port maps declared inside your configuration file, the Nethernet engine will instantly drop any subsequent inbound client connection handshakes.\n\n");
+            infoBox.AppendText("By default, BDSUtil maps an initial 10-port block sequence starting from 19133 through 19142. This allocation strictly supports up to 10 active external concurrent player profiles. You must scale the available port allocation array to precisely match your intended Max Player cap. If the concurrent user traffic exceeds the number of individual port maps declared inside your configuration file, the Nethernet engine will instantly drop any subsequent inbound client connection handshakes.\n\n");
 
             infoBox.SelectionFont = new Font("Roboto", 10f, FontStyle.Italic);
             infoBox.SelectionColor = Color.FromArgb(255, 255, 255);

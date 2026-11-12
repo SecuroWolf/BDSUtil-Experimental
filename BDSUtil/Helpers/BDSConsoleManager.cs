@@ -196,9 +196,9 @@ namespace BDSUtil.Helpers
                 // PVP DEATH INTERCEPT ROUTINE
                 else if (text.Contains("[DEATH][PVP]"))
                 {
-                    string victim = ExtractTokenValue(text, "victim=");
-                    string killer = ExtractTokenValue(text, "killer=");
-                    string cause = ExtractTokenValue(text, "cause=");
+                    string victim = JsonHelper.ExtractBridgeTokenValue(text, "victim=");
+                    string killer = JsonHelper.ExtractBridgeTokenValue(text, "killer=");
+                    string cause = JsonHelper.ExtractBridgeTokenValue(text, "cause=");
 
                     _pvpKillCallback?.Invoke(victim, killer, cause);
                 }
@@ -207,18 +207,6 @@ namespace BDSUtil.Helpers
             {
                 Debug.WriteLine($"[Bridge Parsing Exception]: {ex.Message}");
             }
-        }
-
-        private string ExtractTokenValue(string line, string tokenName)
-        {
-            int start = line.IndexOf(tokenName);
-            if (start == -1) return string.Empty;
-
-            start += tokenName.Length + 1; // Advance past token name and opening quote marker
-            int end = line.IndexOf('"', start);
-            if (end == -1) return string.Empty;
-
-            return line.Substring(start, end - start);
         }
     }
 }

@@ -14,7 +14,7 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
         private readonly Dictionary<string, string> _serverPropertiesMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         private readonly List<string> _activeUdpNodesCache = new List<string>();
         private readonly Label _focusTrapLabel;
-        private bool _isManualChange = true;
+        private readonly ReaLTaiizor.Controls.MaterialButton _verifyPortsBtn;
 
         public NetworkingControl()
         {
@@ -25,7 +25,23 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             _focusTrapLabel = new Label { Size = new System.Drawing.Size(0, 0), Location = new System.Drawing.Point(0, 0), TabStop = true };
             this.Controls.Add(_focusTrapLabel);
 
-            if (CfgUPnP != null) CfgUPnP.CheckedChanged += CfgUPnP_CheckedChanged;
+            _verifyPortsBtn = new ReaLTaiizor.Controls.MaterialButton
+            {
+                Text = "Verify Ports",
+                Type = ReaLTaiizor.Controls.MaterialButton.MaterialButtonType.Outlined,
+                UseAccentColor = false,
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                Location = new System.Drawing.Point(618, 14),
+                Size = new System.Drawing.Size(130, 36),
+                TabIndex = 12
+            };
+            _verifyPortsBtn.Click += VerifyPortsBtn_Click;
+            if (materialCard3 != null)
+            {
+                materialCard3.Controls.Add(_verifyPortsBtn);
+                _verifyPortsBtn.BringToFront();
+            }
+
             if (APBTN != null) APBTN.Click += APBTN_Click;
             if (RPBTN != null) RPBTN.Click += RPBTN_Click;
         }
@@ -46,13 +62,6 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             ClearSelectionFocus();
         }
 
-        private void CfgUPnP_CheckedChanged(object sender, EventArgs e)
-        {
-            ToggleManualInputContainers(!CfgUPnP.Checked);
-            if (_isManualChange) SaveConfig();
-            ClearSelectionFocus();
-        }
-
         private void ToggleManualInputContainers(bool enableManual)
         {
             if (ManPMCtrls != null) ManPMCtrls.Enabled = enableManual;
@@ -67,41 +76,25 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             PMList.Items.Clear();
             PMList.Controls.Clear();
 
+            bool upnpEnabled = AppSettings.Instance?.Networking?.EnableUPnP ?? false;
+            bool consolidateEnabled = AppSettings.Instance?.Networking?.ConsolidateUdpPorts ?? false;
+            ToggleManualInputContainers(!upnpEnabled);
+            UpdateUpnpBannerText(upnpEnabled, consolidateEnabled);
+
             if (!File.Exists(_propertiesPath)) { ClearSelectionFocus(); return; }
 
             try
             {
-                _isManualChange = false;
-
-                string[] lines = File.ReadAllLines(_propertiesPath);
-                foreach (string line in lines)
+                ServerPropertiesDocument.CommentOutServerPortV6(_propertiesPath);
+                foreach (KeyValuePair<string, string> kvp in ServerPropertiesDocument.ReadProperties(_propertiesPath))
                 {
-                    if (string.IsNullOrWhiteSpace(line) || line.Trim().StartsWith("#")) continue;
-
-                    int equalsIdx = line.IndexOf('=');
-                    if (equalsIdx != -1)
-                    {
-                        string key = line.Substring(0, equalsIdx).Trim();
-                        string val = line.Substring(equalsIdx + 1).Trim();
-
-                        if (key.Equals("bdsutil-enable-upnp", StringComparison.OrdinalIgnoreCase)) continue;
-                        _serverPropertiesMap[key] = val;
-                    }
+                    _serverPropertiesMap[kvp.Key] = kvp.Value;
                 }
-
-                if (AppSettings.Instance != null) CfgUPnP.Checked = AppSettings.Instance.EnableUPnP;
-                else CfgUPnP.Checked = false;
-
-                ToggleManualInputContainers(!CfgUPnP.Checked);
 
                 if (_serverPropertiesMap.TryGetValue("server-udp-ports", out string rawPorts) && !string.IsNullOrWhiteSpace(rawPorts))
                 {
-                    string[] nodes = rawPorts.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (string node in nodes)
+                    foreach (string cleanNode in ServerPropertiesDocument.ParseUdpNodeTokens(rawPorts))
                     {
-                        string cleanNode = node.Trim();
-                        if (string.IsNullOrEmpty(cleanNode)) continue;
-
                         _activeUdpNodesCache.Add(cleanNode);
                         string[] segments = cleanNode.Split(':');
 
@@ -127,21 +120,17 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             {
                 System.Diagnostics.Debug.WriteLine($"Network load file violation error: {ex.Message}");
             }
-            finally
-            {
-                _isManualChange = true;
-            }
 
             ClearSelectionFocus();
         }
 
-        private void APBTN_Click(object sender, EventArgs e)
+        private async void APBTN_Click(object sender, EventArgs e)
         {
             using (var addDialog = new BDSUtil.Modals.AddPortDialogue())
             {
                 if (addDialog.ShowDialog(this) == DialogResult.OK && addDialog.IsConfirmed)
                 {
-                    string wanIpAddress = UPnPEngine.GetExternalIPAddress();
+                    string wanIpAddress = await UPnPEngine.GetExternalIPAddressAsync();
                     string formattedPropertyToken = $"{wanIpAddress}:{addDialog.ExternalPort}:{addDialog.InternalPort}";
 
                     string cleanDisplayLabel = (addDialog.ExternalPort == addDialog.InternalPort)
@@ -164,6 +153,135 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             ClearSelectionFocus();
         }
 
+        private async void VerifyPortsBtn_Click(object sender, EventArgs e)
+        {
+            _verifyPortsBtn.Enabled = false;
+            string originalText = _verifyPortsBtn.Text;
+            _verifyPortsBtn.Text = "Checking...";
+
+            try
+            {
+                int primaryPort = 19132;
+                if (_serverPropertiesMap.TryGetValue("server-port", out string rawPrimary) &&
+                    int.TryParse(rawPrimary, out int parsedPrimary) &&
+                    parsedPrimary > 0 && parsedPrimary <= 65535)
+                {
+                    primaryPort = parsedPrimary;
+                }
+
+                var targets = new List<(int ExternalPort, int InternalPort, string Protocol)>();
+                if (AppSettings.Instance?.Networking?.EnableUPnP == true)
+                {
+                    targets.Add((primaryPort, primaryPort, "TCP"));
+                }
+                targets.Add((primaryPort, primaryPort, "UDP"));
+
+                foreach (string nodeToken in _activeUdpNodesCache)
+                {
+                    string[] parts = nodeToken.Split(':');
+                    if (parts.Length >= 2 &&
+                        int.TryParse(parts[parts.Length - 2], out int extPort) &&
+                        int.TryParse(parts[parts.Length - 1], out int intPort) &&
+                        extPort > 0 && extPort <= 65535 &&
+                        intPort > 0 && intPort <= 65535 &&
+                        !targets.Any(t => t.ExternalPort == extPort && t.InternalPort == intPort && t.Protocol == "UDP"))
+                    {
+                        targets.Add((extPort, intPort, "UDP"));
+                        if (targets.Count >= 5) break;
+                    }
+                }
+
+                if (AppSettings.Instance?.RemoteApi?.Enabled == true &&
+                    BDSUtil.Helpers.RemoteApi.RemoteApiManager.Instance.BoundPort > 0)
+                {
+                    int apiPort = BDSUtil.Helpers.RemoteApi.RemoteApiManager.Instance.BoundPort;
+                    targets.Add((apiPort, apiPort, "TCP"));
+                }
+
+                var options = new PortVerificationOptions
+                {
+                    ExternalProbeUrl = AppSettings.Instance?.Networking?.ResolveEffectiveExternalProbeUrl() ?? string.Empty
+                };
+
+                var gateway = await UPnPEngine.DiscoverGatewayAsync(TimeSpan.FromMilliseconds(2500));
+                options.Gateway = gateway;
+
+                var report = new StringBuilder();
+                foreach (var target in targets)
+                {
+                    PortForwardVerificationResult res = await UPnPEngine.VerifyPortAsync(
+                        target.ExternalPort,
+                        target.InternalPort,
+                        target.Protocol,
+                        options);
+
+                    if (report.Length == 0)
+                    {
+                        report.AppendLine($"Local IP: {res.LocalIp}");
+                        report.AppendLine($"Public External IP: {res.PublicExternalIp}");
+                        report.AppendLine($"Router WAN IP: {(string.IsNullOrWhiteSpace(res.RouterExternalIp) ? "(UPnP Gateway Not Found)" : res.RouterExternalIp)}");
+                        report.AppendLine();
+                    }
+
+                    string forwardStatus = res.IsForwardedToHost
+                        ? (res.ForwardedViaManualOrUnknownRule ? "Confirmed (Manual/DMZ)" : "Confirmed to Host")
+                        : (res.IsAssignedToAnotherHost ? $"Conflict ({res.MappedInternalClient})" : "Not Confirmed");
+
+                    string externalStatus = res.IsExternallyAccessible switch
+                    {
+                        true => "Accessible",
+                        false => "Blocked / Unreachable",
+                        null => "Indeterminate (Loopback Timeout)"
+                    };
+
+                    report.AppendLine($"Port {target.Protocol} {target.ExternalPort} -> {target.InternalPort}:");
+                    report.AppendLine($"  • Forwarded to Host: {forwardStatus}");
+                    report.AppendLine($"  • External IP Reachable: {externalStatus} ({res.AccessibilityState})");
+                    report.AppendLine($"  • Details: {res.DiagnosticMessage}");
+                    report.AppendLine();
+                }
+
+                ReaLTaiizor.Controls.MaterialMessageBox.Show(
+                    this,
+                    report.ToString().TrimEnd(),
+                    "Port Forwarding & External Reachability Report",
+                    MessageBoxButtons.OK,
+                    false,
+                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center);
+            }
+            catch (Exception ex)
+            {
+                ReaLTaiizor.Controls.MaterialMessageBox.Show(
+                    this,
+                    $"Port verification encountered an error:\n\n{ex.Message}",
+                    "Verification Error",
+                    MessageBoxButtons.OK,
+                    false,
+                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center);
+            }
+            finally
+            {
+                _verifyPortsBtn.Text = originalText;
+                _verifyPortsBtn.Enabled = true;
+                ClearSelectionFocus();
+            }
+        }
+
+        private void UpdateUpnpBannerText(bool upnpEnabled, bool consolidateEnabled)
+        {
+            if (UPnPLBL == null) return;
+
+            if (upnpEnabled)
+            {
+                string modeTag = consolidateEnabled ? " (Consolidated single-UDP mode)" : "";
+                UPnPLBL.Text = $"UPnP Automation: Enabled in Settings -> Networking{modeTag}\r\nManual port editing is locked while UPnP manages server-udp-ports.";
+            }
+            else
+            {
+                UPnPLBL.Text = "UPnP Automation: Disabled (toggle in Settings -> Networking)\r\nConfigure manual server-udp-ports mappings below.";
+            }
+        }
+
         private void RPBTN_Click(object sender, EventArgs e)
         {
             var indicesToRemove = new List<int>();
@@ -181,9 +299,7 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
                         if (parts.Length >= 2 && int.TryParse(parts[parts.Length - 2], out int extPortToPurge))
                         {
                             int portTarget = extPortToPurge;
-                            System.Threading.Tasks.Task.Run(() => {
-                                try { UPnPEngine.ClosePort(portTarget); } catch { }
-                            });
+                            _ = System.Threading.Tasks.Task.Run(() => UPnPEngine.ClosePortAsync(portTarget, "UDP"));
                         }
                     }
                 }
@@ -204,17 +320,15 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
 
             try
             {
-                _isManualChange = false;
-
                 // Commit the target parameters clean state down to disk
                 SaveConfig();
 
                 // Re-verify and rebuild list layout items from disk explicitly 
                 LoadConfig();
             }
-            finally
+            catch (Exception ex)
             {
-                _isManualChange = true;
+                System.Diagnostics.Debug.WriteLine($"Network remove error: {ex.Message}");
             }
 
             ClearSelectionFocus();
@@ -224,104 +338,18 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
         {
             if (string.IsNullOrEmpty(_propertiesPath) || !File.Exists(_propertiesPath)) return;
 
+            bool upnpEnabled = AppSettings.Instance?.Networking?.EnableUPnP ?? false;
+            if (upnpEnabled)
+            {
+                ClearSelectionFocus();
+                return;
+            }
+
             try
             {
-                bool historicalUpnpState = AppSettings.Instance?.GetSetting("EnableUPnP", false) ?? false;
-                bool activeUiUpnpState = CfgUPnP.Checked;
-
-                if (AppSettings.Instance != null)
-                {
-                    AppSettings.Instance.EnableUPnP = activeUiUpnpState;
-                    AppSettings.Instance.SaveSettingsAsync().GetAwaiter().GetResult();
-                }
-
-                _serverPropertiesMap["server-udp-ports"] = string.Join(",", _activeUdpNodesCache);
-
-                string[] lines = File.ReadAllLines(_propertiesPath);
-                List<string> outputBufferLines = new List<string>();
-                bool portsFieldHandled = false;
-
-                foreach (string line in lines)
-                {
-                    string trimmedLine = line.Trim();
-
-                    // ✅ FIX: Only transform the VERY FIRST instance found. Pass all subsequent examples through cleanly.
-                    if (!portsFieldHandled && trimmedLine.IndexOf("server-udp-ports", StringComparison.OrdinalIgnoreCase) != -1)
-                    {
-                        outputBufferLines.Add($"server-udp-ports={_serverPropertiesMap["server-udp-ports"]}");
-                        portsFieldHandled = true;
-                        continue;
-                    }
-
-                    if (string.IsNullOrWhiteSpace(line) || trimmedLine.StartsWith("#"))
-                    {
-                        outputBufferLines.Add(line);
-                        continue;
-                    }
-
-                    int equalsIdx = line.IndexOf('=');
-                    if (equalsIdx != -1)
-                    {
-                        string key = line.Substring(0, equalsIdx).Trim();
-
-                        if (key.Equals("bdsutil-enable-upnp", StringComparison.OrdinalIgnoreCase)) continue;
-
-                        if (key.Equals("server-udp-ports", StringComparison.OrdinalIgnoreCase))
-                        {
-                            // Safety backup in case an uncommented line slipped past the indexer check above
-                            if (!portsFieldHandled)
-                            {
-                                outputBufferLines.Add($"{key}={_serverPropertiesMap["server-udp-ports"]}");
-                                portsFieldHandled = true;
-                            }
-                            else
-                            {
-                                // If already handled up top, strip out extra active lines so bedrock_server doesn't crash
-                                continue;
-                            }
-                            continue;
-                        }
-
-                        if (_serverPropertiesMap.ContainsKey(key))
-                        {
-                            outputBufferLines.Add($"{key}={_serverPropertiesMap[key]}");
-                            continue;
-                        }
-                    }
-                    outputBufferLines.Add(line);
-                }
-
-                // FALLBACK: If no line containing 'server-udp-ports' was found anywhere, append it safely to the bottom
-                if (!portsFieldHandled)
-                {
-                    outputBufferLines.Add($"server-udp-ports={_serverPropertiesMap["server-udp-ports"]}");
-                }
-
-                File.WriteAllLines(_propertiesPath, outputBufferLines, Encoding.UTF8);
-
-                if (historicalUpnpState != activeUiUpnpState)
-                {
-                    if (ReaLTaiizor.Controls.MaterialMessageBox.Show(
-                        this,
-                        "[UPnP CAPABILITY INVERSION DETECTED]\n\n" +
-                        "You have modified the core network translation engine configuration state.\n\n" +
-                        "To map network interface ports securely and align background execution threads, " +
-                        "BDSUtil requires a clean environmental application initialization loop cycle.\n\n" +
-                        "Would you like to restart the manager app right now, or continue working manually?",
-                        "Infrastructure Realignment Required",
-                        true) == DialogResult.OK)
-                    {
-                        string serverDirectory = AppSettings.Instance?.ServerExecutablePath;
-
-                        using (UPnPCloseProgressForm progressModal = new UPnPCloseProgressForm(serverDirectory))
-                        {
-                            progressModal.ShowDialog(this);
-                        }
-
-                        Application.Restart();
-                        Environment.Exit(0);
-                    }
-                }
+                string serializedPorts = string.Join(",", _activeUdpNodesCache);
+                _serverPropertiesMap["server-udp-ports"] = serializedPorts;
+                ServerPropertiesDocument.SetServerUdpPorts(_propertiesPath, serializedPorts);
             }
             catch (Exception ex)
             {

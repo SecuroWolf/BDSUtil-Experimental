@@ -36,7 +36,7 @@ namespace BDSUtil.Modals.Content_Controls.Level_Editor
         {
             _isInitializing = true;
 
-            bool isAllowed = AppSettings.Instance.WorldEditorEnabled;
+            bool isAllowed = AppSettings.Instance.General.WorldEditorEnabled;
             this.Enabled = isAllowed;
 
             if (isAllowed)
@@ -49,7 +49,7 @@ namespace BDSUtil.Modals.Content_Controls.Level_Editor
         }
         private string ResolveActiveLevelDatPath()
         {
-            string rootPath = AppSettings.Instance.ServerExecutablePath;
+            string rootPath = AppSettings.Instance.General.ServerExecutablePath;
             if (string.IsNullOrWhiteSpace(rootPath) || !Directory.Exists(rootPath)) return null;
 
             string propsPath = Path.Combine(rootPath, "server.properties");
@@ -92,7 +92,7 @@ namespace BDSUtil.Modals.Content_Controls.Level_Editor
         {
             if (_isInitializing || !(sender is MaterialSwitch targetedSwitch)) return;
 
-            if (targetedSwitch.Checked && !AppSettings.Instance.ExperimentsWarned)
+            if (targetedSwitch.Checked && !AppSettings.Instance.General.ExperimentsWarned)
             {
                 if (this.FindForm() is MaterialForm parentMaterialForm)
                 {
@@ -117,8 +117,7 @@ namespace BDSUtil.Modals.Content_Controls.Level_Editor
                         return;
                     }
 
-                    AppSettings.Instance.ExperimentsWarned = true;
-                    AppSettings.Instance.SaveSettings();
+                    AppSettings.Instance.Update(cfg => cfg.General.ExperimentsWarned = true);
                 }
             }
 

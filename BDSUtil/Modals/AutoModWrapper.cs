@@ -32,7 +32,7 @@ namespace BDSUtil.Modals
 
         private void AutoModWrapper_Load(object sender, EventArgs e)
         {
-            string storedPath = AppSettings.Instance?.ServerExecutablePath;
+            string storedPath = AppSettings.Instance?.General.ServerExecutablePath;
             if (string.IsNullOrWhiteSpace(storedPath)) return;
 
             _targetRootPath = storedPath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
