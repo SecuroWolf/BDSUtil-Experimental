@@ -45,7 +45,7 @@ WITHOUT LIMITING THE FOREGOING, I ACCEPT ABSOLUTELY NO LIABILITY IF THIS SOFTWAR
 ![UPnP Startup](docs/upnp1_screenshot.png)
 ![UPnP Settings](docs/upnp2_screenshot.png)
 - **Secure by Default:** UPnP is strictly disabled out of the box—you must explicitly enable it.
-- **Native .NET 8 UPnP Engine:** Uses a built-in SSDP/SOAP Internet Gateway Device client (no external UPnP library dependencies) to lease IPv4 `server-port` TCP/UDP, sequential `server-udp-ports` pools, and the Remote Management API port when enabled, syncing across server directory changes and scrubbing router leases cleanly on exit.
+- **Native .NET 11 UPnP Engine:** Uses a built-in SSDP/SOAP Internet Gateway Device client (no external UPnP library dependencies) to lease IPv4 `server-port` TCP/UDP, sequential `server-udp-ports` pools, and the Remote Management API port when enabled, syncing across server directory changes and scrubbing router leases cleanly on exit.
 - **`[BETA]` Consolidate UDP Ports:** Optional toggle to ignore the max-players pool and consolidate UDP mapping onto the primary server port.
 - **Reachability Verification & Optional External Checker:** During startup batch setup (`[UPnP] Verifying...`), checks TCP reachability via loopback and an optional **External Port Checker API** (`Off` by default for privacy, or choose `ifconfig.co`, `ipconfig.io`, `portchecker.io`, or a custom `{port}` / `{ip}` / `{protocol}` endpoint), confirms UDP leases in the router's active UPnP table (retrying missing leases automatically), and reports concise success or actionable Double-NAT/CGNAT failure diagnostics.
 - **Manual Networking Control:** Built-in `server-udp-ports` manager with an interactive **Verify Ports** button (guarded behind network safety acknowledgments when UPnP is off).
@@ -80,8 +80,8 @@ WITHOUT LIMITING THE FOREGOING, I ACCEPT ABSOLUTELY NO LIABILITY IF THIS SOFTWAR
 
 ## 📚 Libraries & Credits
 This project leverages the following components:
-- **[ReaLTaiizor](https://github.com/Taiizor/ReaLTaiizor):** A massive .NET WinForms component library that powers BDSUtil's Material Design layout.
-- **Native .NET 8 Networking:** Built-in SSDP/SOAP UPnP IGD engine and self-hosted `TcpListener` HTTP/JSON API server (replacing the earlier `Open.NAT` dependency).
+- **[material3-dotnet](https://github.com/dary1337/material3-dotnet):** Created by [dary1337](https://github.com/dary1337), providing the Material Design 3 (Material You) WinForms component library that powers BDSUtil's UI layout.
+- **Native .NET 11 Networking:** Built-in SSDP/SOAP UPnP IGD engine and self-hosted `TcpListener` HTTP/JSON API server (replacing the earlier `Open.NAT` dependency).
 
 ---
 

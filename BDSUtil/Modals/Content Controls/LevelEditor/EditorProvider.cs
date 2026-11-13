@@ -1,21 +1,21 @@
 ﻿using BDSUtil.Helpers;
-using ReaLTaiizor.Controls;
-using ReaLTaiizor.Forms;
+using BDSUtil.UI;
+using Material3.WinForms.Controls;
 using System;
 using System.IO;
 using System.Windows.Forms;
 
 namespace BDSUtil.Modals.Content_Controls.Level_Editor
 {
-    public partial class EditorProvider : UserControl
+    public partial class EditorProvider : Material3UserControl
     {
         private bool _isInitializing = true;
         private Label _focusTrapLabel; // ✅ Holds focus invisibly to prevent input highlighting
 
         public EditorProvider()
         {
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             InitializeComponent();
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
 
             _focusTrapLabel = new Label { Size = new System.Drawing.Size(0, 0), Location = new System.Drawing.Point(0, 0), TabStop = true };
             this.Controls.Add(_focusTrapLabel);
@@ -94,18 +94,16 @@ namespace BDSUtil.Modals.Content_Controls.Level_Editor
 
             if (targetedSwitch.Checked && !AppSettings.Instance.General.ExperimentsWarned)
             {
-                if (this.FindForm() is MaterialForm parentMaterialForm)
+                if (this.FindForm() is Form parentForm)
                 {
-                    DialogResult warningResult = MaterialMessageBox.Show(
-                        parentMaterialForm,
+                    DialogResult warningResult = MaterialDialogBox.Show(
+                        parentForm,
                         "PERMANENT EXPERIMENTAL LOCKOUT WARNING:\n\n" +
                         "Enabling experimental features irreversibly alters this world file. " +
                         "Achievements will be permanently disabled for this world, and it cannot be reverted back to a vanilla state.\n\n" +
                         "Are you absolutely certain you want to apply these permanent changes to the world binary?\n",
                         "Irreversible World Modification Warning",
-                        MessageBoxButtons.YesNo,
-                        false,
-                        MaterialFlexibleForm.ButtonsPosition.Center
+                        MessageBoxButtons.YesNo
                     );
 
                     if (warningResult == DialogResult.No)

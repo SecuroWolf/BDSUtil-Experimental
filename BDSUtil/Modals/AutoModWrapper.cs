@@ -1,11 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Windows.Forms;
-using ReaLTaiizor.Forms;
+using BDSUtil.UI;
+using Material3.Core;
+using Material3.WinForms.Drawing;
 
 namespace BDSUtil.Modals
 {
-    public partial class AutoModWrapper : MaterialForm
+    public partial class AutoModWrapper : Material3Form
     {
         private readonly MainWindow _parentForm;
         private string _targetRootPath;
@@ -23,6 +25,16 @@ namespace BDSUtil.Modals
             this.Sizable = false;
             this.ShowInTaskbar = true;
             this.StartPosition = FormStartPosition.CenterParent;
+            SyncTitleBarMetadata();
+
+            Material3NavigationHelper.Bind(
+                _navRail,
+                AMTabControl,
+                ("Filter", MaterialIcons.Search),
+                ("Options", MaterialIcons.Settings),
+                ("Actions", MaterialIcons.Warning),
+                ("Save & Exit", MaterialIcons.CheckCircle)
+            );
 
             if (AMTabControl != null)
             {

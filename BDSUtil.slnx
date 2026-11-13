@@ -1,3 +1,5 @@
 <Solution>
+  <Project Path="../../Documents/material3-dotnet-main/material3-dotnet-main/src/Material3.Core/Material3.Core.csproj" />
+  <Project Path="../../Documents/material3-dotnet-main/material3-dotnet-main/src/Material3.WinForms/Material3.WinForms.csproj" />
   <Project Path="BDSUtil/BDSUtil.csproj" Id="de19ed44-52fd-4cc6-a408-f18d12e1795d" />
 </Solution>

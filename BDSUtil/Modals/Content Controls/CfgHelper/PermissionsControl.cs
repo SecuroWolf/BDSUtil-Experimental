@@ -1,15 +1,17 @@
-﻿using System;
+﻿using BDSUtil.Helpers;
+using BDSUtil.UI;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows.Forms;
-using BDSUtil.Helpers;
+using M3MaterialCheckBox = Material3.WinForms.Controls.MaterialCheckBox;
 
 namespace BDSUtil.Modals.Content_Controls.CfgHelper
 {
-    public partial class PermissionsControl : UserControl
+    public partial class PermissionsControl : Material3UserControl
     {
         private string _configPath;
         private readonly List<OperatorEntry> _cachedOps = new List<OperatorEntry>();
@@ -128,7 +130,7 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             bool changesMade = false;
             foreach (object item in materialCheckListBox1.Items)
             {
-                if (item is ReaLTaiizor.Controls.MaterialCheckBox checkbox && checkbox.Checked)
+                if (item is M3MaterialCheckBox checkbox && checkbox.Checked)
                 {
                     if (!TryResolveCheckboxTarget(checkbox.Text, out string resolvedXuid, out string bareName)) continue;
                     if (_cachedOps.Any(o => string.Equals(o.Xuid, resolvedXuid, StringComparison.OrdinalIgnoreCase))) continue;
@@ -142,7 +144,7 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             }
 
             if (changesMade) SaveConfig();
-            else ReaLTaiizor.Controls.MaterialMessageBox.Show("No checked players were eligible for operator promotion.", "Operation Intercepted");
+            else MaterialDialogBox.Show(this.FindForm(), "No checked players were eligible for operator promotion.", "Operation Intercepted");
             ClearSelectionFocus();
         }
 
@@ -151,7 +153,7 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             bool changesMade = false;
             foreach (object item in materialCheckListBox1.Items)
             {
-                if (item is ReaLTaiizor.Controls.MaterialCheckBox checkbox && checkbox.Checked)
+                if (item is M3MaterialCheckBox checkbox && checkbox.Checked)
                 {
                     if (!TryResolveCheckboxTarget(checkbox.Text, out string resolvedXuid, out string bareName)) continue;
 
@@ -169,7 +171,7 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             }
 
             if (changesMade) SaveConfig();
-            else ReaLTaiizor.Controls.MaterialMessageBox.Show("No active operators were selected for role revocation.", "Operation Intercepted");
+            else MaterialDialogBox.Show(this.FindForm(), "No active operators were selected for role revocation.", "Operation Intercepted");
             ClearSelectionFocus();
         }
 

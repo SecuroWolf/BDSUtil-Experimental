@@ -1,12 +1,11 @@
 ﻿using BDSUtil.Models.AutoMod;
-using ReaLTaiizor.Controls;
-using ReaLTaiizor.Forms;
+using BDSUtil.UI;
 using System;
 using System.Windows.Forms;
 
 namespace BDSUtil.Modals.Content_Controls.AutoMod
 {
-    public partial class EnforcementProfile : MaterialForm
+    public partial class EnforcementProfile : Material3Form
     {
         private readonly string _xuid;
 
@@ -20,7 +19,7 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
         {
             if (EP_HistoryList.SelectedIndices.Count == 0)
             {
-                MaterialMessageBox.Show(this, "Please select an infraction from the list first.", "No Selection", MessageBoxButtons.OK, false, MaterialFlexibleForm.ButtonsPosition.Center);
+                MaterialDialogBox.Show(this, "Please select an infraction from the list first.", "No Selection", MessageBoxButtons.OK);
                 return;
             }
 
@@ -36,7 +35,7 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
                     ? "No chat context was recorded for this specific infraction."
                     : context;
 
-                MaterialMessageBox.Show(this, messageToShow, $"Context: {action}", MessageBoxButtons.OK, false, MaterialFlexibleForm.ButtonsPosition.Center);
+                MaterialDialogBox.Show(this, messageToShow, $"Context: {action}", MessageBoxButtons.OK);
             }
         }
 

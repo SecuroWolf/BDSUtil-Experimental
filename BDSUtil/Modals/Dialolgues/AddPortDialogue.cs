@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using ReaLTaiizor.Forms;
-using ReaLTaiizor.Controls;
-using ReaLTaiizor.Manager; // Added to resolve the MaterialSkinManager namespace wrapper
+using BDSUtil.UI;
+using Material3.WinForms.Controls;
+using Material3.WinForms.Typography;
+using M3MaterialButton = Material3.WinForms.Controls.MaterialButton;
+using M3MaterialLabel = Material3.WinForms.Controls.MaterialLabel;
+using M3MaterialSwitch = Material3.WinForms.Controls.MaterialSwitch;
 
 namespace BDSUtil.Modals
 {
-    public partial class AddPortDialogue : MaterialForm
+    public partial class AddPortDialogue : Material3Form
     {
         public int ExternalPort { get; private set; } = 0;
         public int InternalPort { get; private set; } = 0;
@@ -15,86 +18,85 @@ namespace BDSUtil.Modals
 
         private readonly MaterialTextBoxEdit extPortBox;
         private readonly MaterialTextBoxEdit intPortBox;
-        private readonly MaterialSwitch splitPortSwitch;
-        private readonly MaterialLabel intPortLabel;
-        private readonly MaterialButton btnSave;
+        private readonly M3MaterialSwitch splitPortSwitch;
+        private readonly M3MaterialLabel intPortLabel;
+        private readonly M3MaterialButton btnSave;
+        private readonly M3MaterialButton btnCancel;
 
         public AddPortDialogue()
         {
-            // Initial dimensions for the compact view layer state
             this.Width = 380;
-            this.Height = 240;
+            this.Height = 230;
             this.Text = "Add Port Mapping Node";
             this.MinimizeBox = false;
             this.MaximizeBox = false;
             this.Sizable = false;
             this.ShowInTaskbar = false;
             this.StartPosition = FormStartPosition.CenterParent;
+            SyncTitleBarMetadata();
 
-            // FIX: Explicitly inherit your main application's theme colors so text turns dark/light correctly
-            var skinManager = ReaLTaiizor.Manager.MaterialSkinManager.Instance;
-            skinManager.AddFormToManage(this);
-
-            // External Port Text Box Layout Configuration
-            extPortBox = new MaterialTextBoxEdit()
+            extPortBox = new MaterialTextBoxEdit
             {
                 Left = 20,
-                Top = 85,
+                Top = 58,
                 Width = 340,
+                Height = 46,
+                InputKind = MaterialInputKind.Integer,
                 Hint = "External Port (e.g. 19133)"
             };
             extPortBox.KeyPress += OnlyAllowNumericInputs;
 
-            // Split Port Mapping Toggle Switch Control
-            splitPortSwitch = new MaterialSwitch()
+            splitPortSwitch = new M3MaterialSwitch
             {
                 Text = "Map to a different internal port",
                 Left = 20,
-                Top = 145,
+                Top = 114,
+                AutoSize = false,
                 Width = 340,
-                Height = 30,
-                UseAccentColor = false
+                Height = 32
             };
             splitPortSwitch.CheckedChanged += SplitPortSwitch_CheckedChanged;
 
-            // Hidden Destination Internal Port Controls
-            intPortLabel = new MaterialLabel()
+            intPortLabel = new M3MaterialLabel
             {
                 Text = "Specify Destination Internal Port Node:",
                 Left = 20,
-                Top = 190,
+                Top = 154,
                 AutoSize = true,
-                Visible = false,
-                FontType = ReaLTaiizor.Manager.MaterialSkinManager.FontType.Body2
+                Visible = false
             };
+            Material3AppTheme.ConfigureLabel(intPortLabel, TypeScale.BodySmall, subtle: true);
 
-            intPortBox = new MaterialTextBoxEdit()
+            intPortBox = new MaterialTextBoxEdit
             {
                 Left = 20,
-                Top = 215,
+                Top = 176,
                 Width = 340,
+                Height = 46,
+                InputKind = MaterialInputKind.Integer,
                 Hint = "Internal Port (e.g. 19132)"
             };
             intPortBox.KeyPress += OnlyAllowNumericInputs;
 
-            // Window Action Controls
-            btnSave = new MaterialButton()
+            btnSave = new M3MaterialButton
             {
                 Text = "Confirm Node",
                 Left = 20,
-                Top = 190,
+                Top = 165,
                 Width = 150,
-                Type = MaterialButton.MaterialButtonType.Contained
+                Height = 40,
+                Variant = MaterialButtonVariant.Filled
             };
             btnSave.Click += BtnSave_Click;
 
-            MaterialButton btnCancel = new MaterialButton()
+            btnCancel = new M3MaterialButton
             {
                 Text = "Cancel",
                 Left = 210,
-                Top = 190,
+                Top = 165,
                 Width = 150,
-                Type = MaterialButton.MaterialButtonType.Outlined
+                Height = 40,
+                Variant = MaterialButtonVariant.Outlined
             };
             btnCancel.Click += (s, e) => { this.Close(); };
 
@@ -108,8 +110,6 @@ namespace BDSUtil.Modals
 
             UpdateWindowLayoutBounds(false);
         }
-
-
 
         private void OnlyAllowNumericInputs(object sender, KeyPressEventArgs e)
         {
@@ -128,28 +128,22 @@ namespace BDSUtil.Modals
         {
             if (isExpanded)
             {
-                this.Height = 330;
+                this.Height = 305;
                 intPortLabel.Visible = true;
                 intPortBox.Visible = true;
 
-                btnSave.Top = 275;
-                foreach (Control ctrl in this.Controls)
-                {
-                    if (ctrl is MaterialButton btn && btn.Text == "Cancel") btn.Top = 275;
-                }
+                btnSave.Top = 240;
+                btnCancel.Top = 240;
             }
             else
             {
-                this.Height = 250;
+                this.Height = 225;
                 intPortLabel.Visible = false;
                 intPortBox.Visible = false;
                 intPortBox.Text = string.Empty;
 
-                btnSave.Top = 195;
-                foreach (Control ctrl in this.Controls)
-                {
-                    if (ctrl is MaterialButton btn && btn.Text == "Cancel") btn.Top = 195;
-                }
+                btnSave.Top = 162;
+                btnCancel.Top = 162;
             }
         }
 
@@ -157,7 +151,7 @@ namespace BDSUtil.Modals
         {
             if (!int.TryParse(extPortBox.Text, out int extParsed) || extParsed < 1 || extParsed > 65535)
             {
-                MaterialMessageBox.Show(this, "Please provide a valid External Port integer between 1 and 65535.", "Input Boundary Violation");
+                MaterialDialogBox.Show(this, "Please provide a valid External Port integer between 1 and 65535.", "Input Boundary Violation");
                 return;
             }
 
@@ -166,7 +160,7 @@ namespace BDSUtil.Modals
             {
                 if (!int.TryParse(intPortBox.Text, out intParsed) || intParsed < 1 || intParsed > 65535)
                 {
-                    MaterialMessageBox.Show(this, "Please provide a valid Internal Port integer between 1 and 65535.", "Input Boundary Violation");
+                    MaterialDialogBox.Show(this, "Please provide a valid Internal Port integer between 1 and 65535.", "Input Boundary Violation");
                     return;
                 }
             }

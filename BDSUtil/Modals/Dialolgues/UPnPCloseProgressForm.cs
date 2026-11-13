@@ -1,46 +1,54 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using ReaLTaiizor.Forms;
-using ReaLTaiizor.Controls;
-using ReaLTaiizor.Manager;
+using BDSUtil.UI;
+using Material3.WinForms.Controls;
+using Material3.WinForms.Typography;
+using M3MaterialLabel = Material3.WinForms.Controls.MaterialLabel;
 
 namespace BDSUtil.Modals
 {
-    public partial class UPnPCloseProgressForm : MaterialForm
+    public partial class UPnPCloseProgressForm : Material3Form
     {
         private readonly string _serverDirectory;
-        private MaterialLabel _statusLabel;
+        private readonly M3MaterialLabel _statusLabel;
+        private readonly MaterialCircularProgress _spinner;
 
         public UPnPCloseProgressForm(string serverDirectory)
         {
             _serverDirectory = serverDirectory;
 
-            // Explicitly inherit your main application's theme colors right on creation
-            var skinManager = MaterialSkinManager.Instance;
-            skinManager.AddFormToManage(this);
-            
-            // Slim visual dimensions optimized for a clean, single-label alert prompt layout
-            this.Width = 380;
-            this.Height = 140;
-            this.Text = "Releasing Ports..."; // FIXED: Clean, concise operation context title
+            this.Width = 400;
+            this.Height = 132;
+            this.Text = "Releasing Ports...";
             this.MinimizeBox = false;
             this.MaximizeBox = false;
             this.Sizable = false;
-            this.ControlBox = false; // Prevents the user from closing out this modal mid-operation
+            this.ControlBox = false;
             this.ShowInTaskbar = false;
             this.StartPosition = FormStartPosition.CenterParent;
+            SyncTitleBarMetadata();
 
-            _statusLabel = new MaterialLabel()
+            _spinner = new MaterialCircularProgress
             {
-                Text = "Scrubbing active UPnP leases from hardware...",
                 Left = 24,
-                Top = 85,
-                Width = 330,
-                FontType = MaterialSkinManager.FontType.Body2
+                Top = 64,
+                Diameter = 28,
+                StrokeWidth = 3,
+                IsIndeterminate = true
             };
 
+            _statusLabel = new M3MaterialLabel()
+            {
+                Text = "Scrubbing active UPnP leases from hardware...",
+                Left = 64,
+                Top = 67,
+                Width = 312,
+                Height = 24
+            };
+            Material3AppTheme.ConfigureLabel(_statusLabel, TypeScale.BodyMedium);
+
+            this.Controls.Add(_spinner);
             this.Controls.Add(_statusLabel);
 
             this.Shown += UPnPCloseProgressForm_Shown;
@@ -72,11 +80,14 @@ namespace BDSUtil.Modals
                 finally
                 {
                     // Marshall back onto the main UI context thread to close out the form layout bounds
-                    this.BeginInvoke((MethodInvoker)delegate
+                    if (!IsDisposed && IsHandleCreated)
                     {
-                        this.DialogResult = DialogResult.OK;
-                        this.Close();
-                    });
+                        this.BeginInvoke((MethodInvoker)delegate
+                        {
+                            this.DialogResult = DialogResult.OK;
+                            this.Close();
+                        });
+                    }
                 }
             });
         }

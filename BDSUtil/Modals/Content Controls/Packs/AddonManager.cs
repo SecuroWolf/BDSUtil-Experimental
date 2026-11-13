@@ -1,15 +1,14 @@
-﻿using BDSUtil.Helpers;
-using ReaLTaiizor.Controls;
-using ReaLTaiizor.Forms;
+using BDSUtil.Helpers;
+using BDSUtil.UI;
+using Material3.WinForms.Controls;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace BDSUtil.Modals.Content_Controls.Packs
 {
-    public partial class AddonManager : MaterialForm
+    public partial class AddonManager : Material3Form
     {
         private readonly string _activeWorldName = "Bedrock level";
 
@@ -20,6 +19,7 @@ namespace BDSUtil.Modals.Content_Controls.Packs
 
         private void AddonManager_Load(object sender, EventArgs e)
         {
+            PM_TabSelector?.RebuildTabs();
             var utilPack = AppSettings.Instance.UtilPack;
             CF_OpCommandsSwitch.Checked = utilPack.OpCommands;
             CF_PvpAwardsSwitch.Checked = utilPack.PvpAwards;
@@ -36,8 +36,6 @@ namespace BDSUtil.Modals.Content_Controls.Packs
             // Hook the custom renderer for Minecraft color codes safely
             RP_ListView.DrawSubItem += PackListView_DrawSubItem;
             BP_ListView.DrawSubItem += PackListView_DrawSubItem;
-            RP_ListView.DrawColumnHeader += (s, ev) => ev.DrawDefault = true;
-            BP_ListView.DrawColumnHeader += (s, ev) => ev.DrawDefault = true;
 
             PopulatePackLists();
         }
@@ -142,7 +140,7 @@ namespace BDSUtil.Modals.Content_Controls.Packs
 
             if (targetListView.SelectedItems[0].Tag is PackManifestInfo packInfo)
             {
-                DialogResult confirm = MaterialMessageBox.Show(this,
+                DialogResult confirm = MaterialDialogBox.Show(this,
                     $"Are you sure you want to permanently delete '{packInfo.Name}'? This action cannot be undone.",
                     "Confirm Deletion", MessageBoxButtons.YesNo);
 
@@ -157,7 +155,7 @@ namespace BDSUtil.Modals.Content_Controls.Packs
                     }
                     else
                     {
-                        MaterialMessageBox.Show(this, $"Failed to delete {packInfo.Name}.", "Error");
+                        MaterialDialogBox.Show(this, $"Failed to delete {packInfo.Name}.", "Error");
                     }
                 }
             }
@@ -174,7 +172,7 @@ namespace BDSUtil.Modals.Content_Controls.Packs
             }
             else
             {
-                MaterialMessageBox.Show(this, $"Failed to import: {System.IO.Path.GetFileName(filePath)}", "Import Error");
+                MaterialDialogBox.Show(this, $"Failed to import: {System.IO.Path.GetFileName(filePath)}", "Import Error");
             }
         }
 
@@ -186,7 +184,7 @@ namespace BDSUtil.Modals.Content_Controls.Packs
                 // Check if already enabled
                 if (packInfo.IsEnabled)
                 {
-                    MaterialMessageBox.Show(this, $"{packInfo.Name} is already enabled.", "Notice");
+                    MaterialDialogBox.Show(this, $"{packInfo.Name} is already enabled.", "Notice");
                     return;
                 }
 
@@ -204,7 +202,7 @@ namespace BDSUtil.Modals.Content_Controls.Packs
                 // Check if already disabled / not enabled
                 if (!packInfo.IsEnabled)
                 {
-                    MaterialMessageBox.Show(this, $"{packInfo.Name} is not currently enabled.", "Notice");
+                    MaterialDialogBox.Show(this, $"{packInfo.Name} is not currently enabled.", "Notice");
                     return;
                 }
 
@@ -222,7 +220,7 @@ namespace BDSUtil.Modals.Content_Controls.Packs
                 // Check if already enabled
                 if (packInfo.IsEnabled)
                 {
-                    MaterialMessageBox.Show(this, $"{packInfo.Name} is already enabled.", "Notice");
+                    MaterialDialogBox.Show(this, $"{packInfo.Name} is already enabled.", "Notice");
                     return;
                 }
 
@@ -240,7 +238,7 @@ namespace BDSUtil.Modals.Content_Controls.Packs
                 // Check if already disabled / not enabled
                 if (!packInfo.IsEnabled)
                 {
-                    MaterialMessageBox.Show(this, $"{packInfo.Name} is not currently enabled.", "Notice");
+                    MaterialDialogBox.Show(this, $"{packInfo.Name} is not currently enabled.", "Notice");
                     return;
                 }
 
@@ -252,7 +250,7 @@ namespace BDSUtil.Modals.Content_Controls.Packs
 
         private void CF_AddCommandBTN_Click(object sender, EventArgs e)
         {
-            MaterialMessageBox.Show(this, "The custom command logic builder will launch here.", "Feature Pending", MessageBoxButtons.OK, false, MaterialFlexibleForm.ButtonsPosition.Center);
+            MaterialDialogBox.Show(this, "The custom command logic builder will launch here.", "Feature Pending", MessageBoxButtons.OK);
         }
 
         private void PM_CloseBTN_Click(object sender, EventArgs e)
@@ -266,25 +264,12 @@ namespace BDSUtil.Modals.Content_Controls.Packs
             PackManifestInfo pack = e.Item.Tag as PackManifestInfo;
             if (pack == null)
             {
-                e.DrawBackground();
                 return;
             }
 
-            // Manually paint the selection highlight background
-            if (e.Item.Selected)
-            {
-                using (SolidBrush highlightBrush = new SolidBrush(Color.FromArgb(50, 0, 150, 255)))
-                {
-                    e.Graphics.FillRectangle(highlightBrush, e.Bounds);
-                }
-            }
-            else
-            {
-                e.DrawBackground();
-            }
-
+            // MaterialListView.OnDrawSubItem already fills the M3 row background, selection tint, and divider.
             TextFormatFlags flags = TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix;
-            Color defaultTextColor = Color.White;
+            Color defaultTextColor = e.Item.Selected ? Material3.WinForms.Theming.MaterialColors.OnSecondaryContainer : Material3.WinForms.Theming.MaterialColors.OnSurface;
 
             // Column 0: Status & Pack Name / Studio (Minecraft Color Parsed)
             if (e.ColumnIndex == 0)
@@ -363,39 +348,5 @@ namespace BDSUtil.Modals.Content_Controls.Packs
                 default: return defaultColor;
             }
         }
-
-        private Point _dragStartPoint;
-
-        private void SmartDrag_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-            {
-                // Log the exact pixel the mouse clicked down on
-                _dragStartPoint = e.Location;
-            }
-        }
-
-        private void SmartDrag_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-            {
-                // If the mouse moves beyond the system's default drag threshold, it's a window drag
-                if (Math.Abs(e.X - _dragStartPoint.X) > SystemInformation.DragSize.Width / 2 ||
-                    Math.Abs(e.Y - _dragStartPoint.Y) > SystemInformation.DragSize.Height / 2)
-                {
-                    ReleaseCapture();
-                    SendMessage(this.Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
-                }
-            }
-        }
-
-        [DllImport("user32.dll")]
-        public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
-
-        [DllImport("user32.dll")]
-        public static extern bool ReleaseCapture();
-
-        public const int WM_NCLBUTTONDOWN = 0xA1;
-        public const int HT_CAPTION = 0x2;
     }
 }

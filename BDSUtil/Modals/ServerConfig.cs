@@ -1,12 +1,14 @@
 ﻿using BDSUtil.Modals.Content_Controls.CfgHelper;
-using ReaLTaiizor.Forms;
+using BDSUtil.UI;
+using Material3.Core;
+using Material3.WinForms.Drawing;
 using System;
 using System.IO;
 using System.Windows.Forms;
 
 namespace BDSUtil.Modals
 {
-    public partial class ServerConfig : MaterialForm
+    public partial class ServerConfig : Material3Form
     {
         private readonly MainWindow _parentForm;
         private string _serverRootPath;
@@ -27,6 +29,17 @@ namespace BDSUtil.Modals
             this.Sizable = false;
             this.ShowInTaskbar = true;
             this.StartPosition = FormStartPosition.CenterParent;
+            SyncTitleBarMetadata();
+
+            Material3NavigationHelper.Bind(
+                _navRail,
+                CfgTabControl,
+                ("Properties", MaterialIcons.Settings),
+                ("Whitelist", MaterialIcons.CheckCircle),
+                ("Permissions", MaterialIcons.DeployedCode),
+                ("Networking", MaterialIcons.TravelExplore),
+                ("Exit", MaterialIcons.Close)
+            );
 
             if (CfgTabControl != null)
             {
@@ -76,40 +89,8 @@ namespace BDSUtil.Modals
             }
             else if (CfgTabControl.SelectedTab == NetTab || CfgTabControl.SelectedTab.Name == "NetTab")
             {
-                if (!AppSettings.Instance.Networking.HasAcceptedNetworkRisks)
-                {
-                    using (var alertDialogue = new NetworkSecurityDialogue())
-                    {
-                        if (alertDialogue.ShowDialog(this) == DialogResult.OK && alertDialogue.Confirmed)
-                        {
-                            using (var instructionsDialogue = new AdvancedNetworkingDialogue())
-                            {
-                                if (instructionsDialogue.ShowDialog(this) == DialogResult.OK && instructionsDialogue.InstructionsAccepted)
-                                {
-                                    AppSettings.Instance.Update(cfg => cfg.Networking.HasAcceptedNetworkRisks = true);
-
-                                    _prevConfigTabIndex = CfgTabControl.SelectedIndex;
-                                    InitializeNetworkControl();
-                                }
-                                else
-                                {
-                                    ExecuteBounceBackMacro();
-                                    return;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            ExecuteBounceBackMacro();
-                            return;
-                        }
-                    }
-                }
-                else
-                {
-                    _prevConfigTabIndex = CfgTabControl.SelectedIndex;
-                    InitializeNetworkControl();
-                }
+                _prevConfigTabIndex = CfgTabControl.SelectedIndex;
+                InitializeNetworkControl();
             }
             else if (CfgTabControl.SelectedTab == ExitTab)
             {
@@ -160,20 +141,6 @@ namespace BDSUtil.Modals
         {
             this.DialogResult = DialogResult.OK;
             this.Close();
-        }
-
-        private void ExecuteBounceBackMacro()
-        {
-            int snapshotIndex = _prevConfigTabIndex;
-            Timer bounceTimer = new Timer { Interval = 1 };
-            bounceTimer.Tick += (s, args) =>
-            {
-                bounceTimer.Stop();
-                CfgTabControl.SelectedIndex = snapshotIndex;
-                CfgTabControl.Update();
-                bounceTimer.Dispose();
-            };
-            bounceTimer.Start();
         }
     }
 }

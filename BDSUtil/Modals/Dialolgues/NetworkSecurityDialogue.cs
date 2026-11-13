@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using ReaLTaiizor.Forms;
-using ReaLTaiizor.Controls;
+using BDSUtil.UI;
+using Material3.WinForms.Controls;
+using Material3.WinForms.Theming;
+using M3MaterialButton = Material3.WinForms.Controls.MaterialButton;
 
 namespace BDSUtil.Modals
 {
-    public partial class NetworkSecurityDialogue : MaterialForm
+    public partial class NetworkSecurityDialogue : Material3Form
     {
         public bool Confirmed { get; private set; } = false;
 
@@ -20,19 +22,20 @@ namespace BDSUtil.Modals
             this.Sizable = false;
             this.ShowInTaskbar = false;
             this.StartPosition = FormStartPosition.CenterParent;
+            SyncTitleBarMetadata();
 
             // Rich TextBox Canvas Setup for the advisory content
             RichTextBox warningBox = new RichTextBox()
             {
                 Left = 20,
-                Top = 80, // Offset cleanly below the Material window header title bar
+                Top = 56,
                 Width = 520,
-                Height = 290,
+                Height = 328,
                 ReadOnly = true,
                 BorderStyle = BorderStyle.None,
-                BackColor = Color.FromArgb(50, 50, 50), // Standard Material Dark Surface color
-                ForeColor = Color.FromArgb(222, 255, 255, 255), // High-contrast text accent
-                Font = new Font("Roboto", 10f, FontStyle.Regular)
+                BackColor = MaterialColors.SurfaceContainerLowest,
+                ForeColor = MaterialColors.OnSurface,
+                Font = new Font("Segoe UI", 10f, FontStyle.Regular)
             };
 
             // High-Visibility Warning Header Styling Pass
@@ -66,26 +69,25 @@ namespace BDSUtil.Modals
             warningBox.AppendText("Please click 'I understand the risks' to open the advanced networking documentation Dialogue.");
 
             // Material Button Controls
-            MaterialButton btnConfirm = new MaterialButton()
+            M3MaterialButton btnConfirm = new M3MaterialButton()
             {
                 Text = "I understand the risks",
                 Left = 20,
-                Top = 390,
+                Top = 400,
                 Width = 200,
-                Height = 36,
-                Type = MaterialButton.MaterialButtonType.Contained,
-                UseAccentColor = false
+                Height = 40,
+                Variant = MaterialButtonVariant.Filled,
+                Tone = MaterialTone.Warning
             };
 
-            MaterialButton btnCancel = new MaterialButton()
+            M3MaterialButton btnCancel = new M3MaterialButton()
             {
                 Text = "Go Back",
                 Left = 340,
-                Top = 390,
+                Top = 400,
                 Width = 200,
-                Height = 36,
-                Type = MaterialButton.MaterialButtonType.Outlined,
-                UseAccentColor = false
+                Height = 40,
+                Variant = MaterialButtonVariant.Outlined
             };
 
             // Wire up event triggers to drive the dialog result callbacks

@@ -1,15 +1,17 @@
-﻿using System;
+﻿using BDSUtil.Helpers;
+using BDSUtil.UI;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows.Forms;
-using BDSUtil.Helpers;
+using M3MaterialCheckBox = Material3.WinForms.Controls.MaterialCheckBox;
 
 namespace BDSUtil.Modals.Content_Controls.CfgHelper
 {
-    public partial class WhitelistControl : UserControl
+    public partial class WhitelistControl : Material3UserControl
     {
         private string _configPath;
         private readonly Label _focusTrapLabel;
@@ -17,8 +19,8 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
 
         public WhitelistControl()
         {
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             InitializeComponent();
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.AutoSize = false;
 
             // =========================================================================
@@ -105,16 +107,16 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             bool profileExists = _cachedPlayers.Any(p => p.Name.Equals(targetGamertag, StringComparison.OrdinalIgnoreCase));
             if (profileExists)
             {
-                ReaLTaiizor.Controls.MaterialMessageBox.Show("That player profile is already registered on the whitelist.", "Duplicate Profile Entry");
+                MaterialDialogBox.Show(this.FindForm(), "That player profile is already registered on the whitelist.", "Duplicate Profile Entry");
                 ClearSelectionFocus();
                 return;
             }
 
-            DialogResult bypassPrompt = ReaLTaiizor.Controls.MaterialMessageBox.Show(
+            DialogResult bypassPrompt = MaterialDialogBox.Show(
+                this.FindForm(),
                 $"Should '{targetGamertag}' bypass the maximum player connection limits?\n\n(Useful for administrative staff entry on full servers)",
                 "Configure Staff Role Bounds",
-                MessageBoxButtons.YesNo,
-                ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
+                MessageBoxButtons.YesNo
             );
             bool requiresBypass = (bypassPrompt == DialogResult.Yes);
 
@@ -136,12 +138,12 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
 
         private void RemovePlayerBTN_Click(object sender, EventArgs e)
         {
-            var entriesToRemove = new List<ReaLTaiizor.Controls.MaterialCheckBox>();
+            var entriesToRemove = new List<M3MaterialCheckBox>();
             var playersToPurge = new List<string>();
 
             foreach (object item in materialCheckListBox1.Items)
             {
-                if (item is ReaLTaiizor.Controls.MaterialCheckBox checkbox && checkbox.Checked)
+                if (item is M3MaterialCheckBox checkbox && checkbox.Checked)
                 {
                     entriesToRemove.Add(checkbox);
                     string cleanedName = checkbox.Text.Replace(" [Staff Bypass]", "").Trim();
@@ -151,7 +153,7 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
 
             if (entriesToRemove.Count == 0)
             {
-                ReaLTaiizor.Controls.MaterialMessageBox.Show("No player listings are currently checked for removal.", "Selection Trace Empty");
+                MaterialDialogBox.Show(this.FindForm(), "No player listings are currently checked for removal.", "Selection Trace Empty");
                 ClearSelectionFocus();
                 return;
             }
@@ -177,11 +179,11 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             }
             catch (Exception ex)
             {
-                ReaLTaiizor.Controls.MaterialMessageBox.Show(
+                MaterialDialogBox.Show(
+                    this.FindForm(),
                     $"An operating system file exception blocked the disk write operation:\n\n{ex.Message}",
                     "Disk Operation Exception",
-                    MessageBoxButtons.OK,
-                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center
+                    MessageBoxButtons.OK
                 );
             }
         }

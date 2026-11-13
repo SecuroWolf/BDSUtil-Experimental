@@ -18,59 +18,44 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ServerUpdateForm));
-            StatusLabel = new ReaLTaiizor.Controls.MaterialLabel();
-            UpdateProgressBar = new ReaLTaiizor.Controls.MaterialProgressBar();
-            UpdateCloseBTN = new ReaLTaiizor.Controls.MaterialButton();
+            StatusLabel = new Material3.WinForms.Controls.MaterialLabel();
+            UpdateProgressBar = new BDSUtil.UI.MaterialMarqueeProgressBar();
+            UpdateCloseBTN = new Material3.WinForms.Controls.MaterialButton();
             SuspendLayout();
             // 
             // StatusLabel
             // 
             StatusLabel.AutoSize = true;
-            StatusLabel.Depth = 0;
-            StatusLabel.Font = new System.Drawing.Font("Roboto", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
-            StatusLabel.Location = new System.Drawing.Point(23, 90);
-            StatusLabel.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            StatusLabel.Font = Material3.WinForms.Typography.TypeScale.BodyLarge;
+            StatusLabel.ForeColor = Material3.WinForms.Theming.MaterialColors.OnSurface;
+            StatusLabel.Location = new System.Drawing.Point(24, 68);
             StatusLabel.Name = "StatusLabel";
-            StatusLabel.Size = new System.Drawing.Size(140, 19);
+            StatusLabel.Size = new System.Drawing.Size(160, 20);
             StatusLabel.TabIndex = 0;
             StatusLabel.Text = "Status: Initializing...";
             // 
             // UpdateProgressBar
             // 
-            UpdateProgressBar.Depth = 0;
-            UpdateProgressBar.Location = new System.Drawing.Point(26, 130);
-            UpdateProgressBar.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            UpdateProgressBar.Location = new System.Drawing.Point(24, 108);
             UpdateProgressBar.Name = "UpdateProgressBar";
-            UpdateProgressBar.Size = new System.Drawing.Size(550, 5);
+            UpdateProgressBar.Size = new System.Drawing.Size(552, 8);
             UpdateProgressBar.TabIndex = 1;
-            UpdateProgressBar.UseAccentColor = false;
             // 
             // UpdateCloseBTN
             // 
-            UpdateCloseBTN.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            UpdateCloseBTN.Density = ReaLTaiizor.Controls.MaterialButton.MaterialButtonDensity.Default;
-            UpdateCloseBTN.Depth = 0;
-            UpdateCloseBTN.HighEmphasis = true;
-            UpdateCloseBTN.Icon = null;
-            UpdateCloseBTN.IconType = ReaLTaiizor.Controls.MaterialButton.MaterialIconType.Rebase;
-            UpdateCloseBTN.Location = new System.Drawing.Point(245, 185);
-            UpdateCloseBTN.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
-            UpdateCloseBTN.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.HOVER;
+            UpdateCloseBTN.Location = new System.Drawing.Point(245, 146);
             UpdateCloseBTN.Name = "UpdateCloseBTN";
-            UpdateCloseBTN.NoAccentTextColor = System.Drawing.Color.Empty;
-            UpdateCloseBTN.Size = new System.Drawing.Size(66, 36);
+            UpdateCloseBTN.Size = new System.Drawing.Size(110, 40);
             UpdateCloseBTN.TabIndex = 2;
             UpdateCloseBTN.Text = "CLOSE";
-            UpdateCloseBTN.Type = ReaLTaiizor.Controls.MaterialButton.MaterialButtonType.Contained;
-            UpdateCloseBTN.UseAccentColor = false;
-            UpdateCloseBTN.UseVisualStyleBackColor = true;
+            UpdateCloseBTN.Variant = Material3.WinForms.Controls.MaterialButtonVariant.Filled;
             UpdateCloseBTN.Click += UpdateCloseBTN_Click;
             // 
             // ServerUpdateForm
             // 
-            AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(600, 230);
+            AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+            ClientSize = new System.Drawing.Size(600, 205);
             Controls.Add(UpdateCloseBTN);
             Controls.Add(UpdateProgressBar);
             Controls.Add(StatusLabel);
@@ -81,13 +66,12 @@
             Load += ServerUpdateForm_Load;
             ResumeLayout(false);
             PerformLayout();
-
         }
 
         #endregion
 
-        private ReaLTaiizor.Controls.MaterialLabel StatusLabel;
-        private ReaLTaiizor.Controls.MaterialProgressBar UpdateProgressBar;
-        private ReaLTaiizor.Controls.MaterialButton UpdateCloseBTN;
+        private Material3.WinForms.Controls.MaterialLabel StatusLabel;
+        private BDSUtil.UI.MaterialMarqueeProgressBar UpdateProgressBar;
+        private Material3.WinForms.Controls.MaterialButton UpdateCloseBTN;
     }
 }

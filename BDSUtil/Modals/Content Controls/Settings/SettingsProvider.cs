@@ -4,8 +4,8 @@ using BDSUtil.Helpers.AutoMod;
 using BDSUtil.Helpers.RemoteApi;
 using BDSUtil.Helpers.Updates;
 using BDSUtil.Modals;
-using ReaLTaiizor.Controls;
-using ReaLTaiizor.Forms;
+using BDSUtil.UI;
+using Material3.WinForms.Controls;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -13,14 +13,14 @@ using System.Windows.Forms;
 
 namespace BDSUtil.Modals.Content_Controls.Settings
 {
-    public partial class SettingsProvider : UserControl
+    public partial class SettingsProvider : Material3UserControl
     {
         private bool _isInitializing = true;
         private Label _focusTrapLabel; // ✅ Holds focus invisibly to prevent input highlighting
 
         public SettingsProvider()
         {
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             InitializeComponent();
 
             // =========================================================================
@@ -34,6 +34,8 @@ namespace BDSUtil.Modals.Content_Controls.Settings
             };
             this.Controls.Add(_focusTrapLabel);
             // =========================================================================
+
+            this.Resize += (s, e) => UpdateNetworkingCardsLayout();
 
             if (CompressionTypeComboBox != null)
                 CompressionTypeComboBox.SelectedIndexChanged += CompressionTypeComboBox_SelectedIndexChanged;
@@ -156,7 +158,7 @@ namespace BDSUtil.Modals.Content_Controls.Settings
 
         private void UpdateNetworkingCardsLayout()
         {
-            if (UpnpSettingsCard == null || ConsolidateUdpCard == null || materialCard5 == null)
+            if (materialCard1 == null || materialCard3 == null || UpnpSettingsCard == null || ConsolidateUdpCard == null || materialCard5 == null)
                 return;
 
             bool upnpOn = CfgUPnP?.Checked == true;
@@ -165,43 +167,136 @@ namespace BDSUtil.Modals.Content_Controls.Settings
             this.SuspendLayout();
             try
             {
+                int left = 14;
+                int cardWidth = Math.Max(280, this.ClientSize.Width - (left * 2));
+
+                // 1. Global App Settings Header Card
+                materialCard1.Location = new System.Drawing.Point(left, 14);
+                materialCard1.Width = cardWidth;
+
+                // 2. Server Directory & Compression Card
+                materialCard3.Location = new System.Drawing.Point(left, materialCard1.Bottom + 14);
+                materialCard3.Size = new System.Drawing.Size(cardWidth, 150);
+
+                if (BrowseBTN != null)
+                {
+                    BrowseBTN.ElevationLevel = 1;
+                    BrowseBTN.IconSize = 28;
+                    BrowseBTN.Size = new System.Drawing.Size(56, 56);
+                    BrowseBTN.Location = new System.Drawing.Point(Math.Max(300, materialCard3.ClientSize.Width - 14 - 56), 10);
+                }
+
+                if (ServerPathTextBox != null)
+                {
+                    int browseLeft = BrowseBTN != null ? BrowseBTN.Left : (materialCard3.ClientSize.Width - 14 - 56);
+                    ServerPathTextBox.Location = new System.Drawing.Point(301, 14);
+                    ServerPathTextBox.Size = new System.Drawing.Size(Math.Max(120, browseLeft - 301 - 12), 48);
+                }
+
+                if (materialLabel2 != null)
+                {
+                    materialLabel2.Location = new System.Drawing.Point(14, 82);
+                }
+
+                if (CompressionTypeComboBox != null)
+                {
+                    CompressionTypeComboBox.Location = new System.Drawing.Point(395, 82);
+                    CompressionTypeComboBox.Size = new System.Drawing.Size(Math.Max(160, materialCard3.ClientSize.Width - 395 - 14), 49);
+                }
+
+                // 3. Enable World Modification Card
+                if (materialCard4 != null)
+                {
+                    materialCard4.Location = new System.Drawing.Point(left, materialCard3.Bottom + 8);
+                    materialCard4.Size = new System.Drawing.Size(cardWidth, 75);
+                }
+
+                // 4. Hide Telemetry Card
+                if (materialCard2 != null)
+                {
+                    int top4 = materialCard4 != null ? materialCard4.Bottom : materialCard3.Bottom;
+                    materialCard2.Location = new System.Drawing.Point(left, top4 + 8);
+                    materialCard2.Size = new System.Drawing.Size(cardWidth, 75);
+                }
+
+                // 5. Networking Settings Header Card
+                if (NetworkingSectionCard != null)
+                {
+                    int top2 = materialCard2 != null ? materialCard2.Bottom : materialCard3.Bottom;
+                    NetworkingSectionCard.Location = new System.Drawing.Point(left, top2 + 16);
+                    NetworkingSectionCard.Size = new System.Drawing.Size(cardWidth, 51);
+                }
+
+                // 6. UPnP Card
+                int netHeaderBottom = NetworkingSectionCard != null ? NetworkingSectionCard.Bottom : (materialCard2?.Bottom ?? 380);
+                UpnpSettingsCard.Location = new System.Drawing.Point(left, netHeaderBottom + 8);
+                UpnpSettingsCard.Size = new System.Drawing.Size(cardWidth, 75);
+
                 int nextTop = UpnpSettingsCard.Bottom + 8;
 
+                // 7. External Port Checker Card
                 if (ExternalPortCheckerCard != null)
                 {
                     ExternalPortCheckerCard.Visible = upnpOn;
                     if (upnpOn)
                     {
-                        ExternalPortCheckerCard.Left = UpnpSettingsCard.Left;
-                        ExternalPortCheckerCard.Width = UpnpSettingsCard.Width;
-                        ExternalPortCheckerCard.Top = nextTop;
+                        ExternalPortCheckerCard.Location = new System.Drawing.Point(left, nextTop);
+                        ExternalPortCheckerCard.Width = cardWidth;
+                        ExternalPortCheckerCard.Height = isCustomProvider ? 186 : 88;
+
+                        int dropdownWidth = Math.Min(310, Math.Max(220, ExternalPortCheckerCard.ClientSize.Width - 380));
+                        int dropdownLeft = Math.Max(220, ExternalPortCheckerCard.ClientSize.Width - 14 - dropdownWidth);
 
                         if (PortCheckerProviderComboBox != null)
                         {
-                            PortCheckerProviderComboBox.Width = Math.Max(180, ExternalPortCheckerCard.Width - PortCheckerProviderComboBox.Left - 19);
+                            PortCheckerProviderComboBox.Location = new System.Drawing.Point(dropdownLeft, 19);
+                            PortCheckerProviderComboBox.Size = new System.Drawing.Size(dropdownWidth, 49);
+                        }
+
+                        if (ExternalPortCheckerLBL != null)
+                        {
+                            ExternalPortCheckerLBL.Location = new System.Drawing.Point(14, 10);
+                            ExternalPortCheckerLBL.Size = new System.Drawing.Size(Math.Max(180, dropdownLeft - 14 - 12), 68);
                         }
 
                         if (CustomPortCheckerTextBox != null)
                         {
                             CustomPortCheckerTextBox.Visible = isCustomProvider;
-                            CustomPortCheckerTextBox.Width = Math.Max(220, ExternalPortCheckerCard.Width - 28);
+                            CustomPortCheckerTextBox.Location = new System.Drawing.Point(14, 84);
+                            CustomPortCheckerTextBox.Size = new System.Drawing.Size(Math.Max(220, ExternalPortCheckerCard.ClientSize.Width - 28), 48);
                         }
 
                         if (CustomPortCheckerHintLBL != null)
                         {
                             CustomPortCheckerHintLBL.Visible = isCustomProvider;
-                            CustomPortCheckerHintLBL.Width = Math.Max(220, ExternalPortCheckerCard.Width - 28);
+                            CustomPortCheckerHintLBL.Location = new System.Drawing.Point(14, 138);
+                            CustomPortCheckerHintLBL.Size = new System.Drawing.Size(Math.Max(220, ExternalPortCheckerCard.ClientSize.Width - 28), 36);
                         }
 
-                        ExternalPortCheckerCard.Height = isCustomProvider ? 178 : 82;
                         nextTop = ExternalPortCheckerCard.Bottom + 8;
                     }
                 }
 
-                ConsolidateUdpCard.Top = nextTop;
+                // 8. Consolidate UDP Ports Card
+                ConsolidateUdpCard.Location = new System.Drawing.Point(left, nextTop);
+                ConsolidateUdpCard.Size = new System.Drawing.Size(cardWidth, 88);
+
+                if (ConsolidateUdpLBL != null)
+                {
+                    ConsolidateUdpLBL.Location = new System.Drawing.Point(14, 10);
+                    ConsolidateUdpLBL.Size = new System.Drawing.Size(Math.Max(200, ConsolidateUdpCard.ClientSize.Width - 14 - 84), 68);
+                }
+
+                if (CfgConsolidateUdp != null)
+                {
+                    CfgConsolidateUdp.Location = new System.Drawing.Point(ConsolidateUdpCard.ClientSize.Width - 14 - 64, 25);
+                }
+
                 nextTop = ConsolidateUdpCard.Bottom + 8;
 
-                materialCard5.Top = nextTop;
+                // 9. Remote API Card
+                materialCard5.Location = new System.Drawing.Point(left, nextTop);
+                materialCard5.Size = new System.Drawing.Size(cardWidth, 126);
                 nextTop = materialCard5.Bottom + 14;
 
                 int logicalBottom = nextTop - this.AutoScrollPosition.Y;
@@ -277,18 +372,16 @@ namespace BDSUtil.Modals.Content_Controls.Settings
 
             if (isEnabled && !AppSettings.Instance.RemoteApi.HasAcceptedApiRisks)
             {
-                if (this.FindForm() is MaterialForm parentMaterialForm)
+                if (this.FindForm() is Form parentMaterialForm)
                 {
-                    DialogResult consent = MaterialMessageBox.Show(
+                    DialogResult consent = MaterialDialogBox.Show(
                         parentMaterialForm,
                         "REMOTE MANAGEMENT API SECURITY NOTICE:\n\n" +
                         "Enabling the Remote Management API binds an HTTP/JSON listener below your lowest Bedrock server port and accepts commands from Android or desktop companion apps.\n\n" +
                         "When UPnP is enabled, this port is also requisitioned on your router for external WAN access.\n\n" +
                         "Always keep your generated API key private. Enable Remote Management API now?\n",
                         "Enable Remote Management API",
-                        MessageBoxButtons.YesNo,
-                        false,
-                        MaterialFlexibleForm.ButtonsPosition.Center);
+                        MessageBoxButtons.YesNo);
 
                     if (consent == DialogResult.No)
                     {
@@ -363,9 +456,9 @@ namespace BDSUtil.Modals.Content_Controls.Settings
                 ? $"http://{mgr.ExternalIp}:{port}/api/v1"
                 : "(Enable UPnP or check external IP)";
 
-            if (this.FindForm() is MaterialForm parentForm)
+            if (this.FindForm() is Form parentForm)
             {
-                MaterialMessageBox.Show(
+                MaterialDialogBox.Show(
                     parentForm,
                     $"API Key copied to clipboard!\n\n" +
                     $"• Header: Authorization: Bearer <key> (or X-API-Key: <key>)\n" +
@@ -374,9 +467,7 @@ namespace BDSUtil.Modals.Content_Controls.Settings
                     $"• Health Ping: GET /api/v1/ping\n" +
                     $"• Status: GET /api/v1/status",
                     "Remote API Connection Info",
-                    MessageBoxButtons.OK,
-                    false,
-                    MaterialFlexibleForm.ButtonsPosition.Center);
+                    MessageBoxButtons.OK);
             }
 
             ClearSelectionFocus();
@@ -384,15 +475,13 @@ namespace BDSUtil.Modals.Content_Controls.Settings
 
         private void RotateApiKeyBTN_Click(object sender, EventArgs e)
         {
-            if (this.FindForm() is MaterialForm parentForm)
+            if (this.FindForm() is Form parentForm)
             {
-                DialogResult confirm = MaterialMessageBox.Show(
+                DialogResult confirm = MaterialDialogBox.Show(
                     parentForm,
                     "Generate a new Remote Management API key?\n\nExisting companion apps using the old key will immediately lose access until updated.",
                     "Rotate API Key",
-                    MessageBoxButtons.YesNo,
-                    false,
-                    MaterialFlexibleForm.ButtonsPosition.Center);
+                    MessageBoxButtons.YesNo);
 
                 if (confirm != DialogResult.Yes)
                 {
@@ -429,17 +518,15 @@ namespace BDSUtil.Modals.Content_Controls.Settings
 
             if (isEnabled)
             {
-                if (this.FindForm() is MaterialForm parentMaterialForm)
+                if (this.FindForm() is Form parentMaterialForm)
                 {
-                    DialogResult riskConsentResult = MaterialMessageBox.Show(
+                    DialogResult riskConsentResult = MaterialDialogBox.Show(
                         parentMaterialForm,
                         "CRITICAL DATA SAFETY WARNING:\n\nUnlocking the World Editor tools grants permission to rewrite level parameters.\n\n" +
                         "Improper values or directory write errors can corrupt active worlds or cause database crashes. Always maintain independent save folder copies.\n\n" +
                         "Do you completely acknowledge these operational risks and authorize file manipulations?\n",
                         "Confirm Data Modification Rights",
-                        MessageBoxButtons.YesNo,
-                        false,
-                        MaterialFlexibleForm.ButtonsPosition.Center
+                        MessageBoxButtons.YesNo
                     );
 
                     if (riskConsentResult == DialogResult.No)
@@ -612,11 +699,11 @@ namespace BDSUtil.Modals.Content_Controls.Settings
                 "BDSUtil requires a clean application restart.\n\n" +
                 "Would you like to restart the manager app right now, or continue working manually?";
 
-            if (MaterialMessageBox.Show(
+            if (MaterialDialogBox.Show(
                     owner,
                     prompt,
                     "Infrastructure Realignment Required",
-                    true) == DialogResult.OK)
+                    MessageBoxButtons.OKCancel) == DialogResult.OK)
             {
                 string serverDirectory = AppSettings.Instance?.General.ServerExecutablePath;
                 using (var progressModal = new UPnPCloseProgressForm(serverDirectory))
@@ -634,21 +721,19 @@ namespace BDSUtil.Modals.Content_Controls.Settings
 
         private static DialogResult ShowPrompt(
             IWin32Window owner,
-            MaterialForm materialOwner,
+            Form materialOwner,
             string text,
             string caption,
             MessageBoxButtons buttons,
             MessageBoxIcon fallbackIcon = MessageBoxIcon.Information)
         {
-            return materialOwner != null
-                ? MaterialMessageBox.Show(materialOwner, text, caption, buttons, false, MaterialFlexibleForm.ButtonsPosition.Center)
-                : MessageBox.Show(owner, text, caption, buttons, fallbackIcon);
+            return MaterialDialogBox.Show(materialOwner ?? owner, text, caption, buttons);
         }
 
         private async void BrowseBTN_Click(object sender, EventArgs e)
         {
             IWin32Window owner = (IWin32Window)this.FindForm() ?? this;
-            MaterialForm materialOwner = this.FindForm() as MaterialForm;
+            Form materialOwner = this.FindForm();
             string originalWorkingDir = Directory.GetCurrentDirectory();
 
             try
@@ -690,7 +775,7 @@ namespace BDSUtil.Modals.Content_Controls.Settings
             }
         }
 
-        private void SelectExistingServerDirectory(IWin32Window owner, MaterialForm materialOwner, string originalWorkingDir)
+        private void SelectExistingServerDirectory(IWin32Window owner, Form materialOwner, string originalWorkingDir)
         {
             using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
             {
@@ -726,7 +811,7 @@ namespace BDSUtil.Modals.Content_Controls.Settings
             }
         }
 
-        private async Task RunAutomaticServerSetupAsync(IWin32Window owner, MaterialForm materialOwner, string originalWorkingDir)
+        private async Task RunAutomaticServerSetupAsync(IWin32Window owner, Form materialOwner, string originalWorkingDir)
         {
             string chosenRoot;
             using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
@@ -860,7 +945,7 @@ namespace BDSUtil.Modals.Content_Controls.Settings
                     IWin32Window owner = (IWin32Window)this.FindForm() ?? this;
                     ShowPrompt(
                         owner,
-                        this.FindForm() as MaterialForm,
+                        this.FindForm(),
                         $"{applyDetail}\n\nYour server directory is ready without requiring a restart.",
                         "UPnP Port Mappings Applied",
                         MessageBoxButtons.OK,

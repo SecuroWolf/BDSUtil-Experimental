@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net8.0-windows7.0</TargetFramework>
+		<TargetFramework>net11.0-windows7.0</TargetFramework>
 		<UseWindowsForms>true</UseWindowsForms>
 		<ApplicationIcon>bds-manager.ico</ApplicationIcon>
 		<Platforms>AnyCPU</Platforms>
 		
 		<!-- Assembly & Release Information -->
-		<AssemblyVersion>1.1.0.0</AssemblyVersion>
-		<FileVersion>1.1.0.0</FileVersion>
-		<Version>1.1.0</Version>
+		<AssemblyVersion>2.0.0.0</AssemblyVersion>
+		<FileVersion>2.0.0.0</FileVersion>
+		<Version>2.0.0</Version>
 		<Title>BDSUtil</Title>
 		<Product>BDSUtil Core</Product>
 		<Company>SecuroWolf</Company>
@@ -27,15 +27,26 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Reference Include="ReaLTaiizor">
-			<HintPath>Resources\Dependencies\ReaLTaiizor.dll</HintPath>
-		</Reference>
+		<ProjectReference Include="..\..\..\Documents\material3-dotnet-main\material3-dotnet-main\src\Material3.Core\Material3.Core.csproj">
+			<Private>false</Private>
+		</ProjectReference>
+		<ProjectReference Include="..\..\..\Documents\material3-dotnet-main\material3-dotnet-main\src\Material3.WinForms\Material3.WinForms.csproj">
+			<Private>false</Private>
+		</ProjectReference>
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="Resources\Dependencies\ReaLTaiizor.dll" />
 		<EmbeddedResource Include="Resources\CommentStrippedServer.Properties.ini" />
 	</ItemGroup>
+
+	<Target Name="EmbedMaterial3Dependencies" BeforeTargets="AssignTargetPaths" DependsOnTargets="ResolveReferences">
+		<ItemGroup>
+			<_Material3Assemblies Include="@(ReferencePath)" Condition="'%(ReferencePath.Filename)' == 'Material3.Core' Or '%(ReferencePath.Filename)' == 'Material3.WinForms'" />
+			<EmbeddedResource Include="@(_Material3Assemblies)">
+				<LogicalName>BDSUtil.Resources.Dependencies.%(Filename)%(Extension)</LogicalName>
+			</EmbeddedResource>
+		</ItemGroup>
+	</Target>
 
 	<ItemGroup>
 	  <Compile Update="MainWindow.RemoteApi.cs">

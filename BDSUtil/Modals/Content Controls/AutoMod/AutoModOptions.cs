@@ -1,14 +1,13 @@
 ﻿using BDSUtil.Helpers;
 using BDSUtil.Helpers.AutoMod;
-using ReaLTaiizor.Controls;
-using ReaLTaiizor.Forms;
+using BDSUtil.UI;
 using System;
 using System.IO;
 using System.Windows.Forms;
 
 namespace BDSUtil.Modals.Content_Controls.AutoMod
 {
-    public partial class AutoModOptions : UserControl
+    public partial class AutoModOptions : Material3UserControl
     {
         private bool _isInitializing = true;
 
@@ -142,15 +141,13 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
                 AMCCard.Visible = false;
                 _isInitializing = false;
 
-                if (this.FindForm() is MaterialForm parentForm)
+                if (this.FindForm() is Form parentForm)
                 {
-                    DialogResult redirectResult = MaterialMessageBox.Show(
+                    DialogResult redirectResult = MaterialDialogBox.Show(
                         parentForm,
                         "The World Editor tools are currently disabled.\n\nWould you like to go to the App Settings configuration menu to review the safety warning and enable world modifications now?",
                         "World Editor Inactive",
-                        MessageBoxButtons.YesNo,
-                        false,
-                        MaterialFlexibleForm.ButtonsPosition.Center
+                        MessageBoxButtons.YesNo
                     );
 
                     if (redirectResult == DialogResult.Yes)
@@ -192,17 +189,15 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
 
             if (!isApiActive)
             {
-                if (this.FindForm() is MaterialForm parentForm)
+                if (this.FindForm() is Form parentForm)
                 {
-                    DialogResult apiDialog = MaterialMessageBox.Show(
+                    DialogResult apiDialog = MaterialDialogBox.Show(
                         parentForm,
                         "AutoMod requires active Minecraft Beta Scripting APIs to capture chat log event string variables.\n\n" +
                         "CRITICAL INFO: Once Beta APIs are enabled, they CANNOT be turned off on this world, and world experiments will permanently disable game achievements.\n\n" +
                         "Would you like BDSUtil to auto-patch your level.dat tags to enable them now?",
                         "Beta APIs Activation Required",
-                        MessageBoxButtons.YesNo,
-                        false,
-                        MaterialFlexibleForm.ButtonsPosition.Center
+                        MessageBoxButtons.YesNo
                     );
 
                     if (apiDialog == DialogResult.Yes)
@@ -210,7 +205,7 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
                         if (!LevelDatPatcher.EnableBetaApis(levelDatPath))
                         {
                             ResetToggleToOff();
-                            MaterialMessageBox.Show(parentForm, "Failed to patch world level.dat tags. Check if files are currently locked by the bedrock server process.", "Patch Aborted", MessageBoxButtons.OK, false, MaterialFlexibleForm.ButtonsPosition.Center);
+                            MaterialDialogBox.Show(parentForm, "Failed to patch world level.dat tags. Check if files are currently locked by the bedrock server process.", "Patch Aborted", MessageBoxButtons.OK);
                             return;
                         }
 
@@ -236,16 +231,14 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
             }
             else
             {
-                if (this.FindForm() is MaterialForm parentForm)
+                if (this.FindForm() is Form parentForm)
                 {
-                    DialogResult packDialog = MaterialMessageBox.Show(
+                    DialogResult packDialog = MaterialDialogBox.Show(
                         parentForm,
                         $"The '{BDSPackInstaller.MONITOR_PACK_FOLDER}' backend script addon folder is missing or disabled for the currently selected server world save.\n\n" +
                         "Would you like BDSUtil to automatically install the required plugin directories and register the pack entries now?\n",
                         "Addon Configuration Required",
-                        MessageBoxButtons.YesNo,
-                        false,
-                        MaterialFlexibleForm.ButtonsPosition.Center
+                        MessageBoxButtons.YesNo
                     );
 
                     if (packDialog == DialogResult.Yes)
@@ -255,7 +248,7 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
                             if (!BDSPackInstaller.InstallMonitorPackFiles(serverRoot))
                             {
                                 ResetToggleToOff();
-                                MaterialMessageBox.Show(parentForm, "File system write block. Unable to write pack files down onto disk nodes.", "Installation Failed", MessageBoxButtons.OK, false, MaterialFlexibleForm.ButtonsPosition.Center);
+                                MaterialDialogBox.Show(parentForm, "File system write block. Unable to write pack files down onto disk nodes.", "Installation Failed", MessageBoxButtons.OK);
                                 return;
                             }
                         }
@@ -265,7 +258,7 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
                             if (!BDSPackInstaller.EnableMonitorPack(serverRoot, targetWorldName))
                             {
                                 ResetToggleToOff();
-                                MaterialMessageBox.Show(parentForm, "Failed to update world_behavior_packs.json array configuration mappings safely.", "Activation Failed", MessageBoxButtons.OK, false, MaterialFlexibleForm.ButtonsPosition.Center);
+                                MaterialDialogBox.Show(parentForm, "Failed to update world_behavior_packs.json array configuration mappings safely.", "Activation Failed", MessageBoxButtons.OK);
                                 return;
                             }
                         }
@@ -274,7 +267,7 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
                         AMCCard.Visible = true;
                         AppSettings.Instance.Update(cfg => cfg.AutoMod.Enabled = true);
 
-                        MaterialMessageBox.Show(parentForm, "The monitor plugin addon has been successfully built and registered.\n\nA Bedrock Dedicated Server reboot is required to activate the chat bridge pipeline.", "Setup Complete", MessageBoxButtons.OK, false, MaterialFlexibleForm.ButtonsPosition.Center);
+                        MaterialDialogBox.Show(parentForm, "The monitor plugin addon has been successfully built and registered.\n\nA Bedrock Dedicated Server reboot is required to activate the chat bridge pipeline.", "Setup Complete", MessageBoxButtons.OK);
                     }
                     else
                     {

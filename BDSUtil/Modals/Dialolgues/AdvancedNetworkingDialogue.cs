@@ -1,37 +1,40 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using ReaLTaiizor.Forms;
-using ReaLTaiizor.Controls;
+using BDSUtil.UI;
+using Material3.WinForms.Controls;
+using Material3.WinForms.Theming;
+using M3MaterialButton = Material3.WinForms.Controls.MaterialButton;
 
 namespace BDSUtil.Modals
 {
-    public partial class AdvancedNetworkingDialogue : MaterialForm
+    public partial class AdvancedNetworkingDialogue : Material3Form
     {
         public bool InstructionsAccepted { get; private set; } = false;
 
         public AdvancedNetworkingDialogue()
         {
             this.Width = 620;
-            this.Height = 520;
+            this.Height = 510;
             this.Text = "Advanced Networking Instructions";
             this.MinimizeBox = false;
             this.MaximizeBox = false;
             this.Sizable = false;
             this.ShowInTaskbar = false;
             this.StartPosition = FormStartPosition.CenterParent;
+            SyncTitleBarMetadata();
 
             RichTextBox infoBox = new RichTextBox()
             {
                 Left = 20,
-                Top = 80,
+                Top = 56,
                 Width = 580,
-                Height = 350,
+                Height = 380,
                 ReadOnly = true,
                 BorderStyle = BorderStyle.None,
-                BackColor = Color.FromArgb(50, 50, 50), // Material Dark Surface Accent
-                ForeColor = Color.FromArgb(222, 255, 255, 255),
-                Font = new Font("Roboto", 9.5f, FontStyle.Regular)
+                BackColor = MaterialColors.SurfaceContainerLowest,
+                ForeColor = MaterialColors.OnSurface,
+                Font = new Font("Segoe UI", 9.5f, FontStyle.Regular)
             };
 
             // Section 1 Header
@@ -83,26 +86,24 @@ namespace BDSUtil.Modals
             infoBox.AppendText("Please accept these structural constraints to open the Networking configuration editor canvas panel.");
 
             // Material Button Controls
-            MaterialButton btnAccept = new MaterialButton()
+            M3MaterialButton btnAccept = new M3MaterialButton()
             {
                 Text = "Accept and Continue",
                 Left = 20,
-                Top = 455,
+                Top = 450,
                 Width = 220,
-                Height = 36,
-                Type = MaterialButton.MaterialButtonType.Contained,
-                UseAccentColor = false
+                Height = 40,
+                Variant = MaterialButtonVariant.Filled
             };
 
-            MaterialButton btnCancel = new MaterialButton()
+            M3MaterialButton btnCancel = new M3MaterialButton()
             {
                 Text = "Cancel",
                 Left = 380,
-                Top = 455,
+                Top = 450,
                 Width = 220,
-                Height = 36,
-                Type = MaterialButton.MaterialButtonType.Outlined,
-                UseAccentColor = false
+                Height = 40,
+                Variant = MaterialButtonVariant.Outlined
             };
 
             btnAccept.Click += (s, e) => { this.InstructionsAccepted = true; this.DialogResult = DialogResult.OK; this.Close(); };

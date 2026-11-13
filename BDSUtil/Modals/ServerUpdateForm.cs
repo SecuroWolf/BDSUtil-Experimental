@@ -2,13 +2,12 @@
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using ReaLTaiizor.Controls;
-using ReaLTaiizor.Forms;
 using BDSUtil.Helpers.Updates;
+using BDSUtil.UI;
 
 namespace BDSUtil.Modals
 {
-    public partial class ServerUpdateForm : MaterialForm
+    public partial class ServerUpdateForm : Material3Form
     {
         private readonly string _serverRoot;
         private readonly string _targetVersion;
@@ -25,15 +24,17 @@ namespace BDSUtil.Modals
             _isFreshInstall = isFreshInstall;
 
             this.Text = isFreshInstall ? "Bedrock Server Installer" : "Bedrock Server Updater";
-
-            // Optional: Force the form canvas to match your dark slate theme natively
-            this.BackColor = System.Drawing.Color.FromArgb(50, 50, 50);
+            this.MinimizeBox = false;
+            this.MaximizeBox = false;
+            this.Sizable = false;
+            SyncTitleBarMetadata();
         }
 
         private async void ServerUpdateForm_Load(object sender, EventArgs e)
         {
             // Lock the UI so the user can't close the form mid-update
             this.ControlBox = false;
+            this.TitleBar.ShowClose = false;
             UpdateCloseBTN.Visible = false;
 
             await RunUpdatePipelineAsync();
@@ -96,13 +97,11 @@ namespace BDSUtil.Modals
                     : $"The server has been successfully updated to v{_targetVersion}.\nYour worlds and custom packs were preserved.";
                 string completionTitle = _isFreshInstall ? "Server Setup Complete" : "Update Complete";
 
-                MaterialMessageBox.Show(
+                MaterialDialogBox.Show(
                     this,
                     completionMessage,
                     completionTitle,
-                    MessageBoxButtons.OK,
-                    false,
-                    MaterialFlexibleForm.ButtonsPosition.Center
+                    MessageBoxButtons.OK
                 );
 
                 this.DialogResult = DialogResult.OK;
@@ -116,18 +115,17 @@ namespace BDSUtil.Modals
                 UpdateProgressBar.Style = ProgressBarStyle.Continuous;
                 UpdateProgressBar.Value = 0;
 
-                MaterialMessageBox.Show(
+                MaterialDialogBox.Show(
                     this,
                     $"A critical error occurred during the download/install pipeline:\n\n{ex.Message}",
                     _isFreshInstall ? "Server Setup Failure" : "Update Failure",
-                    MessageBoxButtons.OK,
-                    false,
-                    MaterialFlexibleForm.ButtonsPosition.Center
+                    MessageBoxButtons.OK
                 );
 
                 // Allow the user to close the form if it fails
                 UpdateCloseBTN.Visible = true;
                 this.ControlBox = true;
+                this.TitleBar.ShowClose = true;
             }
         }
 

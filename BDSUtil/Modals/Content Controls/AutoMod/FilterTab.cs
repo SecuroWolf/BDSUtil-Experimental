@@ -1,5 +1,9 @@
-﻿using ReaLTaiizor.Controls;
-using ReaLTaiizor.Forms;
+﻿using BDSUtil.Helpers;
+using BDSUtil.UI;
+using Material3.WinForms.Controls;
+using Material3.WinForms.Theming;
+using Material3.WinForms.Typography;
+using M3MaterialCheckBox = Material3.WinForms.Controls.MaterialCheckBox;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,11 +12,10 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Windows.Forms;
-using BDSUtil.Helpers;
 
 namespace BDSUtil.Modals.Content_Controls.AutoMod
 {
-    public partial class FilterTab : UserControl
+    public partial class FilterTab : Material3UserControl
     {
         private readonly List<string> _bannedExpressionsCache = new List<string>();
         private string _deferredServerRootPath = string.Empty;
@@ -42,7 +45,6 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
             _batchTimer.Stop();
 
             FilterCheckListBox.Items.Clear();
-            FilterCheckListBox.Controls.Clear(); // ✅ FIX: Vaporize old UI elements to prevent ghost controls
             _bannedExpressionsCache.Clear();
             _currentBatchIndex = 0;
 
@@ -120,7 +122,6 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
 
             _batchTimer.Stop();
             FilterCheckListBox.Items.Clear();
-            FilterCheckListBox.Controls.Clear(); // ✅ Vaporize components completely on list refreshes
 
             _currentBatchIndex = _bannedExpressionsCache.Count - 1;
             _batchTimer.Start();
@@ -164,22 +165,81 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
         }
         private void AddBTN_Click(object sender, EventArgs e)
         {
-            using (Form inputForm = new Form())
+            using (Material3Form inputForm = new Material3Form())
             {
                 inputForm.Text = "Add Banned Expression";
-                inputForm.Size = new System.Drawing.Size(400, 180);
-                inputForm.FormBorderStyle = FormBorderStyle.FixedDialog;
+                inputForm.ClientSize = new System.Drawing.Size(420, 196);
                 inputForm.StartPosition = FormStartPosition.CenterParent;
-                inputForm.MaximizeBox = false; inputForm.MinimizeBox = false; inputForm.ShowInTaskbar = false;
+                inputForm.MaximizeBox = false;
+                inputForm.MinimizeBox = false;
+                inputForm.ShowInTaskbar = false;
+                inputForm.Sizable = false;
 
-                Label promptLabel = new Label { Left = 20, Top = 20, Text = "Enter keyword, slang phrase, or regex pattern:", Width = 350 };
-                TextBox inputTextBox = new TextBox { Left = 20, Top = 45, Width = 340 };
-                System.Windows.Forms.Button confirmButton = new System.Windows.Forms.Button { Text = "OK", Left = 190, Width = 80, Top = 90, DialogResult = DialogResult.OK };
-                System.Windows.Forms.Button cancelButton = new System.Windows.Forms.Button { Text = "Cancel", Left = 280, Width = 80, Top = 90, DialogResult = DialogResult.Cancel };
+                MaterialLabel promptLabel = new MaterialLabel
+                {
+                    Left = 20,
+                    Top = 58,
+                    Width = 380,
+                    Height = 22,
+                    BackColor = System.Drawing.Color.Transparent,
+                    ForeColor = MaterialColors.OnSurfaceVariant,
+                    Font = TypeScale.BodyMedium,
+                    Text = "Enter keyword, slang phrase, or regex pattern:"
+                };
+                MaterialTextBoxEdit inputTextBox = new MaterialTextBoxEdit
+                {
+                    Left = 20,
+                    Top = 86,
+                    Width = 380,
+                    Height = 46,
+                    Hint = "Banned phrase or regex"
+                };
+                MaterialButton confirmButton = new MaterialButton
+                {
+                    Text = "OK",
+                    Left = 228,
+                    Width = 82,
+                    Height = 36,
+                    Top = 144,
+                    AutoSize = false,
+                    Variant = MaterialButtonVariant.Filled,
+                    Tone = MaterialTone.Accent
+                };
+                MaterialButton cancelButton = new MaterialButton
+                {
+                    Text = "Cancel",
+                    Left = 318,
+                    Width = 82,
+                    Height = 36,
+                    Top = 144,
+                    AutoSize = false,
+                    Variant = MaterialButtonVariant.Outlined,
+                    Tone = MaterialTone.Neutral
+                };
 
-                inputForm.Controls.Add(promptLabel); inputForm.Controls.Add(inputTextBox);
-                inputForm.Controls.Add(confirmButton); inputForm.Controls.Add(cancelButton);
-                inputForm.AcceptButton = confirmButton; inputForm.CancelButton = cancelButton;
+                confirmButton.Click += (s, ev) => { inputForm.DialogResult = DialogResult.OK; inputForm.Close(); };
+                cancelButton.Click += (s, ev) => { inputForm.DialogResult = DialogResult.Cancel; inputForm.Close(); };
+                inputTextBox.KeyDown += (s, ke) =>
+                {
+                    if (ke.KeyCode == Keys.Enter)
+                    {
+                        ke.SuppressKeyPress = true;
+                        inputForm.DialogResult = DialogResult.OK;
+                        inputForm.Close();
+                    }
+                    else if (ke.KeyCode == Keys.Escape)
+                    {
+                        ke.SuppressKeyPress = true;
+                        inputForm.DialogResult = DialogResult.Cancel;
+                        inputForm.Close();
+                    }
+                };
+
+                inputForm.Controls.Add(promptLabel);
+                inputForm.Controls.Add(inputTextBox);
+                inputForm.Controls.Add(confirmButton);
+                inputForm.Controls.Add(cancelButton);
+                inputForm.Shown += (s, ev) => inputTextBox.Focus();
 
                 if (inputForm.ShowDialog(this) == DialogResult.OK)
                 {
@@ -192,9 +252,9 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
                         FilterCheckListBox.Items.Add(inputPhrase, false);
                         SaveConfig(); // ✅ AUTOSAVE SYNC: Flush to disk right away
                     }
-                    else if (this.ParentForm is MaterialForm parentMaterialForm)
+                    else
                     {
-                        MaterialMessageBox.Show(parentMaterialForm, "The entry you provided already exists.", "Duplicate Expression", MessageBoxButtons.OK, false, MaterialFlexibleForm.ButtonsPosition.Center);
+                        MaterialDialogBox.Show(this.ParentForm, "The entry you provided already exists.", "Duplicate Expression", MessageBoxButtons.OK);
                     }
                 }
             }
@@ -204,12 +264,12 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
         {
             if (FilterCheckListBox == null || FilterCheckListBox.Items.Count == 0) return;
 
-            System.Collections.Generic.List<MaterialCheckBox> entriesToRemove = new System.Collections.Generic.List<MaterialCheckBox>();
-            System.Collections.Generic.List<string> phrasesToPurge = new System.Collections.Generic.List<string>();
+            List<M3MaterialCheckBox> entriesToRemove = new List<M3MaterialCheckBox>();
+            List<string> phrasesToPurge = new List<string>();
 
             foreach (object item in FilterCheckListBox.Items)
             {
-                if (item is MaterialCheckBox checkbox && checkbox.Checked)
+                if (item is M3MaterialCheckBox checkbox && checkbox.Checked)
                 {
                     entriesToRemove.Add(checkbox);
                     phrasesToPurge.Add(checkbox.Text.Trim());
@@ -218,10 +278,7 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
 
             if (entriesToRemove.Count == 0)
             {
-                if (this.ParentForm is MaterialForm parentMaterialForm)
-                {
-                    MaterialMessageBox.Show(parentMaterialForm, "No expression listings are currently checked for removal.", "Selection Empty", MessageBoxButtons.OK, false, MaterialFlexibleForm.ButtonsPosition.Center);
-                }
+                MaterialDialogBox.Show(this.ParentForm, "No expression listings are currently checked for removal.", "Selection Empty", MessageBoxButtons.OK);
                 return;
             }
 
@@ -274,7 +331,7 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
         {
             if (FilterCheckListBox == null || FilterCheckListBox.Items.Count == 0) return;
             this.SuspendLayout(); FilterCheckListBox.SuspendLayout();
-            try { foreach (object item in FilterCheckListBox.Items) { if (item is MaterialCheckBox cb) cb.Checked = true; } }
+            try { foreach (object item in FilterCheckListBox.Items) { if (item is M3MaterialCheckBox cb) cb.Checked = true; } }
             finally { FilterCheckListBox.ResumeLayout(true); this.ResumeLayout(true); }
         }
 
@@ -282,7 +339,7 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
         {
             if (FilterCheckListBox == null || FilterCheckListBox.Items.Count == 0) return;
             this.SuspendLayout(); FilterCheckListBox.SuspendLayout();
-            try { foreach (object item in FilterCheckListBox.Items) { if (item is MaterialCheckBox cb) cb.Checked = false; } }
+            try { foreach (object item in FilterCheckListBox.Items) { if (item is M3MaterialCheckBox cb) cb.Checked = false; } }
             finally { FilterCheckListBox.ResumeLayout(true); this.ResumeLayout(true); }
         }
     }

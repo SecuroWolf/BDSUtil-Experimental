@@ -62,7 +62,7 @@ namespace BDSUtil.Helpers.RemoteApi
 
     public sealed class RemoteServerStatusSnapshot
     {
-        public string WrapperVersion { get; set; } = "1.0.0";
+        public string WrapperVersion { get; set; } = "2.0.0";
         public string ServerVersion { get; set; } = string.Empty;
         public bool ServerRunning { get; set; }
         public bool ServerInitialized { get; set; }

@@ -1,37 +1,41 @@
-﻿using System;
+﻿using BDSUtil.Helpers;
+using BDSUtil.UI;
+using Material3.WinForms.Controls;
+using Material3.WinForms.Theming;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using System.Collections.Generic;
-using BDSUtil.Helpers;
 
 namespace BDSUtil.Modals.Content_Controls.CfgHelper
 {
-    public partial class NetworkingControl : UserControl
+    public partial class NetworkingControl : Material3UserControl
     {
         private string _propertiesPath;
         private readonly Dictionary<string, string> _serverPropertiesMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         private readonly List<string> _activeUdpNodesCache = new List<string>();
         private readonly Label _focusTrapLabel;
-        private readonly ReaLTaiizor.Controls.MaterialButton _verifyPortsBtn;
+        private readonly MaterialButton _verifyPortsBtn;
 
         public NetworkingControl()
         {
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             InitializeComponent();
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.AutoSize = false;
 
             _focusTrapLabel = new Label { Size = new System.Drawing.Size(0, 0), Location = new System.Drawing.Point(0, 0), TabStop = true };
             this.Controls.Add(_focusTrapLabel);
 
-            _verifyPortsBtn = new ReaLTaiizor.Controls.MaterialButton
+            _verifyPortsBtn = new MaterialButton
             {
                 Text = "Verify Ports",
-                Type = ReaLTaiizor.Controls.MaterialButton.MaterialButtonType.Outlined,
-                UseAccentColor = false,
+                Variant = MaterialButtonVariant.Outlined,
+                Tone = MaterialTone.Accent,
+                AutoSize = false,
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                Location = new System.Drawing.Point(618, 14),
+                Location = new System.Drawing.Point(618, 15),
                 Size = new System.Drawing.Size(130, 36),
                 TabIndex = 12
             };
@@ -72,9 +76,8 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             _serverPropertiesMap.Clear();
             _activeUdpNodesCache.Clear();
 
-            // ✅ FIX: Purge the tracking data AND physically vaporize old UI checkbox handles
+            // Clear existing checklist entries before reloading
             PMList.Items.Clear();
-            PMList.Controls.Clear();
 
             bool upnpEnabled = AppSettings.Instance?.Networking?.EnableUPnP ?? false;
             bool consolidateEnabled = AppSettings.Instance?.Networking?.ConsolidateUdpPorts ?? false;
@@ -139,7 +142,7 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
 
                     if (_activeUdpNodesCache.Contains(formattedPropertyToken, StringComparer.OrdinalIgnoreCase))
                     {
-                        ReaLTaiizor.Controls.MaterialMessageBox.Show(this, "That specific port translation map rule node already exists inside your active grid.", "Duplicate Conflict");
+                        MaterialDialogBox.Show(this.FindForm(), "That specific port translation map rule node already exists inside your active grid.", "Duplicate Conflict");
                         ClearSelectionFocus();
                         return;
                     }
@@ -241,23 +244,19 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
                     report.AppendLine();
                 }
 
-                ReaLTaiizor.Controls.MaterialMessageBox.Show(
-                    this,
+                MaterialDialogBox.Show(
+                    this.FindForm(),
                     report.ToString().TrimEnd(),
                     "Port Forwarding & External Reachability Report",
-                    MessageBoxButtons.OK,
-                    false,
-                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center);
+                    MessageBoxButtons.OK);
             }
             catch (Exception ex)
             {
-                ReaLTaiizor.Controls.MaterialMessageBox.Show(
-                    this,
+                MaterialDialogBox.Show(
+                    this.FindForm(),
                     $"Port verification encountered an error:\n\n{ex.Message}",
                     "Verification Error",
-                    MessageBoxButtons.OK,
-                    false,
-                    ReaLTaiizor.Forms.MaterialFlexibleForm.ButtonsPosition.Center);
+                    MessageBoxButtons.OK);
             }
             finally
             {
@@ -307,7 +306,7 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
 
             if (indicesToRemove.Count == 0)
             {
-                ReaLTaiizor.Controls.MaterialMessageBox.Show(this, "No specific routing configuration rows are checked for deletion tracking.", "Selection Track Empty");
+                MaterialDialogBox.Show(this.FindForm(), "No specific routing configuration rows are checked for deletion tracking.", "Selection Track Empty");
                 ClearSelectionFocus();
                 return;
             }

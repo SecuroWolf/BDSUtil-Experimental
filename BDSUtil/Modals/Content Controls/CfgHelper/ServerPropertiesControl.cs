@@ -1,11 +1,15 @@
-﻿using System;
+﻿using BDSUtil.UI;
+using Material3.WinForms.Controls;
+using Material3.WinForms.Theming;
+using Material3.WinForms.Typography;
+using System;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
 
 namespace BDSUtil.Modals.Content_Controls.CfgHelper
 {
-    public partial class ServerPropertiesControl : UserControl
+    public partial class ServerPropertiesControl : Material3UserControl
     {
         private bool _isInitializing = true;
         private readonly Label _focusTrapLabel;
@@ -14,8 +18,8 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
 
         public ServerPropertiesControl()
         {
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             InitializeComponent();
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.AutoSize = false;
 
             _propertiesCache = new System.Collections.Generic.Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -215,7 +219,7 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             return char.ToUpper(input[0]) + input.Substring(1).ToLower();
         }
 
-        private void ParseChunkDistanceToUI(ComboBox box, string rawValue)
+        private void ParseChunkDistanceToUI(MaterialComboBox box, string rawValue)
         {
             if (string.IsNullOrWhiteSpace(rawValue)) return;
             string cleanValue = rawValue.Replace("Chunks", "").Replace("(Custom)", "").Trim();
@@ -235,7 +239,7 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
             }
         }
 
-        private void ParseTimeoutToUI(ComboBox box, string rawValue)
+        private void ParseTimeoutToUI(MaterialComboBox box, string rawValue)
         {
             if (string.IsNullOrWhiteSpace(rawValue)) return;
             string cleanValue = rawValue.Replace("Mins", "").Replace("(Custom)", "").Trim();
@@ -356,18 +360,87 @@ namespace BDSUtil.Modals.Content_Controls.CfgHelper
     {
         public static string ShowDialog(string titleText, string promptLabelText)
         {
-            Form promptWindow = new Form() { Width = 400, Height = 160, FormBorderStyle = FormBorderStyle.FixedDialog, Text = titleText, StartPosition = FormStartPosition.CenterParent, MaximizeBox = false, MinimizeBox = false };
-            Label textLabel = new Label() { Left = 20, Top = 15, Text = promptLabelText, Width = 360 };
-            TextBox inputTextBox = new TextBox() { Left = 20, Top = 40, Width = 340 };
-            Button confirmationButton = new Button() { Text = "Confirm", Left = 260, Width = 100, Top = 80, DialogResult = DialogResult.OK };
+            using (Material3Form promptWindow = new Material3Form())
+            {
+                promptWindow.ClientSize = new System.Drawing.Size(420, 196);
+                promptWindow.Text = titleText ?? "Input";
+                promptWindow.StartPosition = FormStartPosition.CenterParent;
+                promptWindow.MaximizeBox = false;
+                promptWindow.MinimizeBox = false;
+                promptWindow.ShowInTaskbar = false;
+                promptWindow.Sizable = false;
 
-            confirmationButton.Click += (sender, e) => { promptWindow.Close(); };
-            promptWindow.Controls.Add(inputTextBox);
-            promptWindow.Controls.Add(textLabel);
-            promptWindow.Controls.Add(confirmationButton);
-            promptWindow.AcceptButton = confirmationButton;
+                MaterialLabel textLabel = new MaterialLabel
+                {
+                    Left = 20,
+                    Top = 58,
+                    Width = 380,
+                    Height = 22,
+                    BackColor = System.Drawing.Color.Transparent,
+                    ForeColor = MaterialColors.OnSurfaceVariant,
+                    Font = TypeScale.BodyMedium,
+                    Text = promptLabelText ?? string.Empty
+                };
 
-            return promptWindow.ShowDialog() == DialogResult.OK ? inputTextBox.Text.Trim() : string.Empty;
+                MaterialTextBoxEdit inputTextBox = new MaterialTextBoxEdit
+                {
+                    Left = 20,
+                    Top = 86,
+                    Width = 380,
+                    Height = 46,
+                    Hint = titleText ?? string.Empty
+                };
+
+                MaterialButton confirmationButton = new MaterialButton
+                {
+                    Text = "Confirm",
+                    Left = 290,
+                    Width = 110,
+                    Height = 36,
+                    Top = 144,
+                    AutoSize = false,
+                    Variant = MaterialButtonVariant.Filled,
+                    Tone = MaterialTone.Accent
+                };
+
+                MaterialButton cancelButton = new MaterialButton
+                {
+                    Text = "Cancel",
+                    Left = 188,
+                    Width = 94,
+                    Height = 36,
+                    Top = 144,
+                    AutoSize = false,
+                    Variant = MaterialButtonVariant.Outlined,
+                    Tone = MaterialTone.Neutral
+                };
+
+                confirmationButton.Click += (sender, e) => { promptWindow.DialogResult = DialogResult.OK; promptWindow.Close(); };
+                cancelButton.Click += (sender, e) => { promptWindow.DialogResult = DialogResult.Cancel; promptWindow.Close(); };
+                inputTextBox.KeyDown += (sender, ke) =>
+                {
+                    if (ke.KeyCode == Keys.Enter)
+                    {
+                        ke.SuppressKeyPress = true;
+                        promptWindow.DialogResult = DialogResult.OK;
+                        promptWindow.Close();
+                    }
+                    else if (ke.KeyCode == Keys.Escape)
+                    {
+                        ke.SuppressKeyPress = true;
+                        promptWindow.DialogResult = DialogResult.Cancel;
+                        promptWindow.Close();
+                    }
+                };
+
+                promptWindow.Controls.Add(inputTextBox);
+                promptWindow.Controls.Add(textLabel);
+                promptWindow.Controls.Add(confirmationButton);
+                promptWindow.Controls.Add(cancelButton);
+                promptWindow.Shown += (sender, e) => inputTextBox.Focus();
+
+                return promptWindow.ShowDialog() == DialogResult.OK ? inputTextBox.Text.Trim() : string.Empty;
+            }
         }
     }
 }

@@ -1,5 +1,4 @@
-using ReaLTaiizor.Controls;
-using ReaLTaiizor.Forms;
+using BDSUtil.UI;
 using System;
 using System.IO;
 using System.Windows.Forms;
@@ -48,15 +47,13 @@ namespace BDSUtil.Helpers.AutoMod
         {
             AppSettings.Instance.Update(cfg => cfg.AutoMod.Enabled = false);
 
-            if (parentForm is MaterialForm materialForm)
+            if (parentForm != null && !parentForm.IsDisposed)
             {
-                MaterialMessageBox.Show(
-                    materialForm,
+                MaterialDialogBox.Show(
+                    parentForm,
                     message,
                     "AutoMod Disabled",
-                    MessageBoxButtons.OK,
-                    false,
-                    MaterialFlexibleForm.ButtonsPosition.Center
+                    MessageBoxButtons.OK
                 );
             }
         }

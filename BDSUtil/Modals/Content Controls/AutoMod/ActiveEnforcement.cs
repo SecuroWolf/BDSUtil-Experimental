@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using BDSUtil.Models.AutoMod;
-using ReaLTaiizor.Controls;
+using BDSUtil.UI;
+using M3MaterialCheckBox = Material3.WinForms.Controls.MaterialCheckBox;
 
 namespace BDSUtil.Modals.Content_Controls.AutoMod
 {
-    public partial class ActiveEnforcement : UserControl
+    public partial class ActiveEnforcement : Material3UserControl
     {
         private List<PlayerEnforcementProfile> _loadedProfiles = new List<PlayerEnforcementProfile>();
 
@@ -34,7 +35,6 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
             this.BeginInvoke((MethodInvoker)delegate
             {
                 AM_EnforcementHistory.Items.Clear();
-                AM_EnforcementHistory.Controls.Clear();
 
                 _loadedProfiles = ProfileManager.GetAllProfiles();
 
@@ -51,7 +51,7 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
                     // Hook the single-selection logic directly into the generated checkboxes
                     foreach (object item in AM_EnforcementHistory.Items)
                     {
-                        if (item is MaterialCheckBox chk)
+                        if (item is M3MaterialCheckBox chk)
                         {
                             chk.CheckedChanged += (s, ev) =>
                             {
@@ -60,7 +60,7 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
                                 _isUpdatingChecks = true;
                                 foreach (object otherItem in AM_EnforcementHistory.Items)
                                 {
-                                    if (otherItem is MaterialCheckBox otherChk && otherChk != chk)
+                                    if (otherItem is M3MaterialCheckBox otherChk && otherChk != chk)
                                     {
                                         otherChk.Checked = false;
                                     }
@@ -87,7 +87,7 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
             // Iterate over Items (not Controls) because .Add(string, bool) stores the MaterialCheckBox there
             foreach (object item in AM_EnforcementHistory.Items)
             {
-                if (item is MaterialCheckBox chk && chk.Checked)
+                if (item is M3MaterialCheckBox chk && chk.Checked)
                 {
                     if (index < _loadedProfiles.Count) return _loadedProfiles[index].Xuid;
                 }
@@ -103,7 +103,7 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
             string xuid = GetSelectedXuid();
             if (string.IsNullOrEmpty(xuid))
             {
-                MessageBox.Show("Please check a user profile from the list first.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MaterialDialogBox.Show(this, "Please check a user profile from the list first.", "No Selection", MessageBoxButtons.OK);
                 return;
             }
 
@@ -142,11 +142,11 @@ namespace BDSUtil.Modals.Content_Controls.AutoMod
             string xuid = GetSelectedXuid();
             if (string.IsNullOrEmpty(xuid)) return;
 
-            DialogResult result = MessageBox.Show(
+            DialogResult result = MaterialDialogBox.Show(
+                this,
                 "Are you sure you want to grant this user a Clean Slate? This will permanently delete their entire enforcement history profile from the disk.",
                 "Confirm Clean Slate",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Warning);
+                MessageBoxButtons.YesNo);
 
             if (result == DialogResult.Yes)
             {
